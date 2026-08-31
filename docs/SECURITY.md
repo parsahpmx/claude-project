@@ -36,12 +36,26 @@ Engineering security standards. For the adversary analysis see
   `endpoints:read`, `endpoints:write`, `webhooks:read`, `webhooks:write`,
   `analytics:read`.
 
-### Dashboard sessions
+### Dashboard sessions **[development adapter — not production auth]**
 
-A production-grade authentication library, not a hand-rolled implementation
-(brief §12). Requirements: secure/HttpOnly/SameSite cookies, session rotation
-on privilege change, immediate revocation, MFA-ready, suspicious sign-in
-detection where feasible.
+Phase 1 does **not** integrate a production identity provider, and Meter402
+must not describe itself as having one. What exists is `SessionIssuer`, a
+provider-neutral interface, with a single `DevelopmentSessionIssuer`
+implementation minting HMAC-SHA256 bearer tokens from `AUTH_SECRET`. It exists
+so authorization and tenant isolation can be tested end to end over real HTTP.
+
+Missing, and required before any real user account exists: passwords or
+federated login, MFA, account recovery, device management, and a session
+revocation list.
+
+Two guards keep the token-minting route out of production, both tested:
+1. `POST /v1/dev/sessions` is only registered when `DEPLOY_ENV` is `local` or
+   `development`; in staging and production the route does not exist.
+2. A runtime check refuses even if that call site changes in a refactor.
+
+Requirements for the eventual provider integration are unchanged:
+secure/HttpOnly/SameSite cookies, session rotation on privilege change,
+immediate revocation, MFA-ready, suspicious sign-in detection where feasible.
 
 ## 3. Authorization
 
@@ -51,14 +65,25 @@ one central table, not scattered through route handlers.
 
 **Tenant isolation is the highest-severity access control in the system.**
 Fetching a payment by ID without validating organization ownership is an IDOR
-that exposes another merchant's revenue. Rules:
+that exposes another merchant's revenue. Rules, all **[built]** as of Phase 1:
 
 - Every tenant-owned query is scoped to `organization_id`.
-- Repositories take the organization as a required argument; there is no
-  `findById(id)` on a tenant-owned entity.
-- A cross-tenant fetch returns `RESOURCE_NOT_FOUND`, not `PERMISSION_DENIED` —
-  the latter confirms the resource exists.
-- Cross-tenant access is tested explicitly, not assumed.
+- Repositories take a `TenantScope` as a required argument; there is no
+  `findById(id)` on a tenant-owned entity. `TenantScope` is a *branded* type
+  that cannot be written as an object literal — it is obtainable only from an
+  authenticated principal whose membership was loaded from the database. A
+  handler cannot forget the check, because there is nothing to forget.
+- A cross-tenant fetch returns 404, not `PERMISSION_DENIED` — the latter
+  confirms the resource exists. 403 is reserved for a caller who demonstrably
+  has tenant access and merely lacks the permission.
+- Cross-tenant access is tested explicitly, not assumed: 33 integration tests
+  drive a genuinely authenticated user from Organization B at every
+  Organization A resource and route.
+
+The single sanctioned exception is `findProjectOrganizationId`, which returns
+an opaque organization ID and no project data so that routes can be addressed
+as `/v1/projects/:id`. Its narrowness is the security property; widening its
+return value requires review.
 
 ## 4. Input validation
 
@@ -176,9 +201,21 @@ Security tests are a required category, not an aspiration. Currently covered:
 - duplicated headers (request smuggling ambiguity)
 - forbidden state transitions
 
-Required before the corresponding features ship: cross-tenant object access,
-revoked/expired API keys, brute-force authentication, webhook replay, SSRF
-against webhook URLs.
+Added in Phase 1:
+
+- cross-tenant object access across every organization, project, membership,
+  and API-key route, including with lower-privilege roles and with API keys
+- the full role x permission matrix, denials as well as grants
+- revoked and expired API keys, including a key past `expires_at` that is still
+  marked ACTIVE
+- rotation atomicity, and the plaintext secret's absence from the database, the
+  list endpoint, and every audit event
+- privilege escalation: self-promotion, unknown roles, escalating key scopes
+- concurrency: last-owner races, duplicate membership, duplicate slug,
+  contended key rotation and revocation
+
+Required before the corresponding features ship: brute-force authentication
+rate limiting, webhook replay, SSRF against webhook URLs.
 
 ## 12. Pre-production requirements
 

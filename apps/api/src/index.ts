@@ -12,6 +12,7 @@ import { createDatabase } from '@meter402/database';
 import { FailoverBlockchainProvider, ViemBlockchainProvider } from '@meter402/blockchain';
 import type { BlockchainProvider } from '@meter402/blockchain';
 import { buildApp } from './app.js';
+import { DevelopmentSessionIssuer } from './auth/session.js';
 
 async function main(): Promise<void> {
   let config;
@@ -66,6 +67,13 @@ async function main(): Promise<void> {
 
   const app = await buildApp({
     config,
+    routes: {
+      db: database.db,
+      config,
+      // Development adapter. The route that mints these tokens is only
+      // registered outside staging and production; see routes/v1/index.ts.
+      sessionIssuer: new DevelopmentSessionIssuer(config.secrets.authSecret),
+    },
     /*
      * Only dependencies we genuinely check appear here. Redis is configured
      * but not yet used by the API, so it is deliberately absent rather than

@@ -141,6 +141,56 @@ export const ERROR_DEFINITIONS = {
     defaultMessage: 'The request was denied by the risk engine.',
     retryable: false,
   },
+  INVALID_CREDENTIALS: {
+    status: 401,
+    defaultMessage: 'The supplied credentials are not valid.',
+    retryable: false,
+  },
+  MEMBERSHIP_INACTIVE: {
+    status: 403,
+    defaultMessage: 'Your membership of this organization is not active.',
+    retryable: false,
+  },
+  ENVIRONMENT_MISMATCH: {
+    status: 403,
+    defaultMessage: 'This credential cannot be used in the requested environment.',
+    retryable: false,
+  },
+  ORGANIZATION_NOT_FOUND: {
+    status: 404,
+    defaultMessage: 'The requested organization does not exist.',
+    retryable: false,
+  },
+  PROJECT_NOT_FOUND: {
+    status: 404,
+    defaultMessage: 'The requested project does not exist.',
+    retryable: false,
+  },
+  MEMBERSHIP_NOT_FOUND: {
+    status: 404,
+    defaultMessage: 'The requested membership does not exist.',
+    retryable: false,
+  },
+  API_KEY_NOT_FOUND: {
+    status: 404,
+    defaultMessage: 'The requested API key does not exist.',
+    retryable: false,
+  },
+  LAST_OWNER_REQUIRED: {
+    status: 409,
+    defaultMessage: 'An organization must always have at least one active owner.',
+    retryable: false,
+  },
+  INVALID_ROLE: {
+    status: 422,
+    defaultMessage: 'The supplied role is not recognised.',
+    retryable: false,
+  },
+  INVALID_SCOPE: {
+    status: 422,
+    defaultMessage: 'The supplied API key scope is not recognised.',
+    retryable: false,
+  },
   RATE_LIMITED: {
     status: 429,
     defaultMessage: 'Too many requests. Slow down and retry later.',

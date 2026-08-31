@@ -63,10 +63,10 @@ should be impossible to write, not merely unlikely.
 
 | Table | Purpose | Notes |
 | --- | --- | --- |
-| `users` | People | `email` citext-unique, `email_verified_at` |
+| `users` | People | unique on `email_normalized`, `status`, `email_verified_at` |
 | `organizations` | Tenant root | `slug` unique, `plan` |
-| `organization_members` | Membership + role | Unique `(organization_id, user_id)` |
-| `projects` | Container for endpoints/keys | Soft-deletable |
+| `organization_members` | Membership + role + status | Unique `(organization_id, user_id)` |
+| `projects` | Container for endpoints/keys | `status`, org-unique slug |
 
 Roles: `OWNER`, `ADMIN`, `DEVELOPER`, `ANALYST`, `BILLING`, `VIEWER`.
 Permissions are defined centrally in application code and evaluated
@@ -90,7 +90,14 @@ deliberately slow hash on the hot path is a self-inflicted denial of service.
 The pepper (held in the secret store, not the database) means a database dump
 alone does not permit offline verification of guessed keys.
 
-Lookup is by `prefix`, then a **timing-safe** comparison of the HMAC.
+**Lookup:** a direct equality probe on the unique `key_hash` index — O(1) —
+followed by a **timing-safe** comparison as defence in depth.
+
+> **Correction (Phase 1).** This document previously said lookup was "by
+> `prefix`, then a timing-safe comparison". That is not workable: `prefix` is
+> `meter_test` or `meter_live`, shared by *every* key, so it selects the whole
+> table. Because the HMAC is deterministic (no per-row salt), the hash itself
+> is the correct lookup key. The hashing strategy is unchanged.
 
 ### `endpoints` and `pricing_rules`
 
@@ -186,6 +193,63 @@ user agent, metadata. No `UPDATE` or `DELETE` grant for the application role.
 
 `risk_evaluations`, `policy_rules`, `settlements`, `wallet_references`,
 `subscriptions`, `invoices`, `feature_flags`.
+
+## 6. Phase 1 additions — identity and access
+
+### Lifecycle enums **[built]**
+
+`user_status` (ACTIVE / DISABLED / PENDING_VERIFICATION), `organization_status`
+(ACTIVE / SUSPENDED / DELETED), `membership_status` (ACTIVE / INVITED /
+SUSPENDED / REMOVED), `project_status` (ACTIVE / ARCHIVED / SUSPENDED),
+`api_key_status` (ACTIVE / REVOKED / EXPIRED).
+
+Native Postgres enums, so an invalid status is impossible to write rather than
+merely unlikely.
+
+### `users.email_normalized` **[built]**
+
+Lowercased and trimmed, with the unique index on **this** column rather than on
+the raw address. Uniqueness on the raw form would let `Alice@example.com` and
+`alice@example.com` both register, which becomes an account-takeover vector the
+moment any part of the system treats them as the same person.
+
+`users.name` holds the display name. The TypeScript property is `displayName`;
+the physical column was left as `name` deliberately — renaming it is cosmetic,
+and drizzle-kit cannot distinguish a rename from a drop-plus-add without an
+interactive prompt, which would make migration generation non-reproducible in
+CI. Paying that cost for an alias is a bad trade.
+
+### `organization_members` **[built]**
+
+`UNIQUE (organization_id, user_id)` — one row per person per organization.
+
+Two rows would create a "which role wins" ambiguity that an attacker could
+resolve in their favour by racing two invitation acceptances. Role and status
+are columns on a single row precisely so that question cannot arise. Removal
+sets `REMOVED` rather than deleting, so re-invitation reuses the row and the
+history survives.
+
+`(organization_id, role, status)` is indexed to serve the active-owner query
+that the owner invariant runs inside every membership-changing transaction.
+
+### `api_keys` **[built]**
+
+Adds `status`, `rotated_from_key_id` (lineage for the audit trail;
+deliberately not a foreign key, so pruning a superseded key is not blocked),
+and a foreign key on `created_by_user_id`.
+
+`UNIQUE (key_hash)` is the authentication lookup index. Unique because two keys
+hashing identically would mean a CSPRNG collision or a duplicate insert, and
+either must fail loudly rather than authenticate ambiguously.
+
+### Concurrency: `SELECT ... FOR UPDATE` **[built]**
+
+The owner invariant reads the full membership set under a row lock inside the
+transaction that changes it. Without the lock, two owners demoting each other
+simultaneously would each read a snapshot in which the other is still active,
+both conclude the invariant holds, and both commit — leaving an organization
+nobody can administer. This is verified by a real-PostgreSQL concurrency test,
+not asserted.
 
 ## 3. Indexing
 

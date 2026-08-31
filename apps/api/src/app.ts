@@ -5,6 +5,8 @@ import rateLimit from '@fastify/rate-limit';
 import { Meter402Error, isMeter402Error, newRequestId, toPublicError } from '@meter402/shared';
 import type { AppConfig } from '@meter402/config';
 import { registerHealthRoutes, type HealthProbes } from './routes/health.js';
+import { registerV1Routes } from './routes/v1/index.js';
+import type { RouteDeps } from './routes/context.js';
 
 export interface BuildAppOptions {
   readonly config: AppConfig;
@@ -19,6 +21,12 @@ export interface BuildAppOptions {
    * provoke 500s, and the resulting stack traces drown the actual results.
    */
   readonly silent?: boolean;
+  /**
+   * Dependencies for the /v1 resource routes. Omitted in tests that only
+   * exercise the app shell (health, error handling, headers), so those keep
+   * running without a database.
+   */
+  readonly routes?: RouteDeps;
 }
 
 /**
@@ -229,6 +237,10 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   registerHealthRoutes(app, options.probes ?? {});
+
+  if (options.routes) {
+    await registerV1Routes(app, options.routes);
+  }
 
   return app;
 }

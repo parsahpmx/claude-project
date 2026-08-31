@@ -1,6 +1,6 @@
 # Meter402 — Architecture
 
-**Status:** Living document. Reflects the codebase as of the close of Phase 0.
+**Status:** Living document. Reflects the codebase as of the close of Phase 1.
 
 Sections marked **[built]** exist and are tested. Sections marked
 **[planned]** are design intent with no code yet. That distinction is
@@ -72,7 +72,7 @@ meter402/
 │   ├── risk/                 Deterministic risk rules                   [planned]
 │   ├── policy/               Merchant policy evaluation                 [planned]
 │   ├── analytics/            Aggregation                                [planned]
-│   ├── auth/                 Session and identity integration           [planned]
+│   ├── auth/                 Roles, permissions, principals              [built]
 │   ├── sdk/                  @meter402/sdk merchant SDK                 [planned]
 │   ├── mcp/                  @meter402/mcp paidTool()                   [planned]
 │   ├── cli/                  @meter402/cli                              [planned]
@@ -246,6 +246,134 @@ authorization headers, and payment proofs never reach a log sink.
 Targets: API p95 under 300 ms excluding blockchain finality. Payment
 verification minimises RPC calls; authorization results are never cached
 (caching an authorization decision is caching an entitlement).
+
+## 10. Identity, tenancy, and access control (Phase 1)
+
+### 10.1 The entity model **[built]**
+
+```
+User  ──< OrganizationMembership >──  Organization ──< Project ──< ApiKey
+          (role + status)              (tenant root)
+```
+
+- A **User** exists independently of any organization and may belong to many.
+  It is the only Phase 1 entity that is not tenant-owned.
+- An **Organization** is the tenant boundary. Every merchant-owned row in the
+  database carries its `organization_id`.
+- A **Membership** is the sole source of organization access. It is never
+  derived from an email domain, a header, or anything else a user controls.
+  Only `ACTIVE` grants authority; `INVITED`, `SUSPENDED`, and `REMOVED` grant
+  nothing.
+- A **Project** belongs to exactly one organization. An **ApiKey** belongs to
+  exactly one project, and carries its organization for direct scoping.
+
+### 10.2 Two principal types **[built]**
+
+`Principal = UserPrincipal | ApiKeyPrincipal`, a discriminated union.
+
+A human acting through the dashboard and an agent acting through an API key
+are different actors with different authority. Collapsing them into one
+"current user" object is how a machine credential silently acquires a human's
+organization-management rights.
+
+- `UserPrincipal` authority comes from a membership role, evaluated through
+  **RBAC**.
+- `ApiKeyPrincipal` authority comes from the key's **scopes**, and is confined
+  to one project and one environment.
+
+`requireUserPrincipal` / `requireApiKeyPrincipal` narrow at every route, so an
+API key cannot reach a human-only endpoint and a session cannot satisfy a
+scope check.
+
+### 10.3 RBAC **[built]**
+
+Six roles — OWNER, ADMIN, DEVELOPER, ANALYST, BILLING, VIEWER — map to a closed
+set of 24 permissions in one frozen table in `@meter402/auth`. There are no
+role string comparisons in route handlers.
+
+Notable boundaries: only OWNER may delete an organization; only OWNER and
+BILLING may manage billing; no non-administrative role has authority over
+people.
+
+Every authorization decision happens server-side. The permission map is a pure
+function, so the future dashboard and admin console evaluate the same table
+rather than a second copy that drifts.
+
+### 10.4 Tenant scoping is structural **[built]**
+
+The failure mode Phase 1 exists to prevent is a handler forgetting an ownership
+check. Convention does not survive a growing codebase, so the boundary is
+enforced by types:
+
+- Tenant-owned repositories expose **no** `findById(id)`. The narrowest lookup
+  is `findInOrganization(scope, id)`.
+- `TenantScope` is a branded type. It cannot be written as an object literal;
+  it comes only from `scopeFromContext` (a verified membership) or
+  `scopeFromApiKey`.
+- The organization ID therefore never travels from a request body into a query.
+  A caller may *name* any organization; what they get scoped to is one they are
+  a member of.
+
+There is exactly one deliberate exception, `findProjectOrganizationId`, which
+returns an opaque organization ID and no project data so that routes can be
+`/v1/projects/:id`. Its narrowness is the security property, and it is
+commented as such.
+
+### 10.5 Existence disclosure: 404, not 403 **[built]**
+
+For a resource in another organization the API returns `RESOURCE_NOT_FOUND` /
+`ORGANIZATION_NOT_FOUND` / `PROJECT_NOT_FOUND` (404) — never
+`PERMISSION_DENIED`.
+
+403 confirms the resource exists, which is exactly what a cross-tenant probe
+wants. 403 is reserved for callers who demonstrably have access to the tenant
+and merely lack the permission; that discloses nothing they did not know.
+
+A member whose membership is suspended does get 403 (`MEMBERSHIP_INACTIVE`) —
+they already know the organization exists.
+
+### 10.6 API key authentication **[built]**
+
+- 256 bits from the CSPRNG, prefixed `meter_test_` / `meter_live_`.
+- Stored as HMAC-SHA256 under a server-side pepper. The plaintext is returned
+  once at creation and never persisted, logged, or placed in audit metadata.
+- Lookup is a direct equality probe on the unique `key_hash` index — O(1) —
+  followed by a constant-time comparison as defence in depth.
+- Revocation is immediate: key state is read on every request, with no cache.
+- Expiry is computed from `expires_at` on every request rather than trusting
+  the materialised `EXPIRED` status, so the sweeper's lag is not exploitable.
+
+**Correction to Phase 0.** The Phase 0 docs said lookup was "by `prefix`, then
+compare hashes". That does not work — `prefix` is shared by every key of an
+environment, so it selects the whole table. The hashing strategy is unchanged
+and remains correct; the lookup is now by hash.
+
+### 10.7 Human authentication is a development adapter **[PLANNED as production]**
+
+Phase 1 does **not** integrate a production identity provider, and does not
+claim to. There is no password, no MFA, no account recovery, no device
+management, and no session revocation list.
+
+What exists is `SessionIssuer`, a provider-neutral interface, with one
+implementation — `DevelopmentSessionIssuer` — minting HMAC-SHA256 bearer tokens
+from `AUTH_SECRET`. It exists so Phase 1's authorization and tenant isolation
+can be exercised end to end over real HTTP.
+
+Two guards keep it out of production, and both are tested:
+1. `POST /v1/dev/sessions` is only registered when `DEPLOY_ENV` is `local` or
+   `development`. In staging and production the route does not exist.
+2. A runtime check refuses even if that call site is changed in a refactor.
+
+Integrating a real provider (Better Auth / Auth0 / Clerk) is Phase 4+ work and
+touches only this seam — not routes, repositories, or RBAC.
+
+### 10.8 Invitations **[partial]**
+
+`POST /v1/organizations/:id/members` creates an `INVITED` membership that
+grants no authority until activated. **No email is sent** — there is no mail
+infrastructure yet. Activation currently happens by an administrator setting
+the membership `ACTIVE`. Email delivery and a recipient-driven acceptance flow
+are PLANNED.
 
 ## 9. Deployment [planned]
 

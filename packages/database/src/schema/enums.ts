@@ -80,3 +80,39 @@ export const refundStatusEnum = pgEnum('refund_status', [
 export const idempotencyStatusEnum = pgEnum('idempotency_status', ['IN_FLIGHT', 'COMPLETED']);
 
 export const outboxStatusEnum = pgEnum('outbox_status', ['PENDING', 'PUBLISHED', 'FAILED']);
+
+/* --- Phase 1: lifecycle states for identity and access ------------------- */
+
+/**
+ * A user is PENDING_VERIFICATION until their email is confirmed, and DISABLED
+ * rather than deleted when access is withdrawn — deleting the row would take
+ * their audit history with it.
+ */
+export const userStatusEnum = pgEnum('user_status', ['ACTIVE', 'DISABLED', 'PENDING_VERIFICATION']);
+
+export const organizationStatusEnum = pgEnum('organization_status', [
+  'ACTIVE',
+  'SUSPENDED',
+  'DELETED',
+]);
+
+/**
+ * Membership is the sole source of organization access. Only ACTIVE authorizes
+ * anything: INVITED has not accepted, SUSPENDED and REMOVED have had authority
+ * withdrawn. Mirrors MembershipStatus in @meter402/auth.
+ */
+export const membershipStatusEnum = pgEnum('membership_status', [
+  'ACTIVE',
+  'INVITED',
+  'SUSPENDED',
+  'REMOVED',
+]);
+
+export const projectStatusEnum = pgEnum('project_status', ['ACTIVE', 'ARCHIVED', 'SUSPENDED']);
+
+/**
+ * EXPIRED is materialised by a sweeper for reporting; authentication computes
+ * expiry from `expires_at` on every request rather than trusting this column,
+ * so a key whose sweep has not yet run still fails closed.
+ */
+export const apiKeyStatusEnum = pgEnum('api_key_status', ['ACTIVE', 'REVOKED', 'EXPIRED']);

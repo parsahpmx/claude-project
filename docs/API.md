@@ -25,6 +25,14 @@ produce testnet activity, `meter_live_` keys mainnet.
 | Expired | `API_KEY_EXPIRED` (401) |
 | Valid key, insufficient scope | `PERMISSION_DENIED` (403) |
 
+An unverifiable credential always yields `INVALID_API_KEY`, so probing cannot
+distinguish "no such key" from "wrong secret". `API_KEY_REVOKED` and
+`API_KEY_EXPIRED` are returned only after the presented secret produced a
+matching 256-bit HMAC — that is, only to someone who already holds the key.
+
+**A resource in another organization returns 404, never 403.** 403 would
+confirm it exists.
+
 ## Error envelope
 
 Every error, without exception:
@@ -51,13 +59,23 @@ conversations.
 | Code | HTTP | Retryable |
 | --- | --- | --- |
 | `AUTHENTICATION_REQUIRED` | 401 | no |
+| `INVALID_CREDENTIALS` | 401 | no |
 | `INVALID_API_KEY` | 401 | no |
 | `API_KEY_REVOKED` | 401 | no |
 | `API_KEY_EXPIRED` | 401 | no |
 | `PERMISSION_DENIED` | 403 | no |
+| `MEMBERSHIP_INACTIVE` | 403 | no |
+| `ENVIRONMENT_MISMATCH` | 403 | no |
 | `POLICY_VIOLATION` | 403 | no |
 | `RISK_DENIED` | 403 | no |
 | `RESOURCE_NOT_FOUND` | 404 | no |
+| `ORGANIZATION_NOT_FOUND` | 404 | no |
+| `PROJECT_NOT_FOUND` | 404 | no |
+| `MEMBERSHIP_NOT_FOUND` | 404 | no |
+| `API_KEY_NOT_FOUND` | 404 | no |
+| `LAST_OWNER_REQUIRED` | 409 | no |
+| `INVALID_ROLE` | 422 | no |
+| `INVALID_SCOPE` | 422 | no |
 | `VALIDATION_FAILED` | 422 | no |
 | `PAYMENT_REQUIRED` | 402 | yes — pay, then retry |
 | `PAYMENT_EXPIRED` | 402 | yes — request a new challenge |
@@ -136,22 +154,46 @@ GET /metrics    internal only, not publicly routed
 database is slow causes an orchestrator to restart healthy processes during a
 database incident, turning a degradation into an outage.
 
-### Organizations **[planned]**
+### Credential introspection **[built]**
 ```
-GET   /v1/organizations
-POST  /v1/organizations
+GET /v1/me
+```
+Describes the authenticated credential — for a user, their organizations and
+roles; for an API key, its project, environment, and scopes. Requires no scope:
+a credential is always entitled to describe itself, and gating this would make
+it useless for the debugging case it exists for.
+
+### Organizations **[built]**
+```
+GET   /v1/organizations              only those you actively belong to
+POST  /v1/organizations              creator becomes OWNER, same transaction
 GET   /v1/organizations/{id}
 PATCH /v1/organizations/{id}
 ```
 
-### Projects **[planned]**
+### Members **[built]**
 ```
-POST   /v1/projects
-GET    /v1/projects
+GET    /v1/organizations/{id}/members
+POST   /v1/organizations/{id}/members          creates an INVITED membership
+PATCH  /v1/organizations/{id}/members/{mid}    role and/or status
+DELETE /v1/organizations/{id}/members/{mid}    soft removal (status REMOVED)
+```
+
+An invitation grants **no authority** until activated, and no email is sent —
+delivery is PLANNED. An organization must always retain at least one ACTIVE
+OWNER; a change that would violate that returns `LAST_OWNER_REQUIRED` (409).
+
+### Projects **[built]**
+```
+POST   /v1/projects                  organizationId in body, validated against membership
+GET    /v1/projects?organizationId=  
 GET    /v1/projects/{id}
 PATCH  /v1/projects/{id}
-DELETE /v1/projects/{id}
+DELETE /v1/projects/{id}             archives; never deletes
 ```
+
+`DELETE` sets status `ARCHIVED`. A project owns payments, receipts, and audit
+history, so deleting the row would orphan or cascade away financial records.
 
 ### Endpoints **[planned]**
 ```
@@ -214,15 +256,37 @@ GET   /v1/agents/{id}
 PATCH /v1/agents/{id}
 ```
 
-### API keys **[planned]**
+### API keys **[built]**
 ```
-POST   /v1/api-keys
-GET    /v1/api-keys
-DELETE /v1/api-keys/{id}
+POST   /v1/projects/{projectId}/api-keys
+GET    /v1/projects/{projectId}/api-keys
+POST   /v1/projects/{projectId}/api-keys/{id}/rotate
+DELETE /v1/projects/{projectId}/api-keys/{id}
 ```
 
-The plaintext secret appears in the `POST` response **once** and is never
-retrievable again.
+Keys are nested under their project because a key belongs to exactly one.
+
+The plaintext secret appears in the create and rotate responses **once** and is
+never retrievable again — it is not stored, logged, or written to audit
+metadata. Listing returns `maskedKey` (`meter_test_...a4f9`) and never the hash.
+
+**Rotation** mints a replacement inheriting the original's project,
+environment, and scopes, and revokes the original in the same transaction. The
+old key stops working immediately: a rotation is usually a response to
+suspected exposure, so an overlap window would leave the suspect credential
+live exactly when it must not be. For zero-downtime, create a second key,
+deploy it, then revoke the first.
+
+**Revocation** takes effect on the very next request; key state is read every
+time with no cache.
+
+### Development sessions **[local/development only]**
+```
+POST /v1/dev/sessions
+```
+Mints a bearer token for an email without proving control of it. **This route
+does not exist when `DEPLOY_ENV` is `staging` or `production`.** It is a test
+seam pending a real identity provider, not an authentication system.
 
 ### Webhooks **[planned]**
 ```

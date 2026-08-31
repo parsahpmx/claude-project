@@ -4,7 +4,7 @@ Phase durations are planning estimates for a three-person team, not
 commitments. Each phase lists its exit criteria; a phase is not done because
 its time box elapsed.
 
-**Current position: Phase 0 complete. Phase 1 in progress.**
+**Current position: Phase 1 complete. Phase 2 ready to begin.**
 
 ---
 
@@ -32,17 +32,35 @@ Monorepo, toolchain, and the payment-critical domain core.
 **Exit criteria met:** all packages typecheck, lint, build, and test green in
 CI; all 100 payment state transitions asserted; money arithmetic proven exact.
 
-## Phase 1 — Merchant system (~2 weeks)
+## Phase 1 — Identity, organizations, RBAC, projects, API keys ✅ complete
 
-Users, organizations, projects, RBAC, API keys, dashboard shell.
+The multi-tenant security boundary every later phase depends on.
 
-**Exit criteria**
-- A developer can register, create an organization and project, and mint a
-  TEST API key through the dashboard
-- RBAC enforced server-side with a full role × permission test matrix
-- **Cross-tenant access denied and explicitly tested** (threat T5)
-- API keys hashed with a peppered HMAC, compared timing-safely, revocable
-  immediately
+**Delivered**
+- `@meter402/auth` — six roles over a closed 24-permission vocabulary in one
+  frozen table; `UserPrincipal | ApiKeyPrincipal` discriminated union; API-key
+  scopes evaluated separately from human RBAC; owner invariants
+- Users, organizations, memberships, projects, API keys with lifecycle status
+  enums and database-level constraints
+- Branded `TenantScope`: tenant-owned repositories have no unscoped
+  `findById`, so a missing ownership check is not an available mistake
+- API-key issue / list / rotate / revoke, with the secret returned exactly once
+- Full `/v1` route surface for organizations, members, projects, and keys,
+  plus `/v1/me` credential introspection
+- Audit events for every Phase 1 mutation, transactional with the change
+
+**Exit criteria — all met and verified**
+- ✅ RBAC enforced server-side, full role × permission matrix (unit **and** HTTP)
+- ✅ **Cross-tenant access denied and explicitly tested** (threat T5) — 33 tests
+- ✅ API keys peppered-HMAC hashed, timing-safe, revocable immediately
+- ✅ Owner invariants proven under real concurrency
+- ✅ 530 tests passing; lint, typecheck, format, build green
+
+**Deliberately not done, and marked PLANNED not built**
+- Production identity provider. Human auth is a documented development
+  adapter; the route that mints tokens does not exist in staging or production.
+- Invitation email delivery. The membership half exists; nothing is sent.
+- Dashboard UI (Phase 4+).
 
 ## Phase 2 — Billing objects (~2 weeks)
 
@@ -133,8 +151,10 @@ exists to prevent.
 
 ## Gates that block release regardless of schedule
 
-1. SSRF controls before webhooks ship (T8)
-2. Cross-tenant isolation tests before multi-merchant beta (T5)
+1. SSRF controls before webhooks ship (T8) — **still open**
+2. Cross-tenant isolation tests before multi-merchant beta (T5) — **met in
+   Phase 1**, and must be re-verified whenever a new tenant-owned resource is
+   added
 3. x402 conformance validation before advertising x402 compatibility
 4. External security review before meaningful production volume
 5. Legal review before production financial operation in any jurisdiction
