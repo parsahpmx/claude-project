@@ -75,7 +75,9 @@ function fakeProvider(options: FakeOptions = {}): BlockchainProvider {
   };
 }
 
-function request(overrides: Partial<TransferVerificationRequest> = {}): TransferVerificationRequest {
+function request(
+  overrides: Partial<TransferVerificationRequest> = {},
+): TransferVerificationRequest {
   return {
     transactionHash: TX_HASH,
     chainId: CHAIN_ID,

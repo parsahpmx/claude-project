@@ -1,40 +1,35 @@
 {
-  "name": "@meter402/database",
+  "name": "@meter402/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "PostgreSQL schema, migrations, and client.",
+  "description": "Meter402 control plane. A modular monolith over Fastify.",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
-  },
-  "files": [
-    "dist",
-    "drizzle"
-  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json",
     "lint": "eslint src",
     "test": "vitest run --passWithNoTests",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/migrate.ts",
-    "db:studio": "drizzle-kit studio",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
+    "@fastify/cors": "catalog:",
+    "@fastify/helmet": "catalog:",
+    "@fastify/rate-limit": "catalog:",
+    "@meter402/blockchain": "workspace:*",
+    "@meter402/config": "workspace:*",
+    "@meter402/database": "workspace:*",
     "@meter402/payments": "workspace:*",
+    "@meter402/pricing": "workspace:*",
     "@meter402/shared": "workspace:*",
-    "drizzle-orm": "catalog:",
-    "postgres": "catalog:"
+    "@meter402/x402": "workspace:*",
+    "fastify": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "drizzle-kit": "catalog:",
     "tsx": "^4.20.6",
     "typescript": "catalog:",
     "vitest": "catalog:"

@@ -129,8 +129,7 @@ export class Erc20SettlementVerifier implements SettlementVerifier {
      * behind a load balancer, which does happen — treat it as zero
      * confirmations rather than computing a negative count.
      */
-    const confirmations =
-      head >= receipt.blockNumber ? Number(head - receipt.blockNumber) + 1 : 0;
+    const confirmations = head >= receipt.blockNumber ? Number(head - receipt.blockNumber) + 1 : 0;
 
     if (confirmations < request.requiredConfirmations) {
       return err(

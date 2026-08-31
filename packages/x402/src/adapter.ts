@@ -143,9 +143,7 @@ export class X402Adapter implements PaymentProtocolAdapter {
     challenge: PaymentChallenge,
   ): Result<void, VerificationFailure> {
     if (proof.protocol !== X402_PROTOCOL) {
-      return err(
-        verificationFailure('MALFORMED_PROOF', `Expected an ${X402_PROTOCOL} proof.`),
-      );
+      return err(verificationFailure('MALFORMED_PROOF', `Expected an ${X402_PROTOCOL} proof.`));
     }
 
     const scheme = proof.raw['scheme'];

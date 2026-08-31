@@ -133,18 +133,14 @@ export class InvalidPaymentTransitionError extends Meter402Error {
     readonly to: PaymentStatus,
     paymentId?: string,
   ) {
-    super(
-      'INVALID_STATE_TRANSITION',
-      `A payment cannot move from ${from} to ${to}.`,
-      {
-        details: {
-          from,
-          to,
-          allowed: [...ALLOWED_TRANSITIONS[from]],
-          ...(paymentId ? { paymentId } : {}),
-        },
+    super('INVALID_STATE_TRANSITION', `A payment cannot move from ${from} to ${to}.`, {
+      details: {
+        from,
+        to,
+        allowed: [...ALLOWED_TRANSITIONS[from]],
+        ...(paymentId ? { paymentId } : {}),
       },
-    );
+    });
     this.name = 'InvalidPaymentTransitionError';
   }
 }
@@ -158,11 +154,7 @@ export class InvalidPaymentTransitionError extends Meter402Error {
  * idempotent workers should check `canTransition` first and skip, so the skip
  * is a deliberate decision at the call site.
  */
-export function assertTransition(
-  from: PaymentStatus,
-  to: PaymentStatus,
-  paymentId?: string,
-): void {
+export function assertTransition(from: PaymentStatus, to: PaymentStatus, paymentId?: string): void {
   if (!canTransition(from, to)) {
     throw new InvalidPaymentTransitionError(from, to, paymentId);
   }

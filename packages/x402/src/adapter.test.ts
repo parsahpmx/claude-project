@@ -208,12 +208,14 @@ describe('X402Adapter.parsePaymentProof — hostile and malformed input', () => 
       __proto__: { polluted: 'yes' },
     });
     adapter.parsePaymentProof({ headers: { [PAYMENT_HEADER]: malicious } });
-    expect((({}) as Record<string, unknown>)['polluted']).toBeUndefined();
+    expect(({} as Record<string, unknown>)['polluted']).toBeUndefined();
   });
 
   it('strips a nested constructor key', () => {
     const malicious = encode(
-      JSON.parse('{"x402Version":1,"scheme":"exact","network":"base-sepolia","payload":{"transaction":"0xab","constructor":{"bad":1}}}'),
+      JSON.parse(
+        '{"x402Version":1,"scheme":"exact","network":"base-sepolia","payload":{"transaction":"0xab","constructor":{"bad":1}}}',
+      ),
     );
     const result = adapter.parsePaymentProof({ headers: { [PAYMENT_HEADER]: malicious } });
     expect(result.ok).toBe(true);
@@ -267,10 +269,7 @@ describe('X402Adapter.validatePaymentProof', () => {
   });
 
   it('rejects a proof from a different protocol', () => {
-    const result = adapter.validatePaymentProof(
-      { ...proofWith({}), protocol: 'mpp' },
-      challenge,
-    );
+    const result = adapter.validatePaymentProof({ ...proofWith({}), protocol: 'mpp' }, challenge);
     expect(result.ok).toBe(false);
   });
 });

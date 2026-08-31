@@ -75,8 +75,13 @@ describe.skipIf(!DATABASE_URL)('DrizzleReplayGuard against PostgreSQL', () => {
   it('claims an unseen transaction', async () => {
     const requestId = await createRequest();
     const guard = new DrizzleReplayGuard(handle.db, organizationId);
-    expect(await guard.claim({ chainId: CHAIN_ID, transactionHash: txHash('a'), paymentRequestId: requestId }))
-      .toEqual({ claimed: true });
+    expect(
+      await guard.claim({
+        chainId: CHAIN_ID,
+        transactionHash: txHash('a'),
+        paymentRequestId: requestId,
+      }),
+    ).toEqual({ claimed: true });
   });
 
   it('refuses a transaction already bound to a different request', async () => {
@@ -85,8 +90,9 @@ describe.skipIf(!DATABASE_URL)('DrizzleReplayGuard against PostgreSQL', () => {
     const guard = new DrizzleReplayGuard(handle.db, organizationId);
     const hash = txHash('b');
 
-    expect(await guard.claim({ chainId: CHAIN_ID, transactionHash: hash, paymentRequestId: first }))
-      .toEqual({ claimed: true });
+    expect(
+      await guard.claim({ chainId: CHAIN_ID, transactionHash: hash, paymentRequestId: first }),
+    ).toEqual({ claimed: true });
 
     // This is the double-spend attempt: one payment, two requests.
     expect(
@@ -128,8 +134,9 @@ describe.skipIf(!DATABASE_URL)('DrizzleReplayGuard against PostgreSQL', () => {
     const hash = txHash('e');
 
     await guard.claim({ chainId: CHAIN_ID, transactionHash: hash, paymentRequestId: requestId });
-    expect(await guard.claim({ chainId: 8453, transactionHash: hash, paymentRequestId: requestId }))
-      .toEqual({ claimed: true });
+    expect(
+      await guard.claim({ chainId: 8453, transactionHash: hash, paymentRequestId: requestId }),
+    ).toEqual({ claimed: true });
   });
 
   /**

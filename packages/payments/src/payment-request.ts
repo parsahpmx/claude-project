@@ -122,11 +122,7 @@ export function createPaymentRequest(input: CreatePaymentRequestInput): PaymentR
 
 /** Reconstruct the typed amount from stored columns. */
 export function paymentRequestAmount(request: PaymentRequest): Money {
-  return Money.fromMinorUnits(
-    request.amountMinorUnits,
-    request.assetSymbol,
-    request.assetDecimals,
-  );
+  return Money.fromMinorUnits(request.amountMinorUnits, request.assetSymbol, request.assetDecimals);
 }
 
 export function isExpired(request: PaymentRequest, now: Date = new Date()): boolean {

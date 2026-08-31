@@ -80,8 +80,9 @@ describe('loadConfig — refuses to start on a dangerous misconfiguration', () =
   it('rejects a placeholder secret outside local', () => {
     // A publicly-known webhook signing secret means anyone can forge a payment
     // notification to a merchant.
-    expect(() => loadConfig(env({ WEBHOOK_SIGNING_SECRET: 'replace_me_with_32_bytes_xxxxxxx' })))
-      .toThrow(/placeholder/);
+    expect(() =>
+      loadConfig(env({ WEBHOOK_SIGNING_SECRET: 'replace_me_with_32_bytes_xxxxxxx' })),
+    ).toThrow(/placeholder/);
   });
 
   it('rejects a short secret outside local', () => {

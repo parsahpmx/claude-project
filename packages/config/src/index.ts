@@ -129,9 +129,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   try {
     deployEnv = parseDeployEnvironment(raw.DEPLOY_ENV);
   } catch (error) {
-    throw new ConfigurationError(
-      error instanceof Error ? error.message : 'Invalid DEPLOY_ENV',
-    );
+    throw new ConfigurationError(error instanceof Error ? error.message : 'Invalid DEPLOY_ENV');
   }
   const isLocal = deployEnv === DeployEnvironment.Local;
 
@@ -191,7 +189,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
      * configuration bug that must stop the deploy.
      */
     const known = findAsset('USDC', chain.id);
-    if (known && !(normalizeAddress(known.address) === normalizeAddress(raw.USDC_CONTRACT_ADDRESS))) {
+    if (
+      known &&
+      !(normalizeAddress(known.address) === normalizeAddress(raw.USDC_CONTRACT_ADDRESS))
+    ) {
       issues.push(
         `USDC_CONTRACT_ADDRESS ${raw.USDC_CONTRACT_ADDRESS} does not match the known USDC ` +
           `deployment on ${chain.name} (${known.address}). Refusing to start rather than ` +

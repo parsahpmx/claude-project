@@ -87,7 +87,9 @@ describe('decodeTransferLog — logs that must be rejected', () => {
     // low 20 bytes, a crafted log could alias the merchant's address and be
     // counted as a payment to them.
     const spoofed = `0x${'0'.repeat(23)}1${TO.slice(2)}`;
-    expect(decodeTransferLog(transferLog({ topics: [ERC20_TRANSFER_TOPIC, topicFor(FROM), spoofed] }))).toBeNull();
+    expect(
+      decodeTransferLog(transferLog({ topics: [ERC20_TRANSFER_TOPIC, topicFor(FROM), spoofed] })),
+    ).toBeNull();
   });
 
   it.each([

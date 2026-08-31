@@ -71,7 +71,8 @@ export default tseslint.config(
         {
           object: 'Math',
           property: 'round',
-          message: 'Math.round implies float money. Use BigInt arithmetic with an explicit rounding mode.',
+          message:
+            'Math.round implies float money. Use BigInt arithmetic with an explicit rounding mode.',
         },
         {
           object: 'Number',

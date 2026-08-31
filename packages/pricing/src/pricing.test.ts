@@ -69,9 +69,9 @@ describe('FixedPriceStrategy', () => {
   });
 
   it('rejects an unsupported asset rather than guessing its decimals', async () => {
-    await expect(
-      strategy.calculatePrice(rule({ assetSymbol: 'DOGE' }), context()),
-    ).rejects.toThrow(PricingError);
+    await expect(strategy.calculatePrice(rule({ assetSymbol: 'DOGE' }), context())).rejects.toThrow(
+      PricingError,
+    );
   });
 
   it('rejects a price with more precision than the asset supports', async () => {

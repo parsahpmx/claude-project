@@ -1,5 +1,9 @@
 import { CircuitBreaker, type CircuitState } from './circuit-breaker.js';
-import { ProviderUnavailableError, type BlockchainProvider, type TransactionReceiptView } from './types.js';
+import {
+  ProviderUnavailableError,
+  type BlockchainProvider,
+  type TransactionReceiptView,
+} from './types.js';
 
 /**
  * Primary/secondary RPC with per-provider circuit breaking (product rule 70).
@@ -73,7 +77,10 @@ export class FailoverBlockchainProvider implements BlockchainProvider {
     this.breakers = breakers;
   }
 
-  private async run<T>(operation: string, call: (provider: BlockchainProvider) => Promise<T>): Promise<T> {
+  private async run<T>(
+    operation: string,
+    call: (provider: BlockchainProvider) => Promise<T>,
+  ): Promise<T> {
     const errors: string[] = [];
     let skipped = 0;
 

@@ -141,7 +141,10 @@ export function parseX402PaymentHeader(
   const parsed = parseJsonSafely(decoded);
   if (!isRecord(parsed)) {
     return err(
-      verificationFailure('MALFORMED_PROOF', 'The X-PAYMENT header does not contain a JSON object.'),
+      verificationFailure(
+        'MALFORMED_PROOF',
+        'The X-PAYMENT header does not contain a JSON object.',
+      ),
     );
   }
 

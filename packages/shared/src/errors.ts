@@ -175,6 +175,20 @@ export interface Meter402ErrorOptions {
   readonly details?: Record<string, unknown>;
   /** Internal cause. Logged, never serialised to the client. */
   readonly cause?: unknown;
+  /**
+   * Override the HTTP status while keeping the code.
+   *
+   * The mapping is deliberately not one-to-one. Clients branch on `code`, so
+   * that must stay stable; the HTTP status carries transport-level meaning
+   * that can be more specific. A body over the size limit and a malformed
+   * JSON document are both VALIDATION_FAILED to a client, but flattening 413
+   * and 400 into 422 would discard information every HTTP intermediary
+   * understands.
+   *
+   * Restricted to the 4xx range: an override must never be able to dress a
+   * server fault up as a client error and hide it from error-rate alerting.
+   */
+  readonly httpStatus?: number;
 }
 
 export class Meter402Error extends Error {
@@ -188,7 +202,9 @@ export class Meter402Error extends Error {
     super(message ?? definition.defaultMessage, { cause: options.cause });
     this.name = 'Meter402Error';
     this.code = code;
-    this.httpStatus = definition.status;
+    const override = options.httpStatus;
+    this.httpStatus =
+      override !== undefined && override >= 400 && override < 500 ? override : definition.status;
     this.retryable = definition.retryable;
     this.details = options.details;
   }
@@ -237,19 +253,14 @@ export function notFound(resource: string, id?: string): Meter402Error {
   });
 }
 
-export function validationFailed(
-  message: string,
-  issues?: Record<string, unknown>,
-): Meter402Error {
+export function validationFailed(message: string, issues?: Record<string, unknown>): Meter402Error {
   return new Meter402Error('VALIDATION_FAILED', message, {
     ...(issues ? { details: issues } : {}),
   });
 }
 
 export function permissionDenied(action: string): Meter402Error {
-  return new Meter402Error(
-    'PERMISSION_DENIED',
-    `You do not have permission to ${action}.`,
-    { details: { action } },
-  );
+  return new Meter402Error('PERMISSION_DENIED', `You do not have permission to ${action}.`, {
+    details: { action },
+  });
 }

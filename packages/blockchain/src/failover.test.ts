@@ -165,9 +165,7 @@ describe('FailoverBlockchainProvider', () => {
       provider('primary', { fail: true }),
       provider('secondary', { fail: true }),
     ]);
-    await expect(failover.getTransactionReceipt('0xabc')).rejects.toThrow(
-      ProviderUnavailableError,
-    );
+    await expect(failover.getTransactionReceipt('0xabc')).rejects.toThrow(ProviderUnavailableError);
   });
 
   it('stops calling a provider once its circuit opens', async () => {
@@ -192,9 +190,12 @@ describe('FailoverBlockchainProvider', () => {
 
   it('reports errors through the callback for alerting', async () => {
     const onProviderError = vi.fn();
-    const failover = new FailoverBlockchainProvider([provider('primary', { fail: true }), provider('secondary')], {
-      onProviderError,
-    });
+    const failover = new FailoverBlockchainProvider(
+      [provider('primary', { fail: true }), provider('secondary')],
+      {
+        onProviderError,
+      },
+    );
     await failover.getTransactionReceipt('0xabc');
     expect(onProviderError).toHaveBeenCalledWith('primary', expect.any(ProviderUnavailableError));
   });

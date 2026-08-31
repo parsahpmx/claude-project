@@ -1,0 +1,150 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+# A newer push to the same branch makes the running job's result irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+  # Least privilege by default; jobs opt into more if they ever need it.
+  FORCE_COLOR: '1'
+
+permissions:
+  contents: read
+
+jobs:
+  # Static checks run without any infrastructure, so they fail fast and cheap.
+  verify:
+    name: Lint, typecheck, unit tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      # --frozen-lockfile makes CI fail rather than silently resolving a
+      # different dependency tree than the one that was reviewed.
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: Check formatting
+        run: pnpm format:check
+
+  # Integration tests need real Postgres. They are the only place the replay
+  # protection constraint is actually exercised under concurrency, so this job
+  # is not optional.
+  integration:
+    name: Integration tests (PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: meter402
+          POSTGRES_PASSWORD: meter402
+          POSTGRES_DB: meter402_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U meter402"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://meter402:meter402@localhost:5432/meter402_test
+      REDIS_URL: redis://localhost:6379
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      # Applying migrations in CI is itself a test: it proves the committed
+      # migration files actually produce the schema the code expects.
+      - name: Apply migrations
+        run: pnpm db:migrate
+
+      - name: Verify no uncommitted schema drift
+        run: |
+          pnpm db:generate
+          if ! git diff --quiet -- packages/database/drizzle; then
+            echo "::error::Schema changes are not committed. Run 'pnpm db:generate' and commit the migration."
+            git diff --stat -- packages/database/drizzle
+            exit 1
+          fi
+
+      - name: Integration tests
+        run: pnpm test
+
+  security:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Fails the build on a known high-severity advisory. Deliberately not
+      # `--audit-level low`: a wall of unactionable low findings trains people
+      # to ignore the job, which costs more than it catches.
+      - name: Audit dependencies
+        run: pnpm audit --audit-level high
+
+      # A committed secret must be caught before it is merged, not after it is
+      # public. This scans the diff for the API key formats we mint.
+      - name: Scan for committed Meter402 keys
+        run: |
+          if git grep -nEI 'meter_(test|live)_[A-Za-z0-9_-]{20,}' -- ':!*.test.ts' ':!docs/*' ':!*.md'; then
+            echo "::error::A Meter402 API key appears to be committed."
+            exit 1
+          fi
