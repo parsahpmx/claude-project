@@ -1,0 +1,142 @@
+# Meter402 — Roadmap
+
+Phase durations are planning estimates for a three-person team, not
+commitments. Each phase lists its exit criteria; a phase is not done because
+its time box elapsed.
+
+**Current position: Phase 0 complete. Phase 1 in progress.**
+
+---
+
+## Phase 0 — Foundation ✅ complete
+
+Monorepo, toolchain, and the payment-critical domain core.
+
+**Delivered**
+- pnpm + Turborepo workspace with a version catalog; strict TypeScript;
+  ESLint encoding the no-float-money and no-`any` rules as lint failures
+- `@meter402/shared` — BigInt money, ULID identifiers, error taxonomy,
+  chain/asset registry, TEST/LIVE separation
+- `@meter402/payments` — state machine with a frozen transition table,
+  authorization pipeline, `PaymentProtocolAdapter`
+- `@meter402/blockchain` — strict ERC-20 decoding, pure verifier,
+  primary/secondary failover with circuit breakers
+- `@meter402/x402` — protocol adapter with bounded, hostile-input-hardened
+  parsing
+- `@meter402/pricing` — strategy pattern with `FixedPriceStrategy`
+- `@meter402/config`, `@meter402/database` — validated config, schema,
+  migrations
+- Docker Compose (Postgres, Redis), GitHub Actions CI
+- The eight foundation documents
+
+**Exit criteria met:** all packages typecheck, lint, build, and test green in
+CI; all 100 payment state transitions asserted; money arithmetic proven exact.
+
+## Phase 1 — Merchant system (~2 weeks)
+
+Users, organizations, projects, RBAC, API keys, dashboard shell.
+
+**Exit criteria**
+- A developer can register, create an organization and project, and mint a
+  TEST API key through the dashboard
+- RBAC enforced server-side with a full role × permission test matrix
+- **Cross-tenant access denied and explicitly tested** (threat T5)
+- API keys hashed with a peppered HMAC, compared timing-safely, revocable
+  immediately
+
+## Phase 2 — Billing objects (~2 weeks)
+
+Endpoint registry, pricing wired end to end, payment request persistence,
+state machine wired to the database, test payment simulator.
+
+**Exit criteria**
+- A merchant configures a priced endpoint and receives a real 402 challenge
+- A simulated payment moves a request through to `CONFIRMED`
+- The simulator provably cannot act on a LIVE request
+
+## Phase 3 — Real payments (~3 weeks)
+
+Base + USDC, live verification, confirmation worker, replay protection in the
+database, receipts.
+
+**Exit criteria**
+- A real Base Sepolia USDC payment is verified end to end
+- Replay protection demonstrated against the live constraint, not only unit
+  tests
+- **x402 conformance validated against the published specification and an
+  independent client** — the outstanding caveat from Phase 0
+- Confirmation worker is idempotent under duplicate delivery
+
+## Phase 4 — Developer platform (~2 weeks)
+
+`@meter402/sdk` with Express, Fastify, Next.js, and raw HTTP adapters; example
+merchant; documentation site; quick start.
+
+**Exit criteria**
+- Time to first test payment under 5 minutes, measured on someone who has not
+  seen the product
+- The four-line integration in the README actually works as written
+
+## Phase 5 — MCP (~2 weeks)
+
+`@meter402/mcp` with `paidTool()`, example MCP server, example agent with
+local spending policy.
+
+**Exit criteria**
+- A paid MCP tool call completes end to end
+- The example agent enforces per-request and daily budget caps locally
+- **Threat T16 (MCP prompt injection / malicious tool metadata) has designed
+  mitigations**, not just an entry in the threat model
+
+## Phase 6 — Operational platform (~2 weeks)
+
+Webhooks with signing and retry, audit logs, deterministic risk rules, policy
+engine, analytics.
+
+**Exit criteria**
+- **SSRF controls implemented and tested before any webhook is delivered**
+  (threat T8 — this is a hard gate)
+- Webhook signature verification helper shipped in the SDK, with timestamp
+  tolerance enforced
+- Transactional outbox proven to survive a mid-transaction crash
+- Risk engine is deterministic; no LLM authorizes a payment
+
+## Phase 7 — Production hardening (~2 weeks)
+
+E2E suite, security testing, observability, Terraform, deployment, runbooks.
+
+**Exit criteria**
+- The full §160 acceptance scenario passes end to end in staging
+- Value-scaled finality thresholds implemented (currently fixed per chain)
+- Second-provider cross-check for high-value payments (threat T4)
+- Backup restore tested, not assumed
+- Incident runbooks exercised in a game day
+
+## Phase 8 — Design partners and beta
+
+Not an engineering phase. Ten to twenty design partners, customer interviews,
+and the honest question of whether merchants want this.
+
+**Exit criteria**
+- 5 real merchant integrations
+- 3 paying customers
+- Repeat agent traffic that we did not prompt
+- A documented answer to: is machine-native payment the bottleneck, or is it
+  agent billing, budgets, authentication, or procurement?
+
+If the answer is "none of the above", `PRODUCT_REQUIREMENTS.md §11` describes
+the adjacent problems worth pivoting toward. Continuing on the original thesis
+purely because it was the original thesis is the failure mode this phase
+exists to prevent.
+
+---
+
+## Gates that block release regardless of schedule
+
+1. SSRF controls before webhooks ship (T8)
+2. Cross-tenant isolation tests before multi-merchant beta (T5)
+3. x402 conformance validation before advertising x402 compatibility
+4. External security review before meaningful production volume
+5. Legal review before production financial operation in any jurisdiction
+6. Smart contract audit if a contract ever holds funds — not planned, but the
+   gate exists so the decision is never made casually
