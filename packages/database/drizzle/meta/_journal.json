@@ -15,6 +15,20 @@
       "when": 1788190741765,
       "tag": "0001_soft_scarecrow",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788193032901,
+      "tag": "0002_fine_shen",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788193041587,
+      "tag": "0003_dashing_squadron_supreme",
+      "breakpoints": true
     }
   ]
 }

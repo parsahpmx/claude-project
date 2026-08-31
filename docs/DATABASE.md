@@ -251,6 +251,89 @@ both conclude the invariant holds, and both commit — leaving an organization
 nobody can administer. This is verified by a real-PostgreSQL concurrency test,
 not asserted.
 
+## 7. Phase 2 additions — billing objects
+
+### `endpoints` **[built]**
+
+Gained `normalized_path`, a `method` enum (`GET`/`POST`/`PUT`/`PATCH`/`DELETE`),
+and a `status` enum (`ACTIVE`/`DISABLED`/`ARCHIVED`) replacing the earlier
+boolean `active`. A boolean cannot express "retired but retained for its
+payment history", and an endpoint that owns payments must never be deleted.
+
+Uniqueness is `UNIQUE (project_id, environment, method, normalized_path)`.
+**Environment is part of the key, not a filter applied afterwards** — that is
+what makes it impossible for a TEST lookup to resolve the LIVE definition of
+the same route through a forgotten `WHERE` clause.
+
+`normalized_path` is computed lexically (lowercased, duplicate slashes
+collapsed, trailing slash dropped). Paths containing `..` are rejected at the
+boundary rather than resolved; see `apps/api/src/lib/http-path.ts` for why.
+
+### `pricing_rules` **[built]**
+
+Gained `environment` and `asset_decimals`. Repricing creates a **new** rule and
+repoints the endpoint rather than mutating the existing one, so the
+`pricing_rule_id` recorded on a historical payment request still resolves to
+the rule that actually produced that price.
+
+### `payment_requests` **[built]**
+
+Gained `protocol` and `pricing_rule_id`.
+
+`pricing_rule_id` is **provenance only and is never dereferenced during
+verification or authorization**. This is the load-bearing detail behind the
+immutable price snapshot: the amount, asset, decimals, chain, and recipient are
+written onto the request as values at creation, and no code path re-derives
+them. A merchant repricing an endpoint therefore cannot change what an
+outstanding request owes — not by policy, but because nothing reads the rule
+again.
+
+### `payments` and `payment_receipts` **[built]**
+
+`payments` gained `protocol`, `payer_reference`,
+`external_transaction_reference`, and `simulated`.
+
+`payment_receipts` gained a denormalized snapshot: `project_id`, `endpoint_id`,
+`environment`, `protocol`, `amount_minor_units`, `asset_symbol`,
+`asset_decimals`, `chain_id`, `external_transaction_reference`, and
+`simulated`. A receipt is evidence, and evidence that has to join four tables
+to be read is evidence that changes meaning when those tables change.
+
+`simulated` is carried on the payment, the receipt, and the blockchain
+transaction. A TEST settlement that did not say so on its own row is one
+somebody will eventually reconcile as real revenue.
+
+### Exactly-once is a constraint, not a code path **[built]**
+
+Two unique indexes carry the whole guarantee:
+
+```
+UNIQUE (payments.payment_request_id)
+UNIQUE (payment_receipts.payment_id)
+```
+
+Both inserts are `ON CONFLICT DO NOTHING`. A conflict is not an error — it is
+the answer "someone else already did this", and the loser reads the winner's
+row and returns it. The `SELECT ... FOR UPDATE` on the payment request is a
+serialisation convenience layered on top; if it were removed the constraints
+would still hold and only the error experience would degrade.
+
+Verified by firing twenty simultaneous completions at one payment request and
+counting rows, not by reasoning about the code.
+
+### `usage_events` **[built]**
+
+One row per authorized request, keyed on the payment. The gate inserts it in
+the same transaction that authorizes, which is what makes a payment buy exactly
+one request: a replayed proof finds the event already present and is refused
+with `PAYMENT_ALREADY_USED`.
+
+### `blockchain_transactions` **[built]**
+
+Gained `simulated`. Simulated settlements deliberately share this table and its
+`UNIQUE (chain_id, transaction_hash)` index with real ones, so the TEST path
+exercises genuine replay protection rather than a stub.
+
 ## 3. Indexing
 
 Composite indexes follow real query shapes rather than being added per column:

@@ -41,6 +41,18 @@ export const paymentRequests = pgTable(
     /** Short human-facing reference for dashboards and support. */
     reference: text('reference').notNull(),
     protocol: text('protocol').notNull().default('x402'),
+    /**
+     * Provenance only.
+     *
+     * Records which pricing rule produced this request's amount, so support
+     * can answer "why was this priced at 0.03". It is deliberately NEVER
+     * dereferenced during authorization: the amount, asset, decimals, chain,
+     * and recipient above are the snapshot, captured as values at issue time.
+     * A merchant repricing an endpoint therefore cannot change an outstanding
+     * request, because the code path that would re-read the rule does not
+     * exist.
+     */
+    pricingRuleId: text('pricing_rule_id'),
 
     status: paymentStatusEnum('status').notNull().default('CREATED'),
     expiresAt: tsColumn('expires_at').notNull(),
@@ -95,6 +107,15 @@ export const blockchainTransactions = pgTable(
     logIndex: integer('log_index'),
     confirmations: integer('confirmations').notNull().default(0),
     observedAt: tsColumn('observed_at'),
+    /**
+     * True for a TEST-mode simulated settlement.
+     *
+     * Simulated settlements share this table on purpose: it means TEST
+     * payments are protected by the same UNIQUE (chain_id, transaction_hash)
+     * constraint as real ones, so the replay path is genuinely exercised
+     * rather than stubbed. The flag keeps the row honest about what it is.
+     */
+    simulated: boolean('simulated').notNull().default(false),
     ...auditTimestamps,
   },
   (table) => [
@@ -139,6 +160,19 @@ export const payments = pgTable(
     ),
     environment: merchantEnvironmentEnum('environment').notNull(),
     status: paymentStatusEnum('status').notNull(),
+    protocol: text('protocol').notNull().default('x402'),
+    /** Who paid, as the protocol reports them. Null when the protocol cannot say. */
+    payerReference: text('payer_reference'),
+    /** On-chain transaction hash, or the synthetic reference in TEST mode. */
+    externalTransactionReference: text('external_transaction_reference'),
+    /**
+     * Whether this payment was settled by the TEST simulator rather than a
+     * real transfer. A strongly-typed column rather than an inference from
+     * environment or a null transaction hash: analytics, reconciliation, and
+     * support all need to exclude simulated value, and each inferring it
+     * separately is how one of them eventually gets it wrong.
+     */
+    simulated: boolean('simulated').notNull().default(false),
 
     grossAmountMinorUnits: minorUnits('gross_amount_minor_units').notNull(),
     platformFeeMinorUnits: minorUnits('platform_fee_minor_units').notNull().default('0'),
@@ -210,6 +244,24 @@ export const paymentReceipts = pgTable(
     paymentRequestId: text('payment_request_id')
       .notNull()
       .references(() => paymentRequests.id, { onDelete: 'restrict' }),
+    projectId: text('project_id'),
+    endpointId: text('endpoint_id'),
+    environment: merchantEnvironmentEnum('environment'),
+    protocol: text('protocol'),
+    /*
+     * Denormalised snapshot.
+     *
+     * A receipt is evidence. It must render identically in five years without
+     * joining tables whose rows may since have been repriced, archived, or
+     * had their asset registry entry changed. Everything needed to read the
+     * receipt lives on the receipt.
+     */
+    amountMinorUnits: minorUnits('amount_minor_units'),
+    assetSymbol: text('asset_symbol'),
+    assetDecimals: integer('asset_decimals'),
+    chainId: integer('chain_id'),
+    externalTransactionReference: text('external_transaction_reference'),
+    simulated: boolean('simulated').notNull().default(false),
     issuedAt: tsColumn('issued_at').notNull().defaultNow(),
     metadata: jsonb('metadata').notNull().default({}),
     ...auditTimestamps,

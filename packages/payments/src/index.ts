@@ -15,3 +15,4 @@ export * from './payment-request.js';
 export * from './verification.js';
 export * from './protocol.js';
 export * from './authorization.js';
+export * from './test-protocol.js';

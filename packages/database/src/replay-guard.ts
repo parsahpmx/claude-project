@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { newId } from '@meter402/shared';
 import type { ReplayClaimResult, ReplayGuard } from '@meter402/payments';
-import type { Database } from './client.js';
+import type { QueryExecutor } from './client.js';
 import { blockchainTransactions } from './schema/payments.js';
 
 /**
@@ -19,9 +19,23 @@ import { blockchainTransactions } from './schema/payments.js';
  * purely to report who won.
  */
 export class DrizzleReplayGuard implements ReplayGuard {
+  /**
+   * @param simulated Marks the claimed row as a TEST-mode simulated
+   *   settlement. Simulated settlements deliberately share this table and this
+   *   constraint with real ones, so the TEST path exercises genuine replay
+   *   protection rather than a stub; the flag keeps the row honest about what
+   *   it represents.
+   */
   constructor(
-    private readonly db: Database,
+    /**
+     * Usually the caller's open transaction. The claim must commit or roll
+     * back with the payment it protects: a claim that survives a rolled-back
+     * payment would permanently burn a settlement reference for a payment that
+     * never happened.
+     */
+    private readonly db: QueryExecutor,
     private readonly organizationId: string,
+    private readonly simulated: boolean = false,
   ) {}
 
   async claim(input: {
@@ -41,6 +55,7 @@ export class DrizzleReplayGuard implements ReplayGuard {
         paymentRequestId: input.paymentRequestId,
         chainId: input.chainId,
         transactionHash,
+        simulated: this.simulated,
       })
       .onConflictDoNothing({
         target: [blockchainTransactions.chainId, blockchainTransactions.transactionHash],

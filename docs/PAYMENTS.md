@@ -195,7 +195,14 @@ merchant configuration becomes an instruction to pay a specific chain.
 API keys carry the environment in their prefix (`meter_test_` / `meter_live_`),
 so the environment of a credential is legible without a database lookup.
 
-The test payment simulator may only ever act on TEST requests.
+The test payment simulator may only ever act on TEST requests. Four independent
+guards enforce that, each tested — see `SECURITY.md §12`.
+
+Endpoint lookup makes the separation structural rather than remembered:
+uniqueness is `(project, environment, method, normalized path)` and environment
+is part of the **lookup key**, not a filter applied afterwards. There is no code
+path in which a TEST credential resolves the LIVE definition of a route through
+a forgotten condition, because the condition is not optional.
 
 ## 8. Reorgs and finality
 
@@ -210,8 +217,16 @@ Base is an L2 with fast blocks; deep reorgs are rare but not impossible.
 
 ## 9. Protocol adapters
 
-`PaymentProtocolAdapter` isolates wire format. `@meter402/x402` is the only
-implementation today.
+`PaymentProtocolAdapter` isolates wire format. Two implementations exist:
+`@meter402/x402` and the `TestPaymentProtocolAdapter` in `@meter402/payments`.
+
+Both render the same internal `PaymentChallenge` and consume the same
+`PaymentProof`, and both delegate to the same `authorizePayment` pipeline — so
+every protocol inherits identical replay protection, expiry handling, and
+outage semantics rather than each growing its own subtly different version.
+
+The Phase 2 paid surface serves the **TEST adapter's protocol-neutral body**,
+not x402's `accepts` envelope. That is deliberate: see the caveat below.
 
 **Conformance caveat, stated plainly:** the x402 adapter implements the
 request/response shape described in public x402 v1 material. It has **not**
@@ -221,11 +236,40 @@ that validation is done and any divergence resolved. Tracked in Phase 3.
 
 ## 10. What is not yet built
 
-Honest inventory as of Phase 0:
+Honest inventory as of Phase 2:
 
-- Payment persistence and the confirmation worker (Phase 2–3)
-- Receipts, usage metering, webhooks (Phase 3, 6)
-- Test payment simulator (Phase 2)
+**Built in Phase 2**
+
+- Payment request persistence with an immutable price snapshot
+- The TEST payment simulator, driving the real authorization pipeline
+- Payments and receipts, created exactly once via database constraints
+- Usage metering: one event per authorized request, keyed on the payment
+- The HTTP payment gate: 402, pay, retry, serve
+
+**Still not built**
+
+- **LIVE settlement.** The verifier, the chain reader, and the failover client
+  all exist and are unit-tested, but nothing wires them to the paid surface. A
+  LIVE endpoint is refused with `LIVE_SETTLEMENT_UNAVAILABLE` rather than given
+  an unanswerable 402. (Phase 3)
+- The confirmation worker for below-finality payments (Phase 3)
+- Forwarding authorized requests to merchant infrastructure — blocked on the
+  SSRF gate (see `SECURITY.md`)
+- Webhooks (Phase 6)
 - Refunds beyond schema support (post-MVP)
 - Value-scaled finality thresholds (Phase 7)
 - Reconciliation job (Phase 7)
+
+### The limit of what TEST mode proves
+
+A TEST payment exercises the real state machine, expiry rules, nonce binding,
+replay claim, and exactly-once creation. It does **not** exercise the
+amount/recipient/asset/chain comparisons in any meaningful sense, because the
+settlement evidence is synthesised from the `PaymentRequest` and therefore
+satisfies them trivially.
+
+Those comparisons are covered separately and exhaustively, by unit tests
+against hand-built receipts: wrong recipient, wrong amount, wrong asset, wrong
+network, reverted transactions, and spoofed ERC-20 logs with non-zero address
+padding. Neither body of tests substitutes for the other, and a green Phase 2
+suite is not evidence that real settlement verification works end to end.

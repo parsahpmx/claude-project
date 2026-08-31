@@ -1,8 +1,21 @@
-import { boolean, index, integer, jsonb, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core';
+import { index, integer, jsonb, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core';
 import { auditTimestamps, tsColumn } from './columns.js';
-import { merchantEnvironmentEnum, pricingKindEnum } from './enums.js';
+import {
+  endpointStatusEnum,
+  httpMethodEnum,
+  merchantEnvironmentEnum,
+  pricingKindEnum,
+} from './enums.js';
 import { organizations, projects } from './identity.js';
 
+/**
+ * Pricing rules.
+ *
+ * A rule is endpoint *configuration*. It is mutable — a merchant may reprice
+ * whenever they like — which is precisely why a PaymentRequest snapshots the
+ * resulting amount as a value rather than pointing at the rule. Nothing in the
+ * payment authorization path ever reads this table.
+ */
 export const pricingRules = pgTable(
   'pricing_rules',
   {
@@ -13,6 +26,12 @@ export const pricingRules = pgTable(
     projectId: text('project_id')
       .notNull()
       .references(() => projects.id, { onDelete: 'cascade' }),
+    /**
+     * A rule belongs to one environment. Without this a TEST rule could be
+     * read as a LIVE one during a mis-scoped lookup, which is the sort of
+     * confusion that ends with a testnet price on a mainnet charge.
+     */
+    environment: merchantEnvironmentEnum('environment').notNull(),
     kind: pricingKindEnum('kind').notNull().default('FIXED'),
     /**
      * Stored as the merchant entered it ("0.03"), not as minor units.
@@ -24,12 +43,23 @@ export const pricingRules = pgTable(
      */
     amount: text('amount').notNull(),
     assetSymbol: text('asset_symbol').notNull(),
+    /** Denormalised so a rule is self-describing without an asset-registry lookup. */
+    assetDecimals: integer('asset_decimals').notNull().default(6),
     chainId: integer('chain_id').notNull(),
     ...auditTimestamps,
   },
-  (table) => [index('pricing_rules_project_idx').on(table.projectId)],
+  (table) => [
+    index('pricing_rules_project_idx').on(table.projectId),
+    index('pricing_rules_project_env_idx').on(table.projectId, table.environment),
+  ],
 );
 
+/**
+ * Paid endpoints.
+ *
+ * A merchant's declaration that a given route costs money. The route identity
+ * is (project, environment, method, normalized_path).
+ */
 export const endpoints = pgTable(
   'endpoints',
   {
@@ -42,10 +72,21 @@ export const endpoints = pgTable(
       .references(() => projects.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     description: text('description'),
+    /** As the merchant wrote it, for display. */
     path: text('path').notNull(),
-    method: text('method').notNull(),
+    /**
+     * The canonical form the uniqueness invariant is computed over: lowercased,
+     * single leading slash, no trailing slash, no duplicate slashes.
+     *
+     * Stored rather than derived on read so the unique index can be a plain
+     * B-tree over a column, and so the normalisation that decided uniqueness is
+     * visible in the row rather than hidden in whichever code version last
+     * wrote it.
+     */
+    normalizedPath: text('normalized_path').notNull(),
+    method: httpMethodEnum('method').notNull(),
     environment: merchantEnvironmentEnum('environment').notNull(),
-    active: boolean('active').notNull().default(true),
+    status: endpointStatusEnum('status').notNull().default('ACTIVE'),
     pricingRuleId: text('pricing_rule_id').references(() => pricingRules.id, {
       onDelete: 'set null',
     }),
@@ -54,16 +95,22 @@ export const endpoints = pgTable(
     ...auditTimestamps,
   },
   (table) => [
-    // One definition per (project, method, path, environment). The same path
-    // legitimately exists in both TEST and LIVE, so environment is part of the
-    // key rather than a filter.
+    /*
+     * One definition per (project, environment, method, normalized path).
+     *
+     * Environment is part of the key because the same route legitimately
+     * exists in both TEST and LIVE. Normalised path is used rather than the
+     * authored path so that "/research" and "/Research/" cannot both be
+     * defined and then differ on which one a lookup finds.
+     */
     uniqueIndex('endpoints_route_unique').on(
       table.projectId,
-      table.method,
-      table.path,
       table.environment,
+      table.method,
+      table.normalizedPath,
     ),
     index('endpoints_project_idx').on(table.projectId),
     index('endpoints_org_idx').on(table.organizationId),
+    index('endpoints_project_status_idx').on(table.projectId, table.status),
   ],
 );

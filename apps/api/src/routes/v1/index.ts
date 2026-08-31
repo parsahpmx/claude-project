@@ -7,6 +7,9 @@ import { registerProjectRoutes } from './projects.js';
 import { registerApiKeyRoutes } from './api-keys.js';
 import { registerMeRoutes } from './me.js';
 import { registerDevSessionRoutes } from './dev-sessions.js';
+import { registerEndpointRoutes } from './endpoints.js';
+import { registerPaymentRoutes } from './payments.js';
+import { registerPaidRoutes } from './paid.js';
 
 /**
  * The /v1 surface.
@@ -33,6 +36,9 @@ export async function registerV1Routes(app: FastifyInstance, deps: RouteDeps): P
     registerOrganizationRoutes(scope, deps);
     registerProjectRoutes(scope, deps);
     registerApiKeyRoutes(scope, deps);
+    registerEndpointRoutes(scope, deps);
+    registerPaymentRoutes(scope, deps);
+    registerPaidRoutes(scope, deps);
   });
 
   /*

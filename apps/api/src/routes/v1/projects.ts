@@ -15,7 +15,12 @@ import {
 import { recordAuditEvent } from '../../modules/audit/audit.repository.js';
 import { isUniqueViolation } from '../../modules/identity/organization.service.js';
 import { assertValidSlug, slugify } from '../../lib/slug.js';
-import { parseBody, parseParams, parseQuery } from '../../lib/validation.js';
+import {
+  parseBody,
+  parseParams,
+  parseQuery,
+  settlementAddressSchema,
+} from '../../lib/validation.js';
 import type { TenantScope } from '../../lib/tenant.js';
 import type { AuthorizationContext } from '@meter402/auth';
 import type { Database } from '@meter402/database';
@@ -32,6 +37,7 @@ const updateProjectSchema = z
   .object({
     name: z.string().trim().min(1).max(120).optional(),
     description: z.string().trim().max(500).nullable().optional(),
+    settlementAddress: settlementAddressSchema.optional(),
   })
   .refine((value) => Object.keys(value).length > 0, { message: 'No fields to update' });
 
@@ -51,6 +57,7 @@ function serializeProject(record: ProjectRecord) {
     description: record.description,
     status: record.status,
     liveModeEnabled: record.liveModeEnabled,
+    settlementAddress: record.settlementAddress,
     createdAt: record.createdAt.toISOString(),
   };
 }

@@ -116,3 +116,22 @@ export const projectStatusEnum = pgEnum('project_status', ['ACTIVE', 'ARCHIVED',
  * so a key whose sweep has not yet run still fails closed.
  */
 export const apiKeyStatusEnum = pgEnum('api_key_status', ['ACTIVE', 'REVOKED', 'EXPIRED']);
+
+/* --- Phase 2: paid endpoints and payment execution --------------------- */
+
+/**
+ * The closed HTTP method vocabulary a merchant may price.
+ *
+ * A database enum rather than free text: an arbitrary method string reaching
+ * a route-matching comparison is a correctness hazard, and "GET " with a
+ * trailing space silently defining a second endpoint is exactly the kind of
+ * near-duplicate the uniqueness invariant is meant to prevent.
+ */
+export const httpMethodEnum = pgEnum('http_method', ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+
+/**
+ * DISABLED stops new payment requests but leaves history intact and can be
+ * reversed; ARCHIVED is the terminal retirement state. Neither deletes the
+ * row, because endpoints own payments and receipts.
+ */
+export const endpointStatusEnum = pgEnum('endpoint_status', ['ACTIVE', 'DISABLED', 'ARCHIVED']);

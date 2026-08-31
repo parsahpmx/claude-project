@@ -61,3 +61,22 @@ export function parseDeployEnvironment(value: string | undefined): DeployEnviron
       );
   }
 }
+
+/**
+ * Convert a stored environment string into the domain enum.
+ *
+ * The database returns a `'TEST' | 'LIVE'` string literal, which TypeScript
+ * will not assign to the enum type. A cast would silence that, but a cast also
+ * silences the day the column grows a third value — so this parses and throws
+ * instead, keeping the failure loud and at the boundary.
+ */
+export function parseMerchantEnvironment(value: string): MerchantEnvironment {
+  switch (value) {
+    case 'TEST':
+      return MerchantEnvironment.Test;
+    case 'LIVE':
+      return MerchantEnvironment.Live;
+    default:
+      throw new Error(`Unknown merchant environment: ${JSON.stringify(value)}`);
+  }
+}

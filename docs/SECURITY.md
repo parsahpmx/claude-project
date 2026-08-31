@@ -214,10 +214,80 @@ Added in Phase 1:
 - concurrency: last-owner races, duplicate membership, duplicate slug,
   contended key rotation and revocation
 
-Required before the corresponding features ship: brute-force authentication
-rate limiting, webhook replay, SSRF against webhook URLs.
+Added in Phase 2:
 
-## 12. Pre-production requirements
+- cross-tenant access to endpoints, payment requests, payments, and receipts,
+  by user session and by API key, including the assertion that an unknown ID
+  and another tenant's ID return byte-identical answers
+- payment binding: a settled payment presented at a different endpoint, and a
+  valid request ID presented with the wrong reference
+- double-spend: replaying a spent proof, and twenty simultaneous retries of one
+  valid proof, asserted against the usage-event count in the database
+- exactly-once creation: twenty simultaneous completions of one payment
+  request, asserted against payment and receipt row counts
+- scope enforcement on the machine surface — `payments:write` for paying and
+  for the simulator, `payments:read` for reading receipts — and the refusal of
+  machine credentials on endpoint configuration entirely
+- TEST/LIVE confinement: a LIVE key on a TEST endpoint, a LIVE key at the
+  simulator, a LIVE endpoint on a project without LIVE mode enabled
+- price snapshot immutability: repricing an endpoint mid-flight does not change
+  what an issued request owes, and the settled payment and receipt carry the
+  quoted amount
+- price validation: over-precision for the asset's decimals, and zero prices
+- endpoint path handling: traversal rejected rather than resolved, embedded
+  control characters, query strings and fragments, non-ASCII, over-length
+
+### Still open, and blocking the features they belong to
+
+These gates remain **unresolved**. Phase 2 did not close either of them, and
+nothing in this release should be read as having done so:
+
+1. **SSRF controls must exist before merchant-controlled outbound webhook
+   delivery.** No DNS-rebinding-resistant resolution, private-range blocking,
+   or redirect confinement is implemented. This is why Phase 2's paid surface
+   does not forward authorized requests to merchant infrastructure and serves
+   them from a built-in handler instead.
+2. **x402 compatibility must not be advertised until independent wire
+   conformance testing is complete.** It has not been done. The Phase 2
+   challenge body is deliberately protocol-neutral and does not use x402's
+   `accepts` shape, precisely so that no public contract depends on an
+   unverified reading of that specification.
+
+Also required before the corresponding features ship: brute-force
+authentication rate limiting, and webhook replay protection.
+
+## 12. The TEST payment simulator
+
+The simulator settles TEST payments without a wallet or a chain. Four
+independent guards confine it, each covered by a test:
+
+1. **The stored environment decides.** `assertSimulatableRequest` refuses any
+   `PaymentRequest` whose environment is not `TEST`, and it lives beside the
+   adapter in `@meter402/payments` so there is exactly one implementation of
+   the rule rather than a copy per handler that can drift.
+2. **A TEST request cannot carry a mainnet chain.**
+   `assertChainAllowedForEnvironment` runs at endpoint configuration, so the
+   LIVE case cannot be constructed through this path in the first place.
+3. **There is no flag to pass.** The route accepts a payment request ID and
+   nothing else — no environment, no amount, no `simulate` parameter, no
+   override. A caller cannot relax a check that takes no input.
+4. **The evidence must be one the simulator issued.**
+   `SimulatedSettlementVerifier` refuses any reference other than the keyed
+   HMAC derivation for that specific request, compared in constant time. An
+   agent that knows the request ID and nonce — both public, both in the 402 —
+   still cannot mint one.
+
+`TEST_SIMULATOR_SECRET` keys that derivation. It is a **separate secret**,
+required at boot and required to differ from `AUTH_SECRET`,
+`API_KEY_HASH_PEPPER`, and `WEBHOOK_SIGNING_SECRET`: a simulated settlement
+reference is a bearer credential for a TEST payment, and deriving it from the
+session secret would make one leak forge both sessions and payments.
+
+The reference itself is recorded in audit metadata deliberately — once a
+payment is complete it is the identifier a merchant reconciles against, the
+TEST analogue of a transaction hash. The derivation *key* is never logged.
+
+## 13. Pre-production requirements
 
 Before processing meaningful production volume:
 

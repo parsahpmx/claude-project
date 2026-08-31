@@ -159,3 +159,24 @@ export function assertTransition(from: PaymentStatus, to: PaymentStatus, payment
     throw new InvalidPaymentTransitionError(from, to, paymentId);
   }
 }
+
+/**
+ * Convert a stored status string into the enum.
+ *
+ * The database column is an enum whose TypeScript type is a string-literal
+ * union, which is not assignable to this enum. Parsing rather than casting
+ * means a value the application does not know about — one added to the
+ * database enum without a corresponding code change — fails loudly at the
+ * boundary instead of flowing into the state machine as an unrecognised
+ * status.
+ */
+export function parsePaymentStatus(value: string): PaymentStatus {
+  const match = ALL_PAYMENT_STATUSES.find((status) => status === value);
+  if (!match) {
+    throw new Meter402Error(
+      'INTERNAL_ERROR',
+      `Unrecognised payment status: ${JSON.stringify(value)}`,
+    );
+  }
+  return match;
+}

@@ -5,6 +5,7 @@ import { ConfigurationError, loadConfig, redactConfig } from './index.js';
 const STRONG_A = 'a'.repeat(64);
 const STRONG_B = 'b'.repeat(64);
 const STRONG_C = 'c'.repeat(64);
+const STRONG_D = 'd'.repeat(64);
 
 const USDC_SEPOLIA = '0x036cbd53842c5426634e7929541ec2318f3dcf7e';
 const USDC_MAINNET = '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913';
@@ -17,6 +18,7 @@ function env(overrides: Record<string, string | undefined> = {}): NodeJS.Process
     AUTH_SECRET: STRONG_A,
     API_KEY_HASH_PEPPER: STRONG_B,
     WEBHOOK_SIGNING_SECRET: STRONG_C,
+    TEST_SIMULATOR_SECRET: STRONG_D,
     BASE_CHAIN_ID: '84532',
     BASE_RPC_URL: 'https://sepolia.base.org',
     USDC_CONTRACT_ADDRESS: USDC_SEPOLIA,
@@ -70,6 +72,7 @@ describe('loadConfig — happy path', () => {
         AUTH_SECRET: 'replace_me_with_32_bytes',
         API_KEY_HASH_PEPPER: 'replace_me_with_32_bytes',
         WEBHOOK_SIGNING_SECRET: 'replace_me_with_32_bytes',
+        TEST_SIMULATOR_SECRET: 'replace_me_with_32_bytes',
       }),
     );
     expect(config.deployEnv).toBe(DeployEnvironment.Local);
@@ -90,8 +93,22 @@ describe('loadConfig — refuses to start on a dangerous misconfiguration', () =
   });
 
   it('rejects reusing the same value for multiple secrets', () => {
-    // A leak in the least-protected context would otherwise compromise all three.
-    expect(() => loadConfig(env({ API_KEY_HASH_PEPPER: STRONG_A }))).toThrow(/must differ/);
+    // A leak in the least-protected context would otherwise compromise every
+    // other use of that value.
+    expect(() => loadConfig(env({ API_KEY_HASH_PEPPER: STRONG_A }))).toThrow(/must all differ/);
+  });
+
+  it('rejects reusing the auth secret as the simulator secret', () => {
+    // The simulated settlement reference is a bearer credential for a TEST
+    // payment. Keying it with the session secret would make one leak forge
+    // both sessions and payments.
+    expect(() => loadConfig(env({ TEST_SIMULATOR_SECRET: STRONG_A }))).toThrow(/must all differ/);
+  });
+
+  it('requires a simulator secret', () => {
+    expect(() => loadConfig(env({ TEST_SIMULATOR_SECRET: undefined }))).toThrow(
+      /TEST_SIMULATOR_SECRET/,
+    );
   });
 
   it('rejects a USDC address that does not match the known deployment', () => {
@@ -182,7 +199,7 @@ describe('loadConfig — refuses to start on a dangerous misconfiguration', () =
 describe('redactConfig', () => {
   it('never emits a secret value, not even a prefix', () => {
     const serialised = JSON.stringify(redactConfig(loadConfig(env())));
-    for (const secret of [STRONG_A, STRONG_B, STRONG_C]) {
+    for (const secret of [STRONG_A, STRONG_B, STRONG_C, STRONG_D]) {
       expect(serialised).not.toContain(secret);
       // A truncated prefix is still a partial secret.
       expect(serialised).not.toContain(secret.slice(0, 8));

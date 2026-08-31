@@ -66,6 +66,9 @@ conversations.
 | `PERMISSION_DENIED` | 403 | no |
 | `MEMBERSHIP_INACTIVE` | 403 | no |
 | `ENVIRONMENT_MISMATCH` | 403 | no |
+| `TEST_LIVE_MISMATCH` | 403 | no |
+| `SIMULATOR_LIVE_FORBIDDEN` | 403 | no |
+| `PAYMENT_ENDPOINT_MISMATCH` | 403 | no |
 | `POLICY_VIOLATION` | 403 | no |
 | `RISK_DENIED` | 403 | no |
 | `RESOURCE_NOT_FOUND` | 404 | no |
@@ -73,9 +76,15 @@ conversations.
 | `PROJECT_NOT_FOUND` | 404 | no |
 | `MEMBERSHIP_NOT_FOUND` | 404 | no |
 | `API_KEY_NOT_FOUND` | 404 | no |
+| `ENDPOINT_NOT_FOUND` | 404 | no |
+| `PAYMENT_REQUEST_NOT_FOUND` | 404 | no |
+| `RECEIPT_NOT_FOUND` | 404 | no |
 | `LAST_OWNER_REQUIRED` | 409 | no |
+| `ENDPOINT_DISABLED` | 409 | no |
+| `PAYMENT_ALREADY_CONFIRMED` | 409 | no |
 | `INVALID_ROLE` | 422 | no |
 | `INVALID_SCOPE` | 422 | no |
+| `INVALID_PRICE` | 422 | no |
 | `VALIDATION_FAILED` | 422 | no |
 | `PAYMENT_REQUIRED` | 402 | yes — pay, then retry |
 | `PAYMENT_EXPIRED` | 402 | yes — request a new challenge |
@@ -88,6 +97,7 @@ conversations.
 | `CONFLICT` | 409 | no |
 | `INVALID_STATE_TRANSITION` | 409 | no |
 | `RATE_LIMITED` | 429 | yes |
+| `LIVE_SETTLEMENT_UNAVAILABLE` | 503 | no |
 | `UPSTREAM_UNAVAILABLE` | 503 | yes |
 | `INTERNAL_ERROR` | 500 | yes |
 
@@ -195,62 +205,146 @@ DELETE /v1/projects/{id}             archives; never deletes
 `DELETE` sets status `ARCHIVED`. A project owns payments, receipts, and audit
 history, so deleting the row would orphan or cascade away financial records.
 
-### Endpoints **[planned]**
+### Endpoints **[built]**
 ```
-POST   /v1/endpoints
-GET    /v1/endpoints
+POST   /v1/endpoints                        create a paid endpoint and its price
+GET    /v1/endpoints?projectId=&environment=
 GET    /v1/endpoints/{id}
-PATCH  /v1/endpoints/{id}
-DELETE /v1/endpoints/{id}
+PATCH  /v1/endpoints/{id}                   rename, disable, archive, or reprice
 ```
 
-### Payment requests **[planned]**
-```
-POST /v1/payment-requests
-GET  /v1/payment-requests/{id}
-POST /v1/payment-requests/{id}/verify
-```
+**User sessions only.** Configuring an endpoint is an act of running a
+business; an API key that could reprice the endpoints it pays for would be a
+serious design mistake, so these routes reject machine credentials outright.
 
-`POST /v1/payment-requests` — requires `Idempotency-Key`:
+`POST /v1/endpoints`:
 
 ```json
 {
   "projectId": "prj_...",
-  "endpointId": "ep_...",
-  "amount": "30000",
-  "asset": "USDC",
-  "chainId": 84532,
-  "metadata": {}
+  "name": "Research",
+  "path": "/research",
+  "method": "POST",
+  "environment": "TEST",
+  "price": { "amount": "0.03", "asset": "USDC" }
 }
 ```
 
-Response includes the challenge:
+`price.amount` is a **decimal string**, never a JSON number, and it is refused
+rather than truncated if it carries more precision than the asset holds:
+`"0.0000001"` against 6-decimal USDC is a `422 INVALID_PRICE`, not a silent
+zero. A zero or negative price is also refused — a free endpoint should not be
+registered as a paid one.
+
+Uniqueness is over `(project, environment, normalized path, method)`. Paths are
+normalised lexically (lowercased, duplicate slashes collapsed, trailing slash
+dropped) and are **rejected, never resolved**, if they contain `..` — a
+normaliser that resolves segments can disagree with the router in front of it,
+and that disagreement is what traversal attacks exploit.
+
+`PATCH` with a `price` creates a **new** pricing rule and repoints the endpoint
+at it rather than editing the old rule in place, so the `pricingRuleId` recorded
+on a historical payment request still resolves to the rule that produced it.
+Outstanding payment requests are unaffected either way — see *Endpoint payment
+flow* below.
+
+`DELETE` is deliberately absent: an endpoint owns payment history. `PATCH` with
+`{"status": "ARCHIVED"}` is the way to retire one.
+
+### Endpoint payment flow **[built]**
+```
+POST|GET|PUT|PATCH|DELETE /v1/paid/{merchant path}    the agent-facing surface
+```
+
+**API keys only**, and the key must hold `payments:write`. The project and the
+environment come from the credential, never from the URL — so a TEST key
+resolves the TEST definition of a route or nothing at all, and can never reach
+the LIVE row for the same path.
+
+Without a payment header the response is a 402 carrying the requirement (see
+*The 402 challenge* below). With a valid proof the request is authorized, the
+payment is spent, and the response carries `Meter402-Receipt-Id` and
+`Meter402-Payment-Id`.
+
+Two properties this surface guarantees:
+
+- **A payment authorizes the endpoint it was issued for, and no other.**
+  Presenting a cheap endpoint's settled payment at an expensive one is a
+  `403 PAYMENT_ENDPOINT_MISMATCH`.
+- **A payment authorizes exactly one request.** Consumption is a usage event
+  keyed on the payment, written in the same transaction that authorizes.
+  Replaying a spent proof is a `409 PAYMENT_ALREADY_USED`.
+
+A LIVE endpoint returns `503 LIVE_SETTLEMENT_UNAVAILABLE`. LIVE settlement is
+not implemented, and issuing a 402 no agent could satisfy would be worse than
+refusing plainly.
+
+*Not implemented:* forwarding the authorized request to merchant
+infrastructure. That is outbound HTTP to a merchant-chosen address, and the
+SSRF controls it requires are an open release gate (`SECURITY.md`). The
+authorized request is served by a built-in handler.
+
+### Payment requests, payments, receipts **[built]**
+```
+GET  /v1/payment-requests/{id}
+GET  /v1/payments/{id}
+GET  /v1/receipts/{id}
+POST /v1/test/payment-requests/{id}/complete    TEST only
+```
+
+Readable by either principal type, authorized differently: a user needs the
+`payments:read` permission in the owning organization, a key needs the
+`payments:read` scope. Neither substitutes for the other.
+
+Payment requests are created **by the paid surface**, not by a client. There is
+deliberately no `POST /v1/payment-requests`: an amount supplied by a caller is
+an amount a caller can choose, and the price must come from the merchant's
+pricing rule. The price is evaluated exactly once, at creation, and written onto
+the request as values — amount, asset, decimals, chain, recipient. Nothing
+re-derives it afterwards, which is what makes the snapshot immutable in practice
+rather than by promise: repricing the endpoint tomorrow cannot change what an
+outstanding request owes.
 
 ```json
 {
   "id": "preq_...",
   "status": "CHALLENGE_ISSUED",
-  "challenge": {
-    "protocol": "x402",
-    "scheme": "exact",
-    "amountMinorUnits": "30000",
-    "asset": { "symbol": "USDC", "address": "0x036c...", "decimals": 6 },
-    "chain": { "id": 84532, "slug": "base-sepolia" },
-    "recipient": "0x...",
-    "nonce": "01J8ZC...",
-    "expiresAt": "2026-01-01T00:05:00.000Z"
-  }
+  "amountMinorUnits": "30000",
+  "asset": { "symbol": "USDC", "address": "0x036c...", "decimals": 6 },
+  "chainId": 84532,
+  "recipient": "0x...",
+  "nonce": "01J8ZC...",
+  "expiresAt": "2026-01-01T00:05:00.000Z"
 }
 ```
 
-`POST /v1/payment-requests/{id}/verify` — body `{ "transactionHash": "0x..." }`.
-Returns the payment on success, or a 402/409 with a specific code.
+#### The TEST simulator
 
-### Payments, receipts, agents **[planned]**
+`POST /v1/test/payment-requests/{id}/complete` settles a TEST payment without a
+wallet, testnet USDC, or block times. It returns the payment, the receipt, and
+the **reference** the agent must present on its retry — the only place that
+value is available to the payer, since it is derived from a server-side secret
+and never appears in the 402.
+
+Note what the handler does **not** accept: no environment, no amount, no
+`simulate` flag, no override of any kind. Its entire input is a payment request
+ID. Every decision is read from the stored request, so there is no parameter a
+caller could supply to make it touch LIVE. A LIVE payment request is a
+`403 SIMULATOR_LIVE_FORBIDDEN`; a LIVE API key is a `403 ENVIRONMENT_MISMATCH`.
+
+Completing twice is idempotent, not an error: the second call returns the same
+payment and receipt with `"created": false`. Twenty simultaneous completions
+produce exactly one payment and one receipt, guaranteed by
+`UNIQUE (payment_request_id)` and `UNIQUE (payment_id)` rather than by a
+check-then-insert.
+
+**A TEST payment is not a parallel fake.** It runs the same
+`authorizePayment` pipeline as a real one — the same expiry rules, nonce
+binding, replay claim against the same `UNIQUE (chain_id, transaction_hash)`
+index, and the same state machine. Only the settlement evidence is synthesised.
+
+### Agents **[planned]**
 ```
-GET   /v1/payments
-GET   /v1/payments/{id}
-GET   /v1/receipts/{id}
 GET   /v1/agents
 GET   /v1/agents/{id}
 PATCH /v1/agents/{id}
@@ -289,6 +383,82 @@ does not exist when `DEPLOY_ENV` is `staging` or `production`.** It is a test
 seam pending a real identity provider, not an authentication system.
 
 ### Webhooks **[planned]**
+```
+POST   /v1/webhooks
+GET    /v1/webhooks
+GET    /v1/webhooks/{id}
+PATCH  /v1/webhooks/{id}
+DELETE /v1/webhooks/{id}
+POST   /v1/webhooks/{id}/test
+```
+
+### Analytics **[planned]**
+```
+GET /v1/analytics/overview
+GET /v1/analytics/revenue
+GET /v1/analytics/transactions
+GET /v1/analytics/endpoints
+```
+
+## The 402 challenge
+
+Served by `/v1/paid/*` when a request arrives without a valid payment:
+
+```http
+HTTP/1.1 402 Payment Required
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-store
+```
+
+```json
+{
+  "error": "PAYMENT_REQUIRED",
+  "message": "This resource requires payment. Complete the payment and retry.",
+  "payment": {
+    "paymentRequestId": "preq_...",
+    "protocol": "test",
+    "scheme": "simulated",
+    "amount": "30000",
+    "asset": { "symbol": "USDC", "address": "0x036c...", "decimals": 6 },
+    "chain": { "id": 84532, "slug": "base-sepolia" },
+    "recipient": "0x...",
+    "expiresAt": "2026-01-01T00:05:00.000Z",
+    "simulated": true
+  },
+  "instructions": {
+    "complete": "POST /v1/test/payment-requests/preq_.../complete",
+    "retryWith": "meter402-payment: <base64 of {\"paymentRequestId\",\"reference\"}>"
+  }
+}
+```
+
+`Cache-Control: no-store` is required, not cosmetic: a cached 402 is a
+replayable payment instruction that a shared proxy could hand to another agent.
+
+`amount` is a **string** of minor units. A JSON number is an IEEE-754 double,
+and an amount that survives a round-trip through one is a coincidence rather
+than a guarantee.
+
+The agent retries with `Meter402-Payment: <base64 JSON>` carrying
+`{ "paymentRequestId", "reference" }`, and on success receives the merchant
+response plus `Meter402-Receipt-Id` and `Meter402-Payment-Id`.
+
+### Why this is not the x402 wire shape
+
+This body is deliberately **protocol-neutral**. It is not x402's `x402Version`
+/ `accepts` envelope, and that is a decision rather than an oversight:
+x402 wire conformance has not been validated against the published
+specification or an independent client, and freezing the product's public
+contract around an unverified reading of someone else's protocol would be hard
+to walk back.
+
+Internally the model is already protocol-agnostic — `PaymentChallenge` and
+`PaymentProof` are rendered by a `PaymentProtocolAdapter`, and `@meter402/x402`
+implements one. Phase 3 maps the x402 format onto the same internal model and
+validates it against an independent client. **Until then Meter402 does not
+claim x402 compatibility.** See `PAYMENTS.md §9`.
+
+## Webhooks **[planned]**
 ```
 POST   /v1/webhooks
 GET    /v1/webhooks

@@ -27,6 +27,7 @@ export function testConfig(overrides: Record<string, string> = {}): AppConfig {
     AUTH_SECRET: 'a'.repeat(64),
     API_KEY_HASH_PEPPER: 'b'.repeat(64),
     WEBHOOK_SIGNING_SECRET: 'c'.repeat(64),
+    TEST_SIMULATOR_SECRET: 'd'.repeat(64),
     BASE_CHAIN_ID: '84532',
     BASE_RPC_URL: 'https://sepolia.base.org',
     USDC_CONTRACT_ADDRESS: '0x036cbd53842c5426634e7929541ec2318f3dcf7e',
@@ -224,4 +225,102 @@ export async function createTestApiKey(
   }
   const data = created.body['data'] as { id: string; secret: string };
   return { id: data.id, secret: data.secret };
+}
+
+export interface TestEndpoint {
+  readonly id: string;
+  readonly path: string;
+  readonly method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  readonly pricingRuleId: string;
+}
+
+/** Create a paid endpoint. Defaults to the Phase 2 demo: POST /research @ 0.03 USDC. */
+export async function createTestEndpoint(
+  app: FastifyInstance,
+  projectId: string,
+  token: string,
+  options: {
+    path?: string;
+    method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    environment?: 'TEST' | 'LIVE';
+    amount?: string;
+    asset?: string;
+    name?: string;
+  } = {},
+): Promise<TestEndpoint> {
+  const path = options.path ?? `/research-${Math.random().toString(36).slice(2, 8)}`;
+  const method = options.method ?? 'POST';
+  const created = await call(app, {
+    method: 'POST',
+    url: '/v1/endpoints',
+    token,
+    payload: {
+      projectId,
+      name: options.name ?? 'Research',
+      path,
+      method,
+      environment: options.environment ?? 'TEST',
+      price: { amount: options.amount ?? '0.03', asset: options.asset ?? 'USDC' },
+    },
+  });
+  if (created.status !== 201) {
+    throw new Error(`Failed to create endpoint: ${created.status} ${created.raw}`);
+  }
+  const data = created.body['data'] as { id: string; price: { pricingRuleId: string } };
+  return { id: data.id, path, method, pricingRuleId: data.price.pricingRuleId };
+}
+
+/** Call a paid endpoint with an API key, optionally presenting a payment proof. */
+export async function callPaid(
+  app: FastifyInstance,
+  apiKeySecret: string,
+  endpoint: { path: string; method: string },
+  proof?: { paymentRequestId: string; reference: string },
+): Promise<{ status: number; body: Record<string, unknown>; headers: Record<string, unknown> }> {
+  const headers: Record<string, string> = { authorization: `Bearer ${apiKeySecret}` };
+  if (proof) {
+    headers['meter402-payment'] = Buffer.from(JSON.stringify(proof), 'utf8').toString('base64');
+  }
+  const response = await app.inject({
+    method: endpoint.method as 'POST',
+    url: `/v1/paid${endpoint.path}`,
+    headers,
+  });
+  let body: Record<string, unknown> = {};
+  try {
+    body = response.json();
+  } catch {
+    body = {};
+  }
+  return { status: response.statusCode, body, headers: response.headers };
+}
+
+/** Complete a TEST payment through the simulator, returning the reference to retry with. */
+export async function completePayment(
+  app: FastifyInstance,
+  token: string,
+  paymentRequestId: string,
+): Promise<{ status: number; body: Record<string, unknown> }> {
+  const response = await call(app, {
+    method: 'POST',
+    url: `/v1/test/payment-requests/${paymentRequestId}/complete`,
+    token,
+  });
+  return { status: response.status, body: response.body };
+}
+
+/** Read the payment requirement out of a 402 body. */
+export function paymentRequirement(body: Record<string, unknown>): {
+  paymentRequestId: string;
+  amount: string;
+  asset: { symbol: string; decimals: number };
+  chain: { id: number };
+  recipient: string;
+  expiresAt: string;
+} {
+  const payment = body['payment'] as Record<string, unknown> | undefined;
+  if (!payment) {
+    throw new Error(`Response carried no payment requirement: ${JSON.stringify(body)}`);
+  }
+  return payment as never;
 }

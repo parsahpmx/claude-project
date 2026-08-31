@@ -23,6 +23,12 @@ export interface ProjectRecord {
   readonly description: string | null;
   readonly status: ProjectStatus;
   readonly liveModeEnabled: boolean;
+  /**
+   * Where this project's payments settle. Null means "not configured": the
+   * organization-level address is used instead, and if neither is set a LIVE
+   * payment cannot be requested at all.
+   */
+  readonly settlementAddress: string | null;
   readonly createdAt: Date;
 }
 
@@ -34,6 +40,7 @@ const PROJECT_COLUMNS = {
   description: projects.description,
   status: projects.status,
   liveModeEnabled: projects.liveModeEnabled,
+  settlementAddress: projects.settlementAddress,
   createdAt: projects.createdAt,
 } as const;
 
@@ -97,7 +104,12 @@ export async function updateProject(
   executor: Executor,
   scope: TenantScope,
   projectId: string,
-  patch: { name?: string; description?: string | null; status?: ProjectStatus },
+  patch: {
+    name?: string;
+    description?: string | null;
+    status?: ProjectStatus;
+    settlementAddress?: string | null;
+  },
 ): Promise<ProjectRecord | null> {
   const [row] = await executor
     .update(projects)
@@ -105,6 +117,9 @@ export async function updateProject(
       ...(patch.name !== undefined ? { name: patch.name } : {}),
       ...(patch.description !== undefined ? { description: patch.description } : {}),
       ...(patch.status !== undefined ? { status: patch.status } : {}),
+      ...(patch.settlementAddress !== undefined
+        ? { settlementAddress: patch.settlementAddress }
+        : {}),
       updatedAt: new Date(),
     })
     .where(and(eq(projects.id, projectId), eq(projects.organizationId, scope.organizationId)))

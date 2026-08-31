@@ -59,6 +59,15 @@ const rawSchema = z.object({
   AUTH_SECRET: z.string().min(1, 'AUTH_SECRET is required'),
   API_KEY_HASH_PEPPER: z.string().min(1, 'API_KEY_HASH_PEPPER is required'),
   WEBHOOK_SIGNING_SECRET: z.string().min(1, 'WEBHOOK_SIGNING_SECRET is required'),
+  /*
+   * Keys the TEST settlement references the payment simulator issues.
+   *
+   * A separate secret rather than a reuse of AUTH_SECRET: a simulated
+   * settlement reference is a bearer credential for a TEST payment, and
+   * deriving it from the session secret would make one leak compromise both
+   * session forgery and payment forgery.
+   */
+  TEST_SIMULATOR_SECRET: z.string().min(1, 'TEST_SIMULATOR_SECRET is required'),
 
   BASE_CHAIN_ID: z.coerce.number().int(),
   BASE_RPC_URL: z.string().url(),
@@ -95,6 +104,7 @@ export interface AppConfig {
     readonly authSecret: string;
     readonly apiKeyHashPepper: string;
     readonly webhookSigningSecret: string;
+    readonly testSimulatorSecret: string;
   };
 
   readonly chain: {
@@ -144,6 +154,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     ['AUTH_SECRET', raw.AUTH_SECRET],
     ['API_KEY_HASH_PEPPER', raw.API_KEY_HASH_PEPPER],
     ['WEBHOOK_SIGNING_SECRET', raw.WEBHOOK_SIGNING_SECRET],
+    ['TEST_SIMULATOR_SECRET', raw.TEST_SIMULATOR_SECRET],
   ];
 
   if (!isLocal) {
@@ -164,7 +175,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     // least-protected context compromises all three.
     const distinct = new Set(secretEntries.map(([, value]) => value));
     if (distinct.size !== secretEntries.length) {
-      issues.push('AUTH_SECRET, API_KEY_HASH_PEPPER, and WEBHOOK_SIGNING_SECRET must differ.');
+      issues.push(
+        'AUTH_SECRET, API_KEY_HASH_PEPPER, WEBHOOK_SIGNING_SECRET, and ' +
+          'TEST_SIMULATOR_SECRET must all differ.',
+      );
     }
   }
 
@@ -237,6 +251,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       authSecret: raw.AUTH_SECRET,
       apiKeyHashPepper: raw.API_KEY_HASH_PEPPER,
       webhookSigningSecret: raw.WEBHOOK_SIGNING_SECRET,
+      testSimulatorSecret: raw.TEST_SIMULATOR_SECRET,
     },
     chain: {
       chainId: chain.id,
@@ -273,6 +288,7 @@ export function redactConfig(config: AppConfig): Record<string, unknown> {
       authSecret: '[set]',
       apiKeyHashPepper: '[set]',
       webhookSigningSecret: '[set]',
+      testSimulatorSecret: '[set]',
     },
     chain: config.chain,
     observability: {

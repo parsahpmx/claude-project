@@ -55,3 +55,17 @@ export function createDatabase(url: string, options: DatabaseOptions = {}): Data
 }
 
 export type Database = DatabaseHandle['db'];
+
+/**
+ * Anything that can run a query: the connection pool, or a transaction.
+ *
+ * Code that writes takes this rather than `Database`, so the same function
+ * works inside and outside a transaction. That is not a convenience — several
+ * invariants are only correct when every read and write in them runs in one
+ * transaction, and a helper typed as `Database` silently forces its caller to
+ * escape the surrounding one.
+ *
+ * Structural rather than nominal: Drizzle's transaction object is a different
+ * class from the database handle but exposes the same query builders.
+ */
+export type QueryExecutor = Pick<Database, 'select' | 'insert' | 'update' | 'delete'>;

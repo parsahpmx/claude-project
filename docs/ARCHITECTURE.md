@@ -201,23 +201,81 @@ product brief forbids weakening these settings to silence errors.
 with third-party types for limited additional safety. Tracked as hardening
 work.
 
-## 5. Payment flow (built)
+## 5. Payment flow **[built]**
 
-1. A request arrives at a merchant endpoint wrapped by the SDK.
-2. The pricing engine quotes a price. `assertChainAllowedForEnvironment` runs
-   here, so a TEST project can never be quoted a mainnet price.
-3. A `PaymentRequest` is created: amount, asset, chain, recipient, nonce,
-   deadline. Status `CREATED`.
-4. The protocol adapter renders a challenge. Status `CHALLENGE_ISSUED`. The
-   402 is served `no-store` — a cached challenge is a replayable payment
-   instruction.
-5. The agent transfers USDC on Base and retries with a proof.
-6. The adapter parses the proof. Parsing is bounded before allocation and
-   strips prototype-polluting keys.
-7. `authorizePayment` runs the pipeline: local checks → on-chain verification →
-   replay claim. Ordering is deliberate and documented in the source.
-8. On success, status `CONFIRMED`; the merchant handler runs. On a
-   below-finality result, `CONFIRMING`. On an RPC outage, `PENDING`.
+1. A request arrives at `/v1/paid/{path}` carrying an API key. The project and
+   environment come from the credential, never the URL.
+2. The endpoint is resolved by `(project, environment, method, normalized
+   path)`. Environment is part of the key, so a TEST credential cannot reach a
+   LIVE route definition.
+3. The pricing engine quotes a price **once**.
+   `assertChainAllowedForEnvironment` runs at configuration time, so a TEST
+   endpoint can never carry a mainnet chain.
+4. A `PaymentRequest` is created carrying the quote as *values* — amount,
+   asset, decimals, chain, recipient, nonce, deadline. Status `CREATED`, then
+   `CHALLENGE_ISSUED` via the transition table rather than by assignment.
+5. The protocol adapter renders the 402, served `no-store` — a cached challenge
+   is a replayable payment instruction.
+6. The payer settles. In TEST that is the simulator; in LIVE it will be a USDC
+   transfer on Base (not implemented — see §5.1).
+7. The agent retries with a proof. The adapter parses it: bounded before
+   allocation, prototype-polluting keys stripped.
+8. `authorizePayment` runs the pipeline — local checks → settlement
+   verification → replay claim. Ordering is deliberate and documented in the
+   source.
+9. On success the payment walks `SUBMITTED → CONFIRMING → CONFIRMED` through
+   the transition table, and a Payment and Receipt are created — exactly one of
+   each, guaranteed by unique constraints rather than by checking first.
+10. The gate spends the payment by inserting a usage event keyed on it, in the
+    same transaction, then serves the request. A second presentation of the
+    same proof finds that event and is refused.
+
+### 5.1 What Phase 2 does not do
+
+Three things are deliberately absent, and each is absent for a reason worth
+stating rather than discovering:
+
+**LIVE settlement.** A LIVE endpoint can be configured and priced, but the paid
+surface refuses it with `LIVE_SETTLEMENT_UNAVAILABLE`. Nothing in this release
+can verify a real on-chain settlement, and issuing a 402 no agent could satisfy
+would be worse than refusing plainly.
+
+**Forwarding to merchant infrastructure.** Proxying an authorized request to a
+merchant-supplied URL is outbound HTTP to an address the merchant chooses —
+server-side request forgery unless it sits behind DNS-rebinding-resistant
+resolution, private-range blocking, and redirect confinement. Those controls
+are an open release gate, so the authorized request is served by a built-in
+handler instead.
+
+**x402 wire compatibility.** The challenge body is protocol-neutral by choice.
+See ADR-0004 and `PAYMENTS.md §9`.
+
+### 5.2 TEST mode is the real pipeline **[built]**
+
+The tempting shortcut — a simulator that writes `status = CONFIRMED` and skips
+verification — would make the TEST path prove nothing, leaving expiry, replay
+protection, state-machine legality, and exactly-once payment creation untested
+until real money was already moving.
+
+So `TestPaymentProtocolAdapter` implements the same `PaymentProtocolAdapter`
+interface and drives the same `authorizePayment` pipeline, with a
+`SimulatedSettlementVerifier` in place of the chain reader. A TEST payment goes
+through the real expiry check, the real nonce binding, the real replay guard
+backed by the real `UNIQUE (chain_id, transaction_hash)` index, and the real
+state machine.
+
+The honest limitation: settlement evidence is synthesised from the
+`PaymentRequest`, so the amount and recipient comparisons inside authorization
+are trivially satisfied in TEST. Those comparisons are exhaustively unit-tested
+against hand-built receipts — wrong recipient, wrong amount, wrong asset, wrong
+network, reverted, spoofed logs. TEST mode proves the surrounding machinery;
+those tests prove the comparison logic. Phase 3 swaps in
+`Erc20SettlementVerifier` and the rest of the path is already exercised.
+
+The settlement reference is derived by keyed HMAC over
+`(paymentRequestId, nonce)`. Deterministic, so a retry is idempotent rather
+than a duplicate-payment attempt; unforgeable, so an agent that knows both
+public inputs still cannot mint one without calling the simulator.
 
 ## 6. Data layer
 

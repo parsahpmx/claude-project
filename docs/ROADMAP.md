@@ -4,7 +4,7 @@ Phase durations are planning estimates for a three-person team, not
 commitments. Each phase lists its exit criteria; a phase is not done because
 its time box elapsed.
 
-**Current position: Phase 1 complete. Phase 2 ready to begin.**
+**Current position: Phase 2 complete. Phase 3 not started.**
 
 ---
 
@@ -62,15 +62,46 @@ The multi-tenant security boundary every later phase depends on.
 - Invitation email delivery. The membership half exists; nothing is sent.
 - Dashboard UI (Phase 4+).
 
-## Phase 2 — Billing objects (~2 weeks)
+## Phase 2 — Billing objects ✅ complete
 
 Endpoint registry, pricing wired end to end, payment request persistence,
-state machine wired to the database, test payment simulator.
+state machine wired to the database, test payment simulator, and the HTTP
+payment gate.
 
-**Exit criteria**
-- A merchant configures a priced endpoint and receives a real 402 challenge
-- A simulated payment moves a request through to `CONFIRMED`
-- The simulator provably cannot act on a LIVE request
+**Delivered**
+- Paid endpoints with `(project, environment, method, path)` uniqueness and an
+  immutable price snapshot taken once, at request creation
+- `POST /v1/paid/*` — the agent-facing surface: 402 with a machine-readable
+  requirement, then authorization on retry
+- `TestPaymentProtocolAdapter` driving the **real** `authorizePayment`
+  pipeline, not a parallel fake — real expiry, nonce binding, replay claim,
+  and state machine
+- Payments and receipts created exactly once, guaranteed by
+  `UNIQUE (payment_request_id)` and `UNIQUE (payment_id)` rather than by a
+  check-then-insert
+- Usage events keyed on the payment, so one payment authorizes one request
+
+**Exit criteria — met**
+- ✅ A merchant configures a priced endpoint and receives a real 402 challenge
+- ✅ A simulated payment moves a request through to `CONFIRMED`
+- ✅ The simulator provably cannot act on a LIVE request (four independent
+  guards, each tested)
+
+**Verified by** `payment-flow.integration.test.ts` (the 23-step release gate),
+`payments-security.integration.test.ts` (26 tests), and
+`payments-concurrency.integration.test.ts` (20 simultaneous completions
+producing exactly one payment and one receipt).
+
+**Explicitly not delivered in Phase 2**
+- LIVE settlement. A LIVE endpoint can be configured and priced, but the paid
+  surface refuses it with `LIVE_SETTLEMENT_UNAVAILABLE` rather than issuing a
+  402 no agent could satisfy.
+- Forwarding an authorized request to merchant infrastructure. That is
+  outbound HTTP to a merchant-chosen address, and the SSRF controls it
+  requires are an open release gate. The authorized request is served by a
+  built-in handler instead.
+- x402 wire conformance. The Phase 2 challenge body is deliberately
+  protocol-neutral and does not use x402's `accepts` shape.
 
 ## Phase 3 — Real payments (~3 weeks)
 

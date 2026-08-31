@@ -191,6 +191,70 @@ export const ERROR_DEFINITIONS = {
     defaultMessage: 'The supplied API key scope is not recognised.',
     retryable: false,
   },
+  ENDPOINT_NOT_FOUND: {
+    status: 404,
+    defaultMessage: 'The requested endpoint does not exist.',
+    retryable: false,
+  },
+  ENDPOINT_DISABLED: {
+    status: 409,
+    defaultMessage: 'This endpoint is not accepting payments.',
+    retryable: false,
+  },
+  PRICING_RULE_NOT_FOUND: {
+    status: 404,
+    defaultMessage: 'The requested pricing rule does not exist.',
+    retryable: false,
+  },
+  INVALID_PRICE: {
+    status: 422,
+    defaultMessage: 'The supplied price is not valid for this asset.',
+    retryable: false,
+  },
+  PAYMENT_REQUEST_NOT_FOUND: {
+    status: 404,
+    defaultMessage: 'The requested payment request does not exist.',
+    retryable: false,
+  },
+  RECEIPT_NOT_FOUND: {
+    status: 404,
+    defaultMessage: 'The requested receipt does not exist.',
+    retryable: false,
+  },
+  PAYMENT_ALREADY_CONFIRMED: {
+    status: 409,
+    defaultMessage: 'This payment request has already been paid.',
+    retryable: false,
+  },
+  PAYMENT_ENDPOINT_MISMATCH: {
+    status: 403,
+    defaultMessage: 'This payment does not authorize the requested resource.',
+    retryable: false,
+  },
+  TEST_LIVE_MISMATCH: {
+    status: 403,
+    defaultMessage: 'The credential and the resource belong to different environments.',
+    retryable: false,
+  },
+  SIMULATOR_LIVE_FORBIDDEN: {
+    status: 403,
+    defaultMessage: 'The TEST payment simulator cannot operate on LIVE resources.',
+    retryable: false,
+  },
+  /**
+   * LIVE settlement is not implemented yet.
+   *
+   * A merchant can configure a LIVE endpoint and a LIVE payment request can be
+   * priced, but no code path in this release can verify a real on-chain
+   * settlement, so a LIVE challenge would be one no agent could satisfy.
+   * Refusing plainly is better than issuing an unanswerable 402.
+   */
+  LIVE_SETTLEMENT_UNAVAILABLE: {
+    status: 503,
+    defaultMessage:
+      'LIVE settlement is not available in this release. Use a TEST endpoint and TEST credentials.',
+    retryable: false,
+  },
   RATE_LIMITED: {
     status: 429,
     defaultMessage: 'Too many requests. Slow down and retry later.',

@@ -16,10 +16,19 @@ app.get(
 );
 ```
 
-> **Project status: early development.** Phase 0 (foundation and payment
-> domain core) is complete and tested. The SDK shown above is the target
-> interface and is **not yet implemented** — see
-> [`docs/ROADMAP.md`](docs/ROADMAP.md) for what exists today. This README
+> **Project status: early development.** Phases 0–2 are complete and tested:
+> the payment domain core, identity and tenancy, and billing objects — paid
+> endpoints, payment requests, TEST payments, receipts, and the HTTP payment
+> gate. An agent can meet a 402, settle in TEST mode, retry, and be served.
+>
+> **LIVE settlement is not implemented.** A LIVE endpoint can be configured but
+> the paid surface refuses it rather than issuing a 402 no agent could satisfy.
+> **x402 compatibility is not claimed** — wire conformance has not been
+> validated against the specification or an independent client, so the 402 body
+> is deliberately protocol-neutral.
+>
+> The SDK shown above is the target interface and is **not yet implemented** —
+> see [`docs/ROADMAP.md`](docs/ROADMAP.md) for what exists today. This README
 > marks planned surfaces explicitly rather than describing them as if they
 > shipped.
 

@@ -13,7 +13,7 @@ import {
 import { createOrganizationWithOwner } from '../../modules/identity/organization.service.js';
 import { changeMembership, inviteMember } from '../../modules/identity/membership.service.js';
 import { listMemberships } from '../../modules/identity/membership.repository.js';
-import { parseBody, parseParams } from '../../lib/validation.js';
+import { parseBody, parseParams, settlementAddressSchema } from '../../lib/validation.js';
 
 const roleSchema = z.string().refine(isRole, { message: 'Unknown role' });
 
@@ -25,7 +25,7 @@ const createOrganizationSchema = z.object({
 const updateOrganizationSchema = z
   .object({
     name: z.string().trim().min(1).max(120).optional(),
-    settlementAddress: z.string().trim().max(128).nullable().optional(),
+    settlementAddress: settlementAddressSchema.optional(),
   })
   .refine((value) => Object.keys(value).length > 0, { message: 'No fields to update' });
 

@@ -25,7 +25,16 @@ export type AuditAction =
   | 'project.archived'
   | 'api_key.created'
   | 'api_key.rotated'
-  | 'api_key.revoked';
+  | 'api_key.revoked'
+  /* Phase 2 */
+  | 'endpoint.created'
+  | 'endpoint.updated'
+  | 'endpoint.archived'
+  | 'pricing_rule.created'
+  | 'payment_request.created'
+  | 'payment.confirmed'
+  | 'receipt.created'
+  | 'test_payment.completed';
 
 export interface AuditEventInput {
   readonly organizationId: string;

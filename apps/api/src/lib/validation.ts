@@ -1,5 +1,5 @@
-import { type z } from 'zod';
-import { Meter402Error } from '@meter402/shared';
+import { z } from 'zod';
+import { Meter402Error, isValidAddress } from '@meter402/shared';
 
 /**
  * Boundary validation.
@@ -40,3 +40,24 @@ export function parseParams<T>(schema: z.ZodType<T>, value: unknown): T {
 export function parseQuery<T>(schema: z.ZodType<T>, value: unknown): T {
   return parseWith(schema, value ?? {}, 'query parameters');
 }
+
+/**
+ * A merchant settlement address.
+ *
+ * Validated where it is written rather than only where it is read. This is the
+ * column that decides where a merchant's revenue lands, so accepting a
+ * malformed value and discovering it at payment time — when an agent's request
+ * fails for reasons the merchant cannot see — is the wrong trade. Stored
+ * lowercased so that address comparison never depends on EIP-55 casing.
+ *
+ * Null is permitted and means "not configured": a TEST payment can still be
+ * simulated without one, a LIVE payment cannot.
+ */
+export const settlementAddressSchema = z
+  .string()
+  .trim()
+  .refine((value) => isValidAddress(value), {
+    message: 'Must be a 20-byte hex address (0x followed by 40 hex characters).',
+  })
+  .transform((value) => value.toLowerCase())
+  .nullable();

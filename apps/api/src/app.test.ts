@@ -13,6 +13,7 @@ function testConfig(): AppConfig {
     AUTH_SECRET: 'a'.repeat(64),
     API_KEY_HASH_PEPPER: 'b'.repeat(64),
     WEBHOOK_SIGNING_SECRET: 'c'.repeat(64),
+    TEST_SIMULATOR_SECRET: 'd'.repeat(64),
     BASE_CHAIN_ID: '84532',
     BASE_RPC_URL: 'https://sepolia.base.org',
     USDC_CONTRACT_ADDRESS: '0x036cbd53842c5426634e7929541ec2318f3dcf7e',
