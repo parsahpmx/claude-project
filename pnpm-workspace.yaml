@@ -1,0 +1,60 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# pnpm 10 blocks dependency lifecycle scripts by default, which is the right
+# default for supply-chain safety (brief section 47). Each entry here is an
+# explicit, reviewed exception. esbuild is required by Vitest and fetches a
+# platform-specific binary in its postinstall.
+onlyBuiltDependencies:
+  - esbuild
+
+# Single source of truth for dependency versions across the monorepo.
+# Packages reference these with "catalog:" instead of a literal range, so a
+# version bump happens in exactly one place and drift between workspace
+# packages is structurally impossible.
+catalog:
+  # --- Toolchain -----------------------------------------------------------
+  # TypeScript is pinned to 5.9.x deliberately. TypeScript 7.x (the native
+  # port) is the current `latest`, but typescript-eslint@8 declares
+  # `typescript >=4.8.4 <6.1.0`, so adopting 7.x today silently disables
+  # type-aware linting across the repo. See docs/ARCHITECTURE.md (ADR-0007).
+  typescript: 5.9.3
+  turbo: ^2.10.12
+  eslint: ^9.39.0
+  "@eslint/js": ^9.39.0
+  typescript-eslint: ^8.68.0
+  eslint-config-prettier: ^10.1.8
+  prettier: ^3.9.6
+  vitest: ^3.2.4
+  "@vitest/coverage-v8": ^3.2.4
+  "@types/node": ^22.15.3
+
+  # --- Backend -------------------------------------------------------------
+  fastify: ^5.12.1
+  "@fastify/helmet": ^13.1.1
+  "@fastify/rate-limit": ^11.2.0
+  "@fastify/cors": ^11.1.0
+  "@fastify/sensible": ^6.0.3
+  pino: ^9.13.1
+  pino-pretty: ^13.1.2
+
+  # --- Data ----------------------------------------------------------------
+  "drizzle-orm": ^0.44.7
+  "drizzle-kit": ^0.31.10
+  postgres: ^3.4.9
+  ioredis: ^5.9.0
+
+  # --- Domain --------------------------------------------------------------
+  zod: ^3.25.76
+  viem: ^2.56.1
+
+  # --- Frontend ------------------------------------------------------------
+  next: ^15.5.9
+  react: ^19.2.0
+  react-dom: ^19.2.0
+  "@types/react": ^19.2.0
+  "@types/react-dom": ^19.2.0
+  tailwindcss: ^3.4.18
+  autoprefixer: ^10.4.21
+  postcss: ^8.5.6

@@ -1,0 +1,46 @@
+name: meter402
+
+# Local development dependencies only. Nothing here is production topology --
+# production Postgres and Redis are managed services defined in
+# infrastructure/terraform. See docs/ARCHITECTURE.md.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: meter402-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: meter402
+      POSTGRES_PASSWORD: meter402
+      POSTGRES_DB: meter402
+      # Deterministic collation so index ordering matches production.
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
+    ports:
+      # Bound to loopback so the dev database is never exposed on the LAN.
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U meter402 -d meter402']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: meter402-redis
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - '127.0.0.1:6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+  redis_data:

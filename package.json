@@ -1,0 +1,39 @@
+{
+  "name": "meter402",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Billing infrastructure for autonomous software.",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:unit": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @meter402/database db:generate",
+    "db:migrate": "pnpm --filter @meter402/database db:migrate",
+    "db:seed": "pnpm --filter @meter402/database db:seed",
+    "db:reset": "pnpm --filter @meter402/database db:reset",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "prettier": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vitest": "catalog:"
+  }
+}
