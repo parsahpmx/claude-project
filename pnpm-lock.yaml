@@ -21,6 +21,12 @@ catalogs:
     '@types/node':
       specifier: ^22.15.3
       version: 22.20.1
+    '@x402/core':
+      specifier: ^2.24.0
+      version: 2.24.0
+    '@x402/evm':
+      specifier: ^2.24.0
+      version: 2.24.0
     drizzle-kit:
       specifier: ^0.31.10
       version: 0.31.10
@@ -141,12 +147,21 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.1
+      '@x402/core':
+        specifier: 'catalog:'
+        version: 2.24.0
+      '@x402/evm':
+        specifier: 'catalog:'
+        version: 2.24.0(typescript@5.9.3)
       tsx:
         specifier: ^4.20.6
         version: 4.23.13
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      viem:
+        specifier: 'catalog:'
+        version: 2.56.1(typescript@5.9.3)(zod@3.25.76)
       vitest:
         specifier: 'catalog:'
         version: 3.2.7(@types/node@22.20.1)(tsx@4.23.13)
@@ -291,10 +306,19 @@ importers:
       '@meter402/shared':
         specifier: workspace:*
         version: link:../shared
+      viem:
+        specifier: 'catalog:'
+        version: 2.56.1(typescript@5.9.3)(zod@3.25.76)
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.1
+      '@x402/core':
+        specifier: 'catalog:'
+        version: 2.24.0
+      '@x402/evm':
+        specifier: 'catalog:'
+        version: 2.24.0(typescript@5.9.3)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -1155,6 +1179,12 @@ packages:
 
   '@vitest/utils@3.2.7':
     resolution: {integrity: sha512-x6BDOd7dyo3PFLY3I9/HJ25X/6OurhGXk2/B9gOZNPF7XDVjeBK4k01lQE5uvDpbuheErh91qYuE1E2OEjK3Rw==}
+
+  '@x402/core@2.24.0':
+    resolution: {integrity: sha512-zKFbG+RgUhBXT9RcBQZGPW1cZXL9xpiTv68XSSuO1SMoobudmVvxYgP/bhoxJuAoqJjjEceeAhT4/EcA/wolrQ==}
+
+  '@x402/evm@2.24.0':
+    resolution: {integrity: sha512-npH4A8P/HurcMOjIsri0VrHCb/TNbiIZgCrUrL2c+rbuwpyOtIT+6KT/yfwD53ckOttEE44yJqeK32MCvJ1Tug==}
 
   abitype@1.2.3:
     resolution: {integrity: sha512-Ofer5QUnuUdTFsBRwARMoWKOH1ND5ehwYhJ3OJ/BQO+StkwQjHw0XyVh4vDttzHB7QOFhPHa/o413PJ82gU/Tg==}
@@ -2636,6 +2666,20 @@ snapshots:
       '@vitest/pretty-format': 3.2.7
       loupe: 3.2.1
       tinyrainbow: 2.0.0
+
+  '@x402/core@2.24.0':
+    dependencies:
+      zod: 3.25.76
+
+  '@x402/evm@2.24.0(typescript@5.9.3)':
+    dependencies:
+      '@x402/core': 2.24.0
+      viem: 2.56.1(typescript@5.9.3)(zod@3.25.76)
+      zod: 3.25.76
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
 
   abitype@1.2.3(typescript@5.9.3)(zod@3.25.76):
     optionalDependencies:

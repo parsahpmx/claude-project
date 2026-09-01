@@ -249,6 +249,21 @@ export const ERROR_DEFINITIONS = {
    * settlement, so a LIVE challenge would be one no agent could satisfy.
    * Refusing plainly is better than issuing an unanswerable 402.
    */
+  /**
+   * No settlement destination is configured for the network and asset a real
+   * payment would settle in.
+   *
+   * A distinct code rather than a generic conflict, because the fix is
+   * specific and the merchant needs to be told exactly what to do: configure a
+   * destination. There is deliberately no default for real settlement — a
+   * fallback address would mean a payment that succeeds and destroys the
+   * money.
+   */
+  SETTLEMENT_NOT_CONFIGURED: {
+    status: 409,
+    defaultMessage: 'No settlement destination is configured for this network and asset.',
+    retryable: false,
+  },
   LIVE_SETTLEMENT_UNAVAILABLE: {
     status: 503,
     defaultMessage:

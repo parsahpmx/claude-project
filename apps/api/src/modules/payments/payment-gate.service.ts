@@ -11,14 +11,29 @@ import {
   type PaymentRequest,
   type ProtocolHttpResponse,
 } from '@meter402/payments';
+import {
+  PAYMENT_SIGNATURE_HEADER,
+  X402_PROTOCOL,
+  X402V2PaymentProtocolAdapter,
+  parsePaymentPayload,
+  readHeader,
+  type FacilitatorClient,
+} from '@meter402/x402';
 import type { HttpMethod } from '../../lib/http-path.js';
 import { normalizePath } from '../../lib/http-path.js';
 import type { TenantScope } from '../../lib/tenant.js';
 import { findEndpointByRoute, type EndpointRecord } from '../endpoints/endpoint.repository.js';
+import { chainIdForEnvironment } from '../endpoints/endpoint.service.js';
+import { paymentMetrics } from '../../lib/metrics.js';
 import {
   createPaymentRequestForEndpoint,
   type PaymentRequestActor,
 } from './payment-request.service.js';
+import {
+  settleX402Payment,
+  verifyX402Payment,
+  type SettleOutcome,
+} from './x402-payment.service.js';
 import {
   findPaymentByRequest,
   findPaymentRequestForUpdate,
@@ -71,9 +86,35 @@ export type PaymentGateDecision =
       readonly request: PaymentRequest;
       readonly payment: PaymentRecord;
       readonly receipt: ReceiptRecord;
+    }
+  /**
+   * x402 only: the authorization is verified but **not yet settled**.
+   *
+   * The x402 `authorization` flow settles *after* the merchant handler
+   * succeeds, so the gate cannot finish the payment on its own — it would have
+   * to run the handler, which is not its job. Instead it returns the
+   * verified state plus a `settle` continuation, and the transport layer,
+   * which owns the handler, calls it at the right moment.
+   *
+   * Modelling the pause explicitly is what keeps the ordering honest: there is
+   * no way to reach a settled x402 payment without having passed through a
+   * point where the handler could have failed.
+   */
+  | {
+      readonly outcome: 'AUTHORIZED_PENDING_SETTLEMENT';
+      readonly endpoint: EndpointRecord;
+      readonly request: PaymentRequest;
+      readonly payer: string;
+      readonly settle: () => Promise<SettleOutcome>;
     };
 
 export interface PaidRequestInput {
+  /** Required for x402 endpoints; unused by the simulated protocol. */
+  readonly facilitator?: FacilitatorClient;
+  /** Absolute base URL used to render the x402 `resource.url`. */
+  readonly resourceBaseUrl?: string;
+  /** The request path as the client addressed it, for `resource.url`. */
+  readonly resourcePath?: string;
   readonly projectId: string;
   readonly environment: MerchantEnvironment;
   readonly method: HttpMethod;
@@ -95,7 +136,7 @@ function referencesMatch(expected: string | null, provided: string): boolean {
   return timingSafeEqual(a, b);
 }
 
-function hasPaymentHeader(headers: Readonly<Record<string, string | string[] | undefined>>) {
+function hasTestPaymentHeader(headers: Readonly<Record<string, string | string[] | undefined>>) {
   return Object.keys(headers).some((key) => key.toLowerCase() === TEST_PAYMENT_HEADER);
 }
 
@@ -130,15 +171,49 @@ export async function authorizePaidRequest(
   }
 
   /*
-   * Honest refusal rather than an unanswerable challenge. Nothing in this
-   * release can verify a real on-chain settlement, so issuing a LIVE 402
-   * would advertise a payment flow that cannot complete.
+   * Which protocol settles this endpoint. Two orthogonal axes decide what a
+   * payment means here, and conflating them is what Phase 3 had to undo:
+   *
+   *   environment  (TEST | LIVE)  — which chain, which credentials
+   *   protocol     (test | x402)  — simulated, or real money
+   *
+   * So TEST+test is a simulation with no blockchain, TEST+x402 is a real
+   * signed payment on Base Sepolia, and LIVE+x402 is real money on mainnet.
    */
-  if (endpoint.environment === MerchantEnvironment.Live) {
-    throw new Meter402Error('LIVE_SETTLEMENT_UNAVAILABLE');
+  if (endpoint.settlementProtocol === X402_PROTOCOL) {
+    /*
+     * Real settlement is gated twice more: by the operational kill switch,
+     * and by whether this specific chain is enabled. Both are checked before
+     * a challenge is issued, so a server that cannot settle never asks anyone
+     * to pay.
+     */
+    if (!config.settlement.liveSettlementEnabled) {
+      throw new Meter402Error(
+        'LIVE_SETTLEMENT_UNAVAILABLE',
+        'Real settlement is disabled on this server.',
+      );
+    }
+    if (!config.settlement.enabledChainIds.includes(chainIdForEnvironment(endpoint.environment))) {
+      throw new Meter402Error(
+        'LIVE_SETTLEMENT_UNAVAILABLE',
+        "Settlement is not enabled for this endpoint's network.",
+      );
+    }
+    return authorizeX402Request(db, scope, config, input, endpoint);
   }
 
-  if (!hasPaymentHeader(input.headers)) {
+  /*
+   * Simulated settlement. A LIVE environment cannot be simulated — pretending
+   * to take real money is worse than refusing.
+   */
+  if (endpoint.environment === MerchantEnvironment.Live) {
+    throw new Meter402Error(
+      'LIVE_SETTLEMENT_UNAVAILABLE',
+      'This endpoint is configured for simulated payments and cannot run in LIVE mode.',
+    );
+  }
+
+  if (!hasTestPaymentHeader(input.headers)) {
     return issueChallenge(db, scope, endpoint, config, input.actor);
   }
 
@@ -229,6 +304,184 @@ export async function authorizePaidRequest(
 
     return { outcome: 'AUTHORIZED', endpoint, request, payment, receipt };
   });
+}
+
+/**
+ * The x402 half of the gate: 402, or verify-and-pause-for-settlement.
+ */
+async function authorizeX402Request(
+  db: Database,
+  scope: TenantScope,
+  config: AppConfig,
+  input: PaidRequestInput,
+  endpoint: EndpointRecord,
+): Promise<PaymentGateDecision> {
+  const facilitator = input.facilitator;
+  if (!facilitator) {
+    /* istanbul ignore next -- the app always supplies one when configured. */
+    throw new Meter402Error(
+      'LIVE_SETTLEMENT_UNAVAILABLE',
+      'No facilitator is configured for real settlement.',
+    );
+  }
+
+  const adapter = new X402V2PaymentProtocolAdapter(
+    input.resourceBaseUrl ?? 'https://api.meter402.local',
+  );
+  const basePath = input.resourcePath ?? normalizePath(input.path);
+
+  const raw = readHeader(input.headers, PAYMENT_SIGNATURE_HEADER);
+  if (raw === null) {
+    // No authorization presented: quote a price and serve the x402 402.
+    const request = await createPaymentRequestForEndpoint(db, scope, input.actor, {
+      endpoint,
+      protocol: X402_PROTOCOL,
+      ttlSeconds: config.chain.challengeTtlSeconds,
+    });
+    paymentMetrics.increment('challenges_issued', {
+      network: `eip155:${request.chainId}`,
+    });
+    return {
+      outcome: 'PAYMENT_REQUIRED',
+      endpoint,
+      request,
+      challenge: adapter.createChallenge(request),
+      response: adapter.buildPaymentRequiredResponse(request, resourceUrlFor(basePath, request.id)),
+    };
+  }
+  if (raw === 'DUPLICATED') {
+    throw new Meter402Error('PAYMENT_INVALID', `Multiple ${PAYMENT_SIGNATURE_HEADER} headers.`);
+  }
+
+  const parsed = parsePaymentPayload(raw);
+  if (!parsed.ok) {
+    throw new Meter402Error('PAYMENT_INVALID', parsed.error.message, {
+      details: { reason: parsed.error.reason },
+    });
+  }
+  const payload = parsed.value;
+
+  /*
+   * Which payment request is this paying? x402 does not carry our request ID
+   * on the wire, so it is recovered from the authorization's binding to a
+   * recipient, amount and network — the payment request is found by the
+   * resource being paid for, and then every field is checked against it.
+   */
+  const requestId = readPaymentRequestId(payload);
+  if (!requestId) {
+    throw new Meter402Error(
+      'PAYMENT_INVALID',
+      'The payment payload does not identify a payment request.',
+    );
+  }
+
+  const request = await findPaymentRequestForUpdate(db, scope, requestId);
+  if (!request) {
+    throw new Meter402Error('PAYMENT_INVALID', 'No payment request matches this proof.');
+  }
+  if (request.endpointId !== endpoint.id) {
+    throw new Meter402Error(
+      'PAYMENT_ENDPOINT_MISMATCH',
+      'This payment was made for a different endpoint.',
+    );
+  }
+
+  const verified = await verifyX402Payment(
+    db,
+    scope,
+    config,
+    facilitator,
+    adapter,
+    request,
+    payload,
+    input.actor,
+  );
+
+  if (verified.outcome === 'UNAVAILABLE') {
+    /*
+     * The facilitator could not be reached. Nothing has settled and nothing
+     * has been charged, so this is explicitly not a payment failure — the
+     * caller is told to retry.
+     */
+    throw new Meter402Error('UPSTREAM_UNAVAILABLE', verified.message);
+  }
+  if (verified.outcome === 'REJECTED') {
+    throw new Meter402Error('PAYMENT_INVALID', verified.failure.message, {
+      details: { reason: verified.failure.reason },
+    });
+  }
+
+  return {
+    outcome: 'AUTHORIZED_PENDING_SETTLEMENT',
+    endpoint,
+    request,
+    payer: verified.payer,
+    settle: async () => {
+      const settled = await settleX402Payment(
+        db,
+        scope,
+        config,
+        facilitator,
+        adapter,
+        request,
+        verified.payload,
+        verified.payer,
+        input.actor,
+        verified.ownsAuthorizationClaim,
+      );
+
+      /*
+       * Metering, recorded once settlement exists. Keyed on the payment, so a
+       * retried authorization cannot bill twice — the same guarantee the
+       * simulated path gets, from the same function.
+       */
+      await db.transaction(async (tx) => {
+        await recordUsageEventIfAbsent(tx, scope, {
+          projectId: endpoint.projectId,
+          endpointId: endpoint.id,
+          paymentId: settled.payment.id,
+          requestId: input.actor.requestId ?? null,
+        });
+      });
+
+      return settled;
+    },
+  };
+}
+
+/**
+ * The resource URL for one payment request.
+ *
+ * x402 v2 identifies what is being paid for by `resource.url`, and has no
+ * field for a server-side request ID — so the request ID travels as a query
+ * parameter on that URL. That is the honest reading of the spec rather than a
+ * proprietary extension: this URL genuinely does identify the thing being
+ * paid for, which is *this quote for this resource*, not the route in general.
+ */
+function resourceUrlFor(path: string, paymentRequestId: string): string {
+  const separator = path.includes('?') ? '&' : '?';
+  return `${path}${separator}preq=${paymentRequestId}`;
+}
+
+/**
+ * Recover the payment request ID an x402 payload is paying.
+ *
+ * Read from the `resource.url` we issued and the client echoed back. This is
+ * **not** trusted as authorization — it only selects which stored request to
+ * check the authorization against, and every binding rule then applies. A
+ * caller naming another tenant's request gets a scoped miss; a caller naming
+ * their own gets the full amount, asset, recipient and network comparison.
+ * Selecting the wrong record therefore cannot authorize anything; it can only
+ * cause a rejection.
+ */
+function readPaymentRequestId(payload: {
+  resource?: { url: string };
+  accepted: { extra: Readonly<Record<string, unknown>> };
+}): string | null {
+  const url = payload.resource?.url;
+  if (typeof url !== 'string') return null;
+  const match = /(?:^|[/?&#=])(preq_[0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{26})\b/.exec(url);
+  return match?.[1] ?? null;
 }
 
 /**

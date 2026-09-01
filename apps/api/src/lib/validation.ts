@@ -53,11 +53,22 @@ export function parseQuery<T>(schema: z.ZodType<T>, value: unknown): T {
  * Null is permitted and means "not configured": a TEST payment can still be
  * simulated without one, a LIVE payment cannot.
  */
-export const settlementAddressSchema = z
+const addressSchema = z
   .string()
   .trim()
   .refine((value) => isValidAddress(value), {
     message: 'Must be a 20-byte hex address (0x followed by 40 hex characters).',
   })
-  .transform((value) => value.toLowerCase())
-  .nullable();
+  .transform((value) => value.toLowerCase());
+
+/** An address, or null to clear it. */
+export const settlementAddressSchema = addressSchema.nullable();
+
+/**
+ * An address that must be present.
+ *
+ * Used where the address *is* the resource — a settlement destination without
+ * one is not a destination — as opposed to a nullable field on some larger
+ * object, where null legitimately means "not configured".
+ */
+export const requiredSettlementAddressSchema = addressSchema;

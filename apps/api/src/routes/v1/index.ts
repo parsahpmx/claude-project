@@ -10,6 +10,7 @@ import { registerDevSessionRoutes } from './dev-sessions.js';
 import { registerEndpointRoutes } from './endpoints.js';
 import { registerPaymentRoutes } from './payments.js';
 import { registerPaidRoutes } from './paid.js';
+import { registerSettlementRoutes } from './settlement.js';
 
 /**
  * The /v1 surface.
@@ -39,6 +40,7 @@ export async function registerV1Routes(app: FastifyInstance, deps: RouteDeps): P
     registerEndpointRoutes(scope, deps);
     registerPaymentRoutes(scope, deps);
     registerPaidRoutes(scope, deps);
+    registerSettlementRoutes(scope, deps);
   });
 
   /*

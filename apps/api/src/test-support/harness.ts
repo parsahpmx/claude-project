@@ -4,6 +4,7 @@ import { createDatabase, type DatabaseHandle } from '@meter402/database';
 import type { Role } from '@meter402/auth';
 import { buildApp } from '../app.js';
 import { DevelopmentSessionIssuer } from '../auth/session.js';
+import { FakeFacilitator } from './fake-facilitator.js';
 
 /**
  * Integration test harness.
@@ -40,14 +41,42 @@ export interface Harness {
   readonly app: FastifyInstance;
   readonly handle: DatabaseHandle;
   readonly config: AppConfig;
+  /** Present only when the harness was built with real settlement enabled. */
+  readonly facilitator: FakeFacilitator | null;
   close(): Promise<void>;
 }
 
+export interface HarnessOptions {
+  readonly env?: Record<string, string>;
+  /**
+   * Turn on real settlement and attach a controllable facilitator.
+   *
+   * Off by default, mirroring production: a harness that enabled settlement
+   * implicitly would make it impossible to test that it is off by default.
+   */
+  readonly settlement?: boolean;
+}
+
 export async function createHarness(
-  configOverrides: Record<string, string> = {},
+  options: HarnessOptions | Record<string, string> = {},
 ): Promise<Harness> {
-  const config = testConfig(configOverrides);
+  // Accept the Phase 2 shape (a bare env override map) as well as the new one.
+  const opts: HarnessOptions =
+    'env' in options || 'settlement' in options
+      ? (options as HarnessOptions)
+      : { env: options as Record<string, string> };
+
+  const settlementEnv: Record<string, string> = opts.settlement
+    ? {
+        LIVE_SETTLEMENT_ENABLED: 'true',
+        X402_FACILITATOR_URL: 'https://facilitator.example.test',
+      }
+    : {};
+
+  const config = testConfig({ ...settlementEnv, ...(opts.env ?? {}) });
   const handle = createDatabase(config.database.url, { maxConnections: 15 });
+  const facilitator = opts.settlement ? new FakeFacilitator() : null;
+
   const app = await buildApp({
     config,
     silent: true,
@@ -56,6 +85,7 @@ export async function createHarness(
       db: handle.db,
       config,
       sessionIssuer: new DevelopmentSessionIssuer(config.secrets.authSecret),
+      ...(facilitator ? { facilitator } : {}),
     },
   });
   await app.ready();
@@ -64,6 +94,7 @@ export async function createHarness(
     app,
     handle,
     config,
+    facilitator,
     async close() {
       await app.close();
       await handle.close();
@@ -246,6 +277,7 @@ export async function createTestEndpoint(
     amount?: string;
     asset?: string;
     name?: string;
+    settlementProtocol?: 'test' | 'x402';
   } = {},
 ): Promise<TestEndpoint> {
   const path = options.path ?? `/research-${Math.random().toString(36).slice(2, 8)}`;
@@ -261,6 +293,7 @@ export async function createTestEndpoint(
       method,
       environment: options.environment ?? 'TEST',
       price: { amount: options.amount ?? '0.03', asset: options.asset ?? 'USDC' },
+      settlementProtocol: options.settlementProtocol ?? 'test',
     },
   });
   if (created.status !== 201) {

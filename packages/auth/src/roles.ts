@@ -73,6 +73,8 @@ export const ROLE_PERMISSIONS: Readonly<Record<Role, ReadonlySet<Permission>>> =
     'api_keys:revoke',
     'endpoints:read',
     'endpoints:write',
+    'settlement:read',
+    'settlement:write',
     'payments:read',
     'analytics:read',
     'webhooks:read',
@@ -95,6 +97,9 @@ export const ROLE_PERMISSIONS: Readonly<Record<Role, ReadonlySet<Permission>>> =
     'endpoints:write',
     'payments:read',
     'analytics:read',
+    // Read, deliberately not write. A developer configures endpoints and
+    // rotates keys; deciding where revenue lands is an owner's call.
+    'settlement:read',
     'webhooks:read',
     'webhooks:write',
   ),
@@ -107,6 +112,7 @@ export const ROLE_PERMISSIONS: Readonly<Record<Role, ReadonlySet<Permission>>> =
     'analytics:read',
     'billing:read',
     'billing:manage',
+    'settlement:read',
   ),
 
   VIEWER: permissionSet(...VIEWER_PERMISSIONS),

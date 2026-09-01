@@ -8,6 +8,7 @@
 
 export * from './money.js';
 export * from './assets.js';
+export * from './caip.js';
 export * from './environment.js';
 export * from './ids.js';
 export * from './errors.js';

@@ -218,15 +218,32 @@ Base is an L2 with fast blocks; deep reorgs are rare but not impossible.
 ## 9. Protocol adapters
 
 `PaymentProtocolAdapter` isolates wire format. Two implementations exist:
-`@meter402/x402` and the `TestPaymentProtocolAdapter` in `@meter402/payments`.
+`X402V2PaymentProtocolAdapter` in `@meter402/x402` and
+`TestPaymentProtocolAdapter` in `@meter402/payments`.
 
 Both render the same internal `PaymentChallenge` and consume the same
 `PaymentProof`, and both delegate to the same `authorizePayment` pipeline — so
 every protocol inherits identical replay protection, expiry handling, and
 outage semantics rather than each growing its own subtly different version.
 
-The Phase 2 paid surface serves the **TEST adapter's protocol-neutral body**,
-not x402's `accepts` envelope. That is deliberate: see the caveat below.
+Which adapter serves an endpoint is chosen by its `settlement_protocol`
+column: `test` for a simulated payment with no blockchain, `x402` for a real
+signed payment. That column is deliberately separate from `environment`,
+because the two answer different questions — see §7.
+
+**Conformance status after Phase 3.** The x402 v2 wire format has been verified
+against the official reference implementation (`@x402/core@2.24.0`,
+`@x402/evm@2.24.0`): the official decoder accepts our `PAYMENT-REQUIRED`, the
+official client signs against it, our parser accepts what that client produced,
+and the official decoder accepts our `PAYMENT-RESPONSE`. Fixtures come from the
+official encoder, never from ours.
+
+What remains unverified is **independent facilitator interoperability** and a
+**real Base Sepolia settlement**, both blocked by network egress in the
+development environment. The x402 release gate therefore **remains OPEN**, and
+the accurate claim is *"wire-conformant against the official reference library,
+pending facilitator and testnet verification"* — not "x402 compatible". See
+`X402_V2_CONFORMANCE_PLAN.md` §9.
 
 **Conformance caveat, stated plainly:** the x402 adapter implements the
 request/response shape described in public x402 v1 material. It has **not**
@@ -238,6 +255,19 @@ that validation is done and any divergence resolved. Tracked in Phase 3.
 
 Honest inventory as of Phase 2:
 
+**Built in Phase 3**
+
+- x402 v2 `exact` scheme over EIP-3009 signed authorizations on Base Sepolia
+- The `authorization` flow: verify -> merchant handler -> settle, taken from
+  the reference implementation's flow phases rather than chosen
+- `FacilitatorClient` abstraction, with the facilitator treated as untrusted
+- Local EIP-712 signature verification, so a facilitator's verdict can never
+  manufacture a valid payment
+- Authorization replay protection as a second database constraint
+- Settlement destinations keyed by (project, chain, asset), human-only
+- Kill switch, per-credential rate limits on the paid surface, payment metrics,
+  and a `/health/payments` endpoint separate from readiness
+
 **Built in Phase 2**
 
 - Payment request persistence with an immutable price snapshot
@@ -248,11 +278,13 @@ Honest inventory as of Phase 2:
 
 **Still not built**
 
-- **LIVE settlement.** The verifier, the chain reader, and the failover client
-  all exist and are unit-tested, but nothing wires them to the paid surface. A
-  LIVE endpoint is refused with `LIVE_SETTLEMENT_UNAVAILABLE` rather than given
-  an unanswerable 402. (Phase 3)
-- The confirmation worker for below-finality payments (Phase 3)
+- **A settlement that has actually happened.** Every settlement in this
+  codebase has been against a test double. No payment has been settled on Base
+  Sepolia or any other chain, because this environment cannot reach one.
+- **A reconciliation worker.** An uncertain settlement correctly becomes
+  PENDING and stays there; nothing resolves it automatically.
+- The confirmation worker for below-finality payments
+- Base mainnet, which is disabled by two independent configuration gates
 - Forwarding authorized requests to merchant infrastructure — blocked on the
   SSRF gate (see `SECURITY.md`)
 - Webhooks (Phase 6)

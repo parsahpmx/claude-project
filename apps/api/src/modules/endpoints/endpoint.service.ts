@@ -19,6 +19,7 @@ import {
   updateEndpoint,
   type EndpointRecord,
   type PricingRuleRecord,
+  type SettlementProtocol,
 } from './endpoint.repository.js';
 
 export interface EndpointActor {
@@ -36,6 +37,11 @@ export interface CreateEndpointRequest {
   readonly method: HttpMethod;
   readonly environment: MerchantEnvironment;
   readonly price: { amount: string; asset: string };
+  /**
+   * How this endpoint settles. Defaults to `test` at the call site, so a
+   * merchant opts in to real money rather than getting it by omission.
+   */
+  readonly settlementProtocol: SettlementProtocol;
 }
 
 /**
@@ -132,6 +138,7 @@ export async function createEndpointWithPricing(
         normalizedPath,
         method: request.method,
         environment: request.environment,
+        settlementProtocol: request.settlementProtocol,
         pricingRuleId: pricingRule.id,
       });
 
@@ -151,6 +158,7 @@ export async function createEndpointWithPricing(
           environment: endpoint.environment,
           price: request.price.amount,
           asset: asset.symbol,
+          settlementProtocol: request.settlementProtocol,
           pricingRuleId: pricingRule.id,
         },
       });

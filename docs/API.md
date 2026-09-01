@@ -443,76 +443,160 @@ The agent retries with `Meter402-Payment: <base64 JSON>` carrying
 `{ "paymentRequestId", "reference" }`, and on success receives the merchant
 response plus `Meter402-Receipt-Id` and `Meter402-Payment-Id`.
 
-### Why this is not the x402 wire shape
+### Two protocols on one surface
 
-This body is deliberately **protocol-neutral**. It is not x402's `x402Version`
-/ `accepts` envelope, and that is a decision rather than an oversight:
-x402 wire conformance has not been validated against the published
-specification or an independent client, and freezing the product's public
-contract around an unverified reading of someone else's protocol would be hard
-to walk back.
+Which body a 402 carries depends on the endpoint's `settlementProtocol`:
 
-Internally the model is already protocol-agnostic — `PaymentChallenge` and
-`PaymentProof` are rendered by a `PaymentProtocolAdapter`, and `@meter402/x402`
-implements one. Phase 3 maps the x402 format onto the same internal model and
-validates it against an independent client. **Until then Meter402 does not
-claim x402 compatibility.** See `PAYMENTS.md §9`.
+| `settlementProtocol` | 402 body | Settlement |
+| --- | --- | --- |
+| `test` (default) | Meter402's protocol-neutral shape, shown above | Simulated; no blockchain |
+| `x402` | **x402 v2 `PaymentRequired`** | Real EIP-3009 payment via a facilitator |
 
-## Webhooks **[planned]**
-```
-POST   /v1/webhooks
-GET    /v1/webhooks
-GET    /v1/webhooks/{id}
-PATCH  /v1/webhooks/{id}
-DELETE /v1/webhooks/{id}
-POST   /v1/webhooks/{id}/test
-```
+The `x402` body follows the current specification exactly and is described
+below. The `test` body is deliberately not x402-shaped: a simulated payment is
+not an x402 payment, and dressing it as one would make the two
+indistinguishable to a client.
 
-### Analytics **[planned]**
-```
-GET /v1/analytics/overview
-GET /v1/analytics/revenue
-GET /v1/analytics/transactions
-GET /v1/analytics/endpoints
-```
+## The x402 v2 flow **[built]**
 
-## The 402 challenge
-
-Served by the SDK middleware on the merchant's own endpoint, not by
-`api.meter402.com`:
+For endpoints with `settlementProtocol: "x402"`.
 
 ```http
 HTTP/1.1 402 Payment Required
 Content-Type: application/json; charset=utf-8
 Cache-Control: no-store
+PAYMENT-REQUIRED: <base64 JSON>
 ```
 
 ```json
 {
-  "x402Version": 1,
-  "error": "PAYMENT_REQUIRED",
-  "accepts": [{
-    "scheme": "exact",
-    "network": "base-sepolia",
-    "maxAmountRequired": "30000",
-    "payTo": "0x...",
-    "asset": "0x036cbd53842c5426634e7929541ec2318f3dcf7e",
-    "resource": "preq_...",
-    "maxTimeoutSeconds": 300,
-    "extra": { "name": "USDC", "decimals": 6, "chainId": 84532, "nonce": "..." }
-  }]
+  "x402Version": 2,
+  "resource": {
+    "url": "https://api.meter402.com/v1/paid/research?preq=preq_01J..."
+  },
+  "accepts": [
+    {
+      "scheme": "exact",
+      "network": "eip155:84532",
+      "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "amount": "30000",
+      "payTo": "0x...",
+      "maxTimeoutSeconds": 300,
+      "extra": { "name": "USDC", "version": "2", "assetTransferMethod": "eip3009" }
+    }
+  ]
 }
 ```
 
-`Cache-Control: no-store` is required, not cosmetic: a cached 402 is a
-replayable payment instruction that a shared proxy could hand to another agent.
+Notes that matter to an integrator:
 
-The agent retries with `X-PAYMENT: <base64 JSON>`, and on success receives
-`X-PAYMENT-RESPONSE: <base64 JSON>` alongside the merchant's own response body.
+- `network` is **CAIP-2**, not a slug. Base Sepolia is `eip155:84532`.
+- `amount` is atomic units as a **string**. 0.03 USDC is `"30000"`.
+- `extra.name` and `extra.version` are the **EIP-712 domain of the token
+  contract**, which the payer needs to build the digest. They differ per
+  deployment: Base Sepolia USDC signs as `"USDC"`, Base mainnet as
+  `"USD Coin"`. Do not derive them from the symbol.
+- `resource.url` carries the payment request ID. Echo the `resource` object
+  back unchanged; it is how the server knows which quote you are paying.
 
-**Conformance caveat:** this shape follows public x402 v1 material but has not
-been validated against the published specification or an independent client.
-See `PAYMENTS.md §9`.
+The client retries with `PAYMENT-SIGNATURE: <base64 JSON PaymentPayload>` and,
+on success, receives `PAYMENT-RESPONSE: <base64 JSON SettleResponse>` alongside
+the merchant response.
+
+### Flow ordering
+
+```
+verify  ->  merchant handler  ->  settle
+```
+
+This is the `authorization` flow's phase definition
+(`verifyBeforeHandler: true`, `settleAfterHandler: true`), not a choice
+Meter402 made. The consequence worth relying on: **if the merchant handler
+fails, settlement never runs and you are not charged.**
+
+### What is checked, and against what
+
+Every expectation comes from the server's stored `PaymentRequest`. The
+`accepted` block you echo back is compared against it and is never read as the
+source of any value — an `accepted.payTo` naming a different address fails,
+precisely because it is not where we look for the recipient.
+
+| Field | Compared against | Tolerance |
+| --- | --- | --- |
+| `x402Version` | 2 | exact |
+| `scheme` | `exact` | exact |
+| `network` | the request's chain | exact; never substituted |
+| `asset` | the server's asset registry | exact contract address |
+| `amount` and signed `value` | the request's amount | exact; no rounding |
+| `payTo` and signed `to` | the request's recipient | exact |
+| `validAfter` / `validBefore` | now | must be currently valid |
+| request expiry | `expiresAt` | enforced independently of the facilitator |
+
+### Errors specific to this flow
+
+| Code | HTTP | Meaning |
+| --- | --- | --- |
+| `PAYMENT_INVALID` | 402 | Binding, signature, or replay check failed |
+| `PAYMENT_NOT_CONFIRMED` | 402 | Settlement submitted, outcome unknown. **Do not pay again.** |
+| `UPSTREAM_UNAVAILABLE` | 503 | Facilitator unreachable. Nothing settled; retry. |
+| `IDEMPOTENCY_REQUEST_IN_FLIGHT` | 409 | Another request is settling this authorization. Retry shortly. |
+| `LIVE_SETTLEMENT_UNAVAILABLE` | 503 | Real settlement is disabled on this server |
+| `SETTLEMENT_NOT_CONFIGURED` | 409 | The merchant has no destination for this network and asset |
+
+### Conformance status
+
+Verified against the official reference implementation (`@x402/core@2.24.0`,
+`@x402/evm@2.24.0`): our `PAYMENT-REQUIRED` decodes with the official decoder,
+the official client signs against it and is served, and our `PAYMENT-RESPONSE`
+decodes with the official decoder.
+
+**Not yet verified:** interoperability with a real facilitator, and settlement
+on Base Sepolia. Meter402 therefore does **not** claim "x402 compatible". See
+`PAYMENTS.md §9` and `X402_V2_CONFORMANCE_PLAN.md`.
+
+## Settlement destinations **[built]**
+
+```
+GET   /v1/organizations/{id}/settlement
+PUT   /v1/organizations/{id}/settlement
+PATCH /v1/organizations/{id}/settlement/{settlementConfigId}
+```
+
+**User sessions only, and there is no API-key scope that grants access.** A
+machine credential able to repoint settlement would turn a leaked key into a
+standing theft of all future revenue, so the capability does not exist for
+machines at all. Writing requires `settlement:write` (OWNER and ADMIN);
+reading requires `settlement:read`, which a DEVELOPER also holds.
+
+`PUT` body:
+
+```json
+{
+  "projectId": "prj_...",
+  "chainId": 84532,
+  "asset": "USDC",
+  "recipientAddress": "0x..."
+}
+```
+
+Keyed by `(project, chain, asset)`; a null `projectId` sets the
+organization-wide default for that chain and asset. Repointing a destination
+does **not** affect already-issued payment requests, which carry their
+recipient as a snapshot.
+
+## Health **[built]**
+
+```
+GET /health           liveness  — touches nothing
+GET /ready            rotation  — database; can this task serve at all?
+GET /health/payments  capability — can real settlement happen right now?
+```
+
+The split is deliberate. A facilitator outage must not fail `/ready`, because
+pulling every task from rotation would also take down the dashboard and the
+simulated TEST flow — converting a partial degradation into a total outage.
+`/health/payments` reports `disabled`, `available`, or `degraded` with a 200 in
+all three cases: it answers "what is true", not "should I restart".
 
 ## Webhooks
 

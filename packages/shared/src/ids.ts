@@ -102,6 +102,14 @@ export const ID_PREFIXES = {
   paymentAttempt: 'patt',
   receipt: 'rcpt',
   blockchainTransaction: 'btx',
+  /** A claimed pre-settlement signed payment authorization. */
+  paymentAuthorization: 'pauth',
+  /**
+   * A merchant settlement destination. `stcfg` rather than `setl`, which
+   * already belongs to a settlement batch — two kinds sharing a prefix would
+   * make IDs ambiguous exactly where money is involved.
+   */
+  settlementConfiguration: 'stcfg',
   agent: 'agt',
   customer: 'cus',
   walletReference: 'wal',

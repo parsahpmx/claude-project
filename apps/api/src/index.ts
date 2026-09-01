@@ -13,6 +13,8 @@ import { FailoverBlockchainProvider, ViemBlockchainProvider } from '@meter402/bl
 import type { BlockchainProvider } from '@meter402/blockchain';
 import { buildApp } from './app.js';
 import { DevelopmentSessionIssuer } from './auth/session.js';
+import { HttpFacilitatorClient } from '@meter402/x402';
+import { paymentMetrics } from './lib/metrics.js';
 
 async function main(): Promise<void> {
   let config;
@@ -65,6 +67,21 @@ async function main(): Promise<void> {
     );
   }
 
+  /*
+   * The x402 facilitator, constructed only when real settlement is switched
+   * on. Absent otherwise, so a deployment with settlement disabled has no
+   * client that could accidentally be called — the capability does not exist
+   * rather than existing and being guarded.
+   */
+  const facilitator = config.settlement.liveSettlementEnabled
+    ? new HttpFacilitatorClient({
+        // Config validation guarantees a URL whenever settlement is enabled.
+        baseUrl: config.settlement.facilitator.url as string,
+        apiKey: config.settlement.facilitator.apiKey,
+        timeoutMs: config.settlement.facilitator.timeoutMs,
+      })
+    : undefined;
+
   const app = await buildApp({
     config,
     routes: {
@@ -73,6 +90,7 @@ async function main(): Promise<void> {
       // Development adapter. The route that mints these tokens is only
       // registered outside staging and production; see routes/v1/index.ts.
       sessionIssuer: new DevelopmentSessionIssuer(config.secrets.authSecret),
+      ...(facilitator ? { facilitator } : {}),
     },
     /*
      * Only dependencies we genuinely check appear here. Redis is configured
@@ -80,9 +98,29 @@ async function main(): Promise<void> {
      * reported as a hardcoded `true` — a check that always passes is worse
      * than no check, because it reports health nobody verified.
      */
+    /*
+     * Only dependencies we genuinely check. The facilitator probe is added
+     * only when settlement is enabled: reporting on a dependency this
+     * deployment does not use would be noise, and reporting it as healthy
+     * when it is not configured would be a lie.
+     */
     probes: {
       database: () => database.ping(),
       blockchain: () => blockchain.healthCheck(),
+    },
+    /*
+     * Payment capability is reported separately from readiness. A facilitator
+     * outage degrades payments; it must not pull the task out of rotation and
+     * take the dashboard down with it. See routes/health.ts.
+     */
+    paymentHealth: {
+      settlementEnabled: config.settlement.liveSettlementEnabled,
+      enabledNetworks: config.settlement.enabledChainIds.map((id) => `eip155:${id}`),
+      probes: {
+        blockchain: () => blockchain.healthCheck(),
+        ...(facilitator ? { facilitator: () => facilitator.health() } : {}),
+      },
+      metrics: () => paymentMetrics.snapshot(),
     },
   });
 

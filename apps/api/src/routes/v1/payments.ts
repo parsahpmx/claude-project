@@ -211,42 +211,53 @@ export function registerPaymentRoutes(app: FastifyInstance, deps: RouteDeps): vo
    * no parameter a caller could supply to make this touch LIVE, because the
    * handler takes no parameters that could say so.
    */
-  app.post('/v1/test/payment-requests/:paymentRequestId/complete', async (request) => {
-    const principal = getPrincipal(request);
-    const { paymentRequestId } = parseParams(paymentRequestParams, request.params);
+  app.post(
+    '/v1/test/payment-requests/:paymentRequestId/complete',
+    {
+      /*
+       * The simulator mints settled TEST payments. Cheap for us, but an
+       * unbounded loop here would let one developer fill the payments table,
+       * so it gets its own ceiling well below the global one.
+       */
+      config: { rateLimit: { max: 120, timeWindow: '1 minute' } },
+    },
+    async (request) => {
+      const principal = getPrincipal(request);
+      const { paymentRequestId } = parseParams(paymentRequestParams, request.params);
 
-    const { scope, actor } = await writeAccess(deps.db, principal, paymentRequestId);
+      const { scope, actor } = await writeAccess(deps.db, principal, paymentRequestId);
 
-    const result = await completeTestPayment(
-      deps.db,
-      scope,
-      deps.config,
-      {
-        ...actor,
-        requestId: String(request.id),
-        ipAddress: request.ip,
-        userAgent: (request.headers['user-agent'] ?? null)?.slice(0, 256) ?? null,
-      },
-      paymentRequestId,
-    );
+      const result = await completeTestPayment(
+        deps.db,
+        scope,
+        deps.config,
+        {
+          ...actor,
+          requestId: String(request.id),
+          ipAddress: request.ip,
+          userAgent: (request.headers['user-agent'] ?? null)?.slice(0, 256) ?? null,
+        },
+        paymentRequestId,
+      );
 
-    return {
-      data: {
-        paymentRequest: serializePaymentRequest(result.request),
-        payment: serializePayment(result.payment),
-        receipt: serializeReceipt(result.receipt),
-        /*
-         * The reference the agent must present on its retry. Returned here
-         * because this is the only place it is available to the payer — it is
-         * derived from a server-side secret and never appears in the 402.
-         */
-        reference: result.reference,
-        // False when this call found the payment already complete. Idempotent
-        // rather than an error, so a retrying agent is not punished.
-        created: result.created,
-      },
-    };
-  });
+      return {
+        data: {
+          paymentRequest: serializePaymentRequest(result.request),
+          payment: serializePayment(result.payment),
+          receipt: serializeReceipt(result.receipt),
+          /*
+           * The reference the agent must present on its retry. Returned here
+           * because this is the only place it is available to the payer — it is
+           * derived from a server-side secret and never appears in the 402.
+           */
+          reference: result.reference,
+          // False when this call found the payment already complete. Idempotent
+          // rather than an error, so a retrying agent is not punished.
+          created: result.created,
+        },
+      };
+    },
+  );
 }
 
 /**

@@ -16,16 +16,23 @@ app.get(
 );
 ```
 
-> **Project status: early development.** Phases 0–2 are complete and tested:
-> the payment domain core, identity and tenancy, and billing objects — paid
-> endpoints, payment requests, TEST payments, receipts, and the HTTP payment
-> gate. An agent can meet a 402, settle in TEST mode, retry, and be served.
+> **Project status: early development.** Phases 0–3 are complete and tested:
+> the payment domain core, identity and tenancy, billing objects, and a real
+> **x402 v2** integration using EIP-3009 signed authorizations on Base Sepolia.
+> An independent x402 client can meet a 402, sign an authorization, and be
+> served.
 >
-> **LIVE settlement is not implemented.** A LIVE endpoint can be configured but
-> the paid surface refuses it rather than issuing a 402 no agent could satisfy.
-> **x402 compatibility is not claimed** — wire conformance has not been
-> validated against the specification or an independent client, so the 402 body
-> is deliberately protocol-neutral.
+> **What has not happened: no payment has ever settled on a real chain.**
+> Settlement is exercised against a test double, because the development
+> environment has no network access to a testnet RPC or a hosted facilitator.
+> Independent *client* conformance is verified against the official reference
+> library; independent *facilitator* conformance is not.
+>
+> Consequently **Meter402 does not claim x402 compatibility** — the accurate
+> claim is "wire-conformant against the official reference library, pending
+> facilitator and testnet verification". **Base mainnet is disabled** behind
+> two independent configuration gates and is **NOT READY**; see
+> [`docs/MAINNET_READINESS.md`](docs/MAINNET_READINESS.md).
 >
 > The SDK shown above is the target interface and is **not yet implemented** —
 > see [`docs/ROADMAP.md`](docs/ROADMAP.md) for what exists today. This README

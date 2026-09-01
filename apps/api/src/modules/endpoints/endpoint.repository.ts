@@ -15,6 +15,7 @@ import type { HttpMethod } from '../../lib/http-path.js';
  */
 
 export type EndpointStatus = 'ACTIVE' | 'DISABLED' | 'ARCHIVED';
+export type SettlementProtocol = 'test' | 'x402';
 
 export interface EndpointRecord {
   readonly id: string;
@@ -27,6 +28,8 @@ export interface EndpointRecord {
   readonly method: HttpMethod;
   readonly environment: MerchantEnvironment;
   readonly status: EndpointStatus;
+  /** How this endpoint settles: simulated (`test`) or real (`x402`). */
+  readonly settlementProtocol: SettlementProtocol;
   readonly pricingRuleId: string | null;
   readonly createdAt: Date;
 }
@@ -55,6 +58,7 @@ const ENDPOINT_COLUMNS = {
   method: endpoints.method,
   environment: endpoints.environment,
   status: endpoints.status,
+  settlementProtocol: endpoints.settlementProtocol,
   pricingRuleId: endpoints.pricingRuleId,
   createdAt: endpoints.createdAt,
 } as const;
@@ -134,6 +138,7 @@ export interface CreateEndpointInput {
   readonly normalizedPath: string;
   readonly method: HttpMethod;
   readonly environment: MerchantEnvironment;
+  readonly settlementProtocol: SettlementProtocol;
   readonly pricingRuleId: string | null;
 }
 
@@ -154,6 +159,7 @@ export async function createEndpoint(
       normalizedPath: input.normalizedPath,
       method: input.method,
       environment: input.environment,
+      settlementProtocol: input.settlementProtocol,
       status: 'ACTIVE',
       pricingRuleId: input.pricingRuleId,
     })
@@ -244,6 +250,7 @@ export async function updateEndpoint(
     name?: string;
     description?: string | null;
     status?: EndpointStatus;
+    settlementProtocol?: SettlementProtocol;
     pricingRuleId?: string;
   },
 ): Promise<EndpointRecord | null> {
@@ -253,6 +260,9 @@ export async function updateEndpoint(
       ...(patch.name !== undefined ? { name: patch.name } : {}),
       ...(patch.description !== undefined ? { description: patch.description } : {}),
       ...(patch.status !== undefined ? { status: patch.status } : {}),
+      ...(patch.settlementProtocol !== undefined
+        ? { settlementProtocol: patch.settlementProtocol }
+        : {}),
       ...(patch.pricingRuleId !== undefined ? { pricingRuleId: patch.pricingRuleId } : {}),
       updatedAt: new Date(),
     })

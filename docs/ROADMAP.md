@@ -4,7 +4,9 @@ Phase durations are planning estimates for a three-person team, not
 commitments. Each phase lists its exit criteria; a phase is not done because
 its time box elapsed.
 
-**Current position: Phase 2 complete. Phase 3 not started.**
+**Current position: Phase 3 complete on everything this environment can
+verify. Two conformance conditions remain blocked by network egress; the x402
+release gate stays OPEN. Phase 4 not started.**
 
 ---
 
@@ -103,18 +105,47 @@ producing exactly one payment and one receipt).
 - x402 wire conformance. The Phase 2 challenge body is deliberately
   protocol-neutral and does not use x402's `accepts` shape.
 
-## Phase 3 — Real payments (~3 weeks)
+## Phase 3 — Real payments ⚠️ complete except where the environment blocks it
 
-Base + USDC, live verification, confirmation worker, replay protection in the
-database, receipts.
+x402 v2 over EIP-3009 on Base Sepolia, an external facilitator behind an
+abstraction, authorization replay protection, and settlement configuration.
+
+**Delivered**
+- `X402V2PaymentProtocolAdapter` speaking x402 **v2** — CAIP-2 networks,
+  `PAYMENT-REQUIRED` / `PAYMENT-SIGNATURE` / `PAYMENT-RESPONSE`, `exact` scheme
+- The `authorization` flow (verify -> handler -> settle), read from the
+  reference implementation rather than guessed
+- `FacilitatorClient` treating the facilitator as untrusted infrastructure
+- Local EIP-712 signature verification via viem
+- A second replay guard for signed authorizations, distinct from the
+  transaction-hash guard and protecting a window the latter cannot
+- `SettlementConfiguration` keyed by (project, chain, asset), human-only and
+  audited
+- Kill switch, per-credential rate limiting, payment metrics, and
+  `/health/payments` reported separately from readiness
+- Base mainnet disabled behind two independent gates
 
 **Exit criteria**
-- A real Base Sepolia USDC payment is verified end to end
-- Replay protection demonstrated against the live constraint, not only unit
-  tests
-- **x402 conformance validated against the published specification and an
-  independent client** — the outstanding caveat from Phase 0
-- Confirmation worker is idempotent under duplicate delivery
+- ❌ A real Base Sepolia USDC payment is verified end to end — **not executed.**
+  No network egress to a testnet RPC or a hosted facilitator in this
+  environment. Nothing has settled on a real chain.
+- ✅ Replay protection demonstrated against live database constraints, under a
+  20-way concurrency test — not only unit tests
+- ⚠️ x402 conformance validated against the current specification and an
+  independent **client**: done. Against an independent **facilitator**: not
+  done. The gate stays OPEN.
+- ❌ Confirmation worker / reconciliation — **not built.** An uncertain
+  settlement correctly becomes PENDING and nothing resolves it.
+
+**Release gates**
+- x402: **OPEN** — two of the required conditions are unmet.
+- Webhook SSRF: **OPEN and untouched.**
+- Base mainnet: **NOT READY** — see `MAINNET_READINESS.md`.
+
+**Carried into Phase 4 or a Phase 3b**
+- Base Sepolia end-to-end settlement in an environment with egress
+- The reconciliation worker
+- External security review
 
 ## Phase 4 — Developer platform (~2 weeks)
 

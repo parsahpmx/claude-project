@@ -54,6 +54,11 @@ const createEndpointSchema = z.object({
   method: z.enum(HTTP_METHODS),
   environment: environmentSchema,
   price: priceSchema,
+  /*
+   * How this endpoint settles. Defaults to `test` — a merchant opts in to
+   * real money explicitly, and never gets it by leaving a field out.
+   */
+  settlementProtocol: z.enum(['test', 'x402']).default('test'),
 });
 
 const updateEndpointSchema = z
@@ -61,6 +66,7 @@ const updateEndpointSchema = z
     name: z.string().trim().min(1).max(120).optional(),
     description: z.string().trim().max(500).nullable().optional(),
     status: z.enum(['ACTIVE', 'DISABLED', 'ARCHIVED']).optional(),
+    settlementProtocol: z.enum(['test', 'x402']).optional(),
     price: priceSchema.optional(),
   })
   .refine((value) => Object.keys(value).length > 0, { message: 'No fields to update' });
@@ -83,6 +89,7 @@ function serializeEndpoint(record: EndpointRecord, pricingRule?: PricingRuleReco
     method: record.method,
     environment: record.environment,
     status: record.status,
+    settlementProtocol: record.settlementProtocol,
     createdAt: record.createdAt.toISOString(),
     price: pricingRule
       ? {
@@ -180,6 +187,7 @@ export function registerEndpointRoutes(app: FastifyInstance, deps: RouteDeps): v
         method: body.method,
         environment: body.environment,
         price: body.price,
+        settlementProtocol: body.settlementProtocol ?? 'test',
       },
       chainId,
     );
@@ -250,6 +258,9 @@ export function registerEndpointRoutes(app: FastifyInstance, deps: RouteDeps): v
       ...(body.name !== undefined ? { name: body.name } : {}),
       ...(body.description !== undefined ? { description: body.description } : {}),
       ...(body.status !== undefined ? { status: body.status } : {}),
+      ...(body.settlementProtocol !== undefined
+        ? { settlementProtocol: body.settlementProtocol }
+        : {}),
     };
 
     if (Object.keys(metadataPatch).length > 0) {

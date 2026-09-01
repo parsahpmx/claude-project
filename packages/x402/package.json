@@ -24,11 +24,14 @@
   },
   "dependencies": {
     "@meter402/payments": "workspace:*",
-    "@meter402/shared": "workspace:*"
+    "@meter402/shared": "workspace:*",
+    "viem": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@x402/core": "catalog:",
+    "@x402/evm": "catalog:"
   }
 }

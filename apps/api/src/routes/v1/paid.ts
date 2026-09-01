@@ -6,6 +6,40 @@ import { getPrincipal, type RouteDeps } from '../context.js';
 import { isHttpMethod } from '../../lib/http-path.js';
 import { scopeFromApiKey } from '../../lib/tenant.js';
 import { authorizePaidRequest } from '../../modules/payments/payment-gate.service.js';
+import { X402V2PaymentProtocolAdapter } from '@meter402/x402';
+import type { EndpointRecord } from '../../modules/endpoints/endpoint.repository.js';
+
+/**
+ * The merchant handler.
+ *
+ * Phase 3 still does not forward to merchant infrastructure — that is outbound
+ * HTTP to a merchant-chosen address, and the SSRF gate remains open. This
+ * built-in handler stands in for it, and exists so the payment flow has a real
+ * success and failure point to order settlement around.
+ */
+function runMerchantHandler(endpoint: EndpointRecord) {
+  return {
+    endpoint: {
+      id: endpoint.id,
+      name: endpoint.name,
+      path: endpoint.normalizedPath,
+      method: endpoint.method,
+    },
+    result: { served: true, servedAt: new Date().toISOString() },
+  };
+}
+
+/**
+ * The absolute origin this server is reachable at, for `resource.url`.
+ *
+ * Read from configuration, never from a request header. The resource URL is
+ * part of what a payer signs against, so a caller who could set it via `Host`
+ * or `X-Forwarded-Host` could obtain a signature for one resource and present
+ * it at another.
+ */
+function resourceBaseUrl(): string {
+  return process.env['PUBLIC_BASE_URL'] ?? 'https://api.meter402.local';
+}
 
 /**
  * The agent-facing paid surface.
@@ -59,6 +93,9 @@ export function registerPaidRoutes(app: FastifyInstance, deps: RouteDeps): void 
     const path = `/${params['*'] ?? ''}`;
 
     const decision = await authorizePaidRequest(deps.db, scopeFromApiKey(principal), deps.config, {
+      ...(deps.facilitator ? { facilitator: deps.facilitator } : {}),
+      resourceBaseUrl: resourceBaseUrl(),
+      resourcePath: request.url,
       projectId: principal.projectId,
       // From the credential, never from the request. A TEST key resolves the
       // TEST definition of this route or nothing.
@@ -83,29 +120,76 @@ export function registerPaidRoutes(app: FastifyInstance, deps: RouteDeps): void 
     }
 
     /*
-     * Authorized. The payment is settled, bound to this endpoint, and now
-     * spent — the usage event was recorded inside the gate's transaction, so
-     * this proof cannot buy a second request.
+     * x402: verified but not yet settled.
+     *
+     * This is where the protocol's flow ordering becomes real code. The
+     * `authorization` flow settles *after* the handler, so the handler runs
+     * here — and if it throws, `settle()` is never called and the payer is
+     * never charged. That behaviour is not a special case we added; it is
+     * what the ordering means.
+     */
+    if (decision.outcome === 'AUTHORIZED_PENDING_SETTLEMENT') {
+      const merchantResult = runMerchantHandler(decision.endpoint);
+
+      const settled = await decision.settle();
+
+      const successResponse = new X402V2PaymentProtocolAdapter(
+        resourceBaseUrl(),
+      ).buildSuccessResponse({
+        request: decision.request,
+        transfer: {
+          transactionHash: settled.settlement.transaction,
+          chainId: decision.request.chainId,
+          tokenAddress: decision.request.assetAddress,
+          from: decision.payer,
+          to: decision.request.recipientAddress,
+          minorUnits: decision.request.amountMinorUnits,
+          blockNumber: 0n,
+          blockHash: `0x${'0'.repeat(64)}`,
+          confirmations: 0,
+          logIndex: 0,
+          observedAt: new Date(),
+        },
+        receiptId: settled.receipt.id,
+      });
+
+      for (const [name, value] of Object.entries(successResponse.headers)) {
+        void reply.header(name, value);
+      }
+      void reply.header('meter402-receipt-id', settled.receipt.id);
+      void reply.header('meter402-payment-id', settled.payment.id);
+
+      return {
+        data: {
+          endpoint: merchantResult.endpoint,
+          result: { ...merchantResult.result, simulated: false },
+          payment: {
+            id: settled.payment.id,
+            receiptId: settled.receipt.id,
+            paymentRequestId: decision.request.id,
+            amountMinorUnits: decision.request.amountMinorUnits.toString(),
+            asset: decision.request.assetSymbol,
+            transactionHash: settled.settlement.transaction,
+            payer: decision.payer,
+          },
+        },
+      };
+    }
+
+    /*
+     * Simulated settlement. The payment was already settled out of band, is
+     * bound to this endpoint, and is now spent — the usage event was recorded
+     * inside the gate's transaction, so this proof cannot buy a second
+     * request.
      */
     void reply.header('meter402-receipt-id', decision.receipt.id);
     void reply.header('meter402-payment-id', decision.payment.id);
 
+    const merchantResult = runMerchantHandler(decision.endpoint);
     return {
       data: {
-        endpoint: {
-          id: decision.endpoint.id,
-          name: decision.endpoint.name,
-          path: decision.endpoint.normalizedPath,
-          method: decision.endpoint.method,
-        },
-        // Evidence the paid handler actually ran, which is the thing the
-        // end-to-end test asserts. A real merchant integration replaces this
-        // body; the payment machinery around it does not change.
-        result: {
-          served: true,
-          simulated: decision.payment.simulated,
-          servedAt: new Date().toISOString(),
-        },
+        endpoint: merchantResult.endpoint,
+        result: { ...merchantResult.result, simulated: decision.payment.simulated },
         payment: {
           id: decision.payment.id,
           receiptId: decision.receipt.id,
@@ -118,13 +202,44 @@ export function registerPaidRoutes(app: FastifyInstance, deps: RouteDeps): void 
   };
 
   /*
+   * A tighter limit than the global one.
+   *
+   * This is the only unauthenticated-ish surface that can cause **outbound**
+   * work: an unpaid request creates a payment request row, and a request with
+   * an authorization causes a facilitator call. Without a per-key ceiling,
+   * Meter402 becomes an amplifier — one cheap inbound request turning into an
+   * expensive call at someone else's infrastructure — and a cheap way to fill
+   * our own payment_requests table.
+   *
+   * Keyed on the API key rather than the IP, because the credential is the
+   * accountable identity here and a single agent behind a NAT should not be
+   * limited by its neighbours.
+   */
+  const paidRateLimit = {
+    config: {
+      rateLimit: {
+        max: 60,
+        timeWindow: '1 minute',
+        keyGenerator: (request: FastifyRequest) => {
+          const header = request.headers.authorization;
+          return typeof header === 'string' && header.length > 0
+            ? // The token itself is never used as a label anywhere it could be
+              // logged; this key stays inside the limiter's memory.
+              `paid:${header}`
+            : `paid-ip:${request.ip}`;
+        },
+      },
+    },
+  };
+
+  /*
    * Registered per method rather than with `app.all`, so a method the product
    * does not support is a 404 from the router instead of reaching a handler
    * that has to reject it.
    */
-  app.get('/v1/paid/*', handler);
-  app.post('/v1/paid/*', handler);
-  app.put('/v1/paid/*', handler);
-  app.patch('/v1/paid/*', handler);
-  app.delete('/v1/paid/*', handler);
+  app.get('/v1/paid/*', paidRateLimit, handler);
+  app.post('/v1/paid/*', paidRateLimit, handler);
+  app.put('/v1/paid/*', paidRateLimit, handler);
+  app.patch('/v1/paid/*', paidRateLimit, handler);
+  app.delete('/v1/paid/*', paidRateLimit, handler);
 }

@@ -12,6 +12,8 @@
 
 import { z } from 'zod';
 import {
+  BASE_MAINNET,
+  BASE_SEPOLIA,
   DeployEnvironment,
   findChainById,
   findAsset,
@@ -38,6 +40,20 @@ export class ConfigurationError extends Error {
 const PLACEHOLDER_MARKERS = ['replace_me', 'changeme', 'placeholder', 'example', 'todo'];
 
 const MIN_SECRET_LENGTH = 32;
+
+/**
+ * Environment variables are strings; a boolean flag must therefore be parsed,
+ * not coerced. `Boolean("false")` is `true`, which is precisely the kind of
+ * quiet mistake that would turn a kill switch into decoration — so only an
+ * explicit, recognised affirmative enables anything.
+ */
+const booleanFlag = z
+  .string()
+  .transform((value) => value.trim().toLowerCase())
+  .refine((value) => ['true', 'false', '1', '0', 'yes', 'no', ''].includes(value), {
+    message: 'Must be one of: true, false, 1, 0, yes, no',
+  })
+  .transform((value) => value === 'true' || value === '1' || value === 'yes');
 
 function looksLikePlaceholder(value: string): boolean {
   const lower = value.toLowerCase();
@@ -75,6 +91,25 @@ const rawSchema = z.object({
   USDC_CONTRACT_ADDRESS: z.string(),
   PAYMENT_CONFIRMATIONS_REQUIRED: z.coerce.number().int().min(1).max(200).default(3),
   PAYMENT_CHALLENGE_TTL_SECONDS: z.coerce.number().int().min(30).max(3600).default(300),
+
+  /*
+   * Real settlement controls. All three default to OFF.
+   *
+   * A fresh checkout must not be able to move real value, and it must not be
+   * able to do so through a default that someone merely forgot to review. The
+   * defaults here are the safe direction, and every step toward real money is
+   * an explicit, auditable act of configuration.
+   */
+
+  /** Master kill switch for real (non-simulated) settlement, on any network. */
+  LIVE_SETTLEMENT_ENABLED: booleanFlag.default('false'),
+  /** Additionally required before Base mainnet is even a selectable network. */
+  ENABLE_BASE_MAINNET: booleanFlag.default('false'),
+
+  /** The external x402 facilitator. Required once real settlement is enabled. */
+  X402_FACILITATOR_URL: z.string().url().or(z.literal('')).optional(),
+  X402_FACILITATOR_API_KEY: z.string().optional(),
+  X402_FACILITATOR_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120_000).default(15_000),
 
   SENTRY_DSN: z.string().optional(),
   POSTHOG_KEY: z.string().optional(),
@@ -116,6 +151,29 @@ export interface AppConfig {
     readonly usdcAddress: string;
     readonly confirmationsRequired: number;
     readonly challengeTtlSeconds: number;
+  };
+
+  /**
+   * Real-settlement posture. Read by the payment gate before any x402 payment
+   * is quoted or settled.
+   */
+  readonly settlement: {
+    /**
+     * Master kill switch. When false, real settlement is refused while the
+     * rest of the API — including simulated TEST payments — keeps serving.
+     * Operational control, deliberately not reachable from any merchant
+     * credential.
+     */
+    readonly liveSettlementEnabled: boolean;
+    /** Whether Base mainnet is a selectable network at all. */
+    readonly baseMainnetEnabled: boolean;
+    /** Chain IDs real settlement may use, derived from the flags above. */
+    readonly enabledChainIds: readonly number[];
+    readonly facilitator: {
+      readonly url: string | null;
+      readonly apiKey: string | null;
+      readonly timeoutMs: number;
+    };
   };
 
   readonly observability: {
@@ -224,6 +282,42 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     );
   }
 
+  const secondary = raw.SECONDARY_BASE_RPC_URL?.trim();
+  const facilitatorUrl = raw.X402_FACILITATOR_URL?.trim() || null;
+
+  /*
+   * Real settlement needs somewhere to send it. Enabling the switch without a
+   * facilitator would produce a server that accepts payment authorizations and
+   * then cannot settle them — worse than one that plainly refuses.
+   */
+  if (raw.LIVE_SETTLEMENT_ENABLED && !facilitatorUrl) {
+    issues.push(
+      'LIVE_SETTLEMENT_ENABLED is true but X402_FACILITATOR_URL is not set. ' +
+        'Real settlement requires a facilitator.',
+    );
+  }
+
+  /*
+   * Mainnet is gated twice, and the second gate is this one: turning on the
+   * mainnet network without turning on settlement is a contradiction worth
+   * failing on rather than silently resolving in either direction.
+   */
+  if (raw.ENABLE_BASE_MAINNET && !raw.LIVE_SETTLEMENT_ENABLED) {
+    issues.push(
+      'ENABLE_BASE_MAINNET is true but LIVE_SETTLEMENT_ENABLED is false. ' +
+        'Enable settlement explicitly, or disable mainnet.',
+    );
+  }
+
+  const enabledChainIds: number[] = [];
+  if (raw.LIVE_SETTLEMENT_ENABLED) {
+    // Base Sepolia comes with real settlement; mainnet needs its own flag.
+    enabledChainIds.push(BASE_SEPOLIA.id);
+    if (raw.ENABLE_BASE_MAINNET) {
+      enabledChainIds.push(BASE_MAINNET.id);
+    }
+  }
+
   if (issues.length > 0) {
     throw new ConfigurationError('Invalid environment configuration', issues);
   }
@@ -232,8 +326,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   if (!chain) {
     throw new ConfigurationError('Unresolved chain configuration');
   }
-
-  const secondary = raw.SECONDARY_BASE_RPC_URL?.trim();
 
   return {
     nodeEnv: raw.NODE_ENV,
@@ -263,6 +355,16 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       confirmationsRequired: raw.PAYMENT_CONFIRMATIONS_REQUIRED,
       challengeTtlSeconds: raw.PAYMENT_CHALLENGE_TTL_SECONDS,
     },
+    settlement: {
+      liveSettlementEnabled: raw.LIVE_SETTLEMENT_ENABLED,
+      baseMainnetEnabled: raw.ENABLE_BASE_MAINNET,
+      enabledChainIds: Object.freeze(enabledChainIds),
+      facilitator: {
+        url: facilitatorUrl,
+        apiKey: raw.X402_FACILITATOR_API_KEY?.trim() || null,
+        timeoutMs: raw.X402_FACILITATOR_TIMEOUT_MS,
+      },
+    },
     observability: {
       sentryDsn: raw.SENTRY_DSN?.trim() || null,
       posthogKey: raw.POSTHOG_KEY?.trim() || null,
@@ -291,6 +393,15 @@ export function redactConfig(config: AppConfig): Record<string, unknown> {
       testSimulatorSecret: '[set]',
     },
     chain: config.chain,
+    settlement: {
+      ...config.settlement,
+      facilitator: {
+        url: config.settlement.facilitator.url,
+        // Presence marker only; a facilitator key is a credential.
+        apiKey: config.settlement.facilitator.apiKey ? '[set]' : null,
+        timeoutMs: config.settlement.facilitator.timeoutMs,
+      },
+    },
     observability: {
       sentryDsn: config.observability.sentryDsn ? '[set]' : null,
       posthogKey: config.observability.posthogKey ? '[set]' : null,

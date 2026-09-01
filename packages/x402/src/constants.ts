@@ -1,40 +1,68 @@
 /**
- * x402 wire constants.
+ * x402 v2 wire constants.
  *
- * IMPORTANT — implementation status.
+ * Every value here was verified against the official reference implementation
+ * (`@x402/core@2.24.0`, `@x402/evm@2.24.0`) rather than transcribed from
+ * prose. See docs/X402_V2_CONFORMANCE_PLAN.md for the evidence.
  *
- * This adapter implements the x402 request/response *shape* as described in
- * the public x402 v1 material: a 402 carrying an `accepts` array of payment
- * requirements, a client retry bearing a base64url `X-PAYMENT` header, and an
- * `X-PAYMENT-RESPONSE` header on success.
- *
- * It has NOT been conformance-tested against the published specification or
- * against a third-party x402 client. Before Meter402 advertises x402
- * compatibility publicly, this package must be validated against the spec
- * document and an independent implementation, and any divergence resolved
- * here. That task is tracked in docs/ROADMAP.md under Phase 3.
- *
- * Everything x402-specific is confined to this package precisely so that
- * correcting a wire-format divergence is a change here and nowhere else.
+ * This package is the ONLY place in Meter402 that knows x402 wire format. The
+ * test for whether that boundary is holding: grep the API app for "x402" — it
+ * should appear where an adapter is selected, never where a payment is
+ * processed.
  */
 
 export const X402_PROTOCOL = 'x402';
-export const X402_VERSION = 1;
 
-/** Client -> server: the payment payload, base64-encoded JSON. */
-export const PAYMENT_HEADER = 'x-payment';
-/** Server -> client: the settlement result, base64-encoded JSON. */
-export const PAYMENT_RESPONSE_HEADER = 'x-payment-response';
+/**
+ * The protocol version this adapter speaks.
+ *
+ * Exactly 2. A v1 payload is rejected, never reinterpreted: v1 and v2 differ
+ * in ways that are silently compatible in the wrong direction — v1's
+ * `maxAmountRequired` is absent in v2, and v1 network slugs (`"base-sepolia"`)
+ * would parse as neither valid nor obviously invalid CAIP-2. Accepting both
+ * through one code path is how a payer ends up bound to a requirement the
+ * server never issued. Backward compatibility, if ever wanted, is a separate
+ * versioned adapter.
+ */
+export const X402_VERSION = 2;
 
-/** The only settlement scheme Meter402 supports today: an exact-amount transfer. */
+/** Server -> client, alongside the 402 body. Base64 JSON `PaymentRequired`. */
+export const PAYMENT_REQUIRED_HEADER = 'payment-required';
+/** Client -> server. Base64 JSON `PaymentPayload`. */
+export const PAYMENT_SIGNATURE_HEADER = 'payment-signature';
+/** Server -> client on success. Base64 JSON `SettleResponse`. */
+export const PAYMENT_RESPONSE_HEADER = 'payment-response';
+
+/** The only settlement scheme Meter402 implements. */
 export const SCHEME_EXACT = 'exact';
 
 /**
- * Cap on the decoded `X-PAYMENT` header.
+ * The EVM asset transfer method for the exact scheme: EIP-3009
+ * `transferWithAuthorization`. The payer signs; the facilitator submits.
+ * Meter402 never holds a key that can move payer funds.
+ */
+export const ASSET_TRANSFER_METHOD_EIP3009 = 'eip3009';
+
+/**
+ * Cap on the decoded `PAYMENT-SIGNATURE` header.
  *
- * Without a bound, an attacker can make an unauthenticated endpoint allocate
- * and JSON-parse an arbitrarily large buffer on every request. 8 KiB is far
- * more than a legitimate payload — a transaction hash and a few addresses —
- * needs.
+ * A real payload, measured from the official client, is ~1 KiB. 8 KiB is
+ * generous for a legitimate caller and still bounds the work an unauthenticated
+ * request can force: without a limit, an attacker makes the server allocate and
+ * JSON-parse an arbitrarily large buffer on every request.
  */
 export const MAX_PAYMENT_HEADER_BYTES = 8 * 1024;
+
+/**
+ * Cap on the base64 text before decoding.
+ *
+ * Checked first, so an oversized header is refused without ever being decoded.
+ * Base64 expands by 4/3, plus room for padding and any transfer encoding.
+ */
+export const MAX_PAYMENT_HEADER_ENCODED_BYTES = Math.ceil(MAX_PAYMENT_HEADER_BYTES * (4 / 3)) + 64;
+
+/** A 65-byte secp256k1 signature, hex-encoded with the 0x prefix. */
+export const SIGNATURE_HEX_LENGTH = 2 + 130;
+
+/** EIP-3009 authorization nonces are 32 bytes. */
+export const NONCE_HEX_LENGTH = 2 + 64;

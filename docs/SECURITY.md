@@ -237,6 +237,32 @@ Added in Phase 2:
 - endpoint path handling: traversal rejected rather than resolved, embedded
   control characters, query strings and fragments, non-ASCII, over-length
 
+Added in Phase 3:
+
+- x402 v2 wire conformance against the official reference library, including
+  fixtures the official encoder produced rather than ours
+- an independent x402 client signing a real EIP-3009 authorization against our
+  402 and being served
+- binding negatives: lowered amount, raised amount, redirected recipient in
+  both the signed authorization and the echoed requirement, lookalike token,
+  genuine mainnet USDC on a Sepolia request, network downgrade, unsupported
+  scheme, expired and not-yet-valid authorizations, expired payment request
+- signature negatives: modified signed message, signature presented under
+  another payer, wrong EIP-712 domain, wrong chain id
+- hostile input: non-base64, empty, non-JSON, arrays, strings, null, oversized
+  header rejected before decoding, oversized JSON body, prototype pollution,
+  non-canonical amounts, malformed signature and nonce lengths, x402Version 1
+  rejected rather than reinterpreted
+- authorization replay re-pointed at a different payment request
+- 20 simultaneous submissions of one authorization producing exactly one
+  settlement, one Payment, one Receipt, one usage event
+- facilitator behaviour: rejection, outage, uncertain settlement, wrong
+  network, wrong amount, wrong payer
+- settlement mutation: API key refused at the broadest machine scopes, DEVELOPER
+  refused, cross-tenant refused, malformed address refused, audit written,
+  issued PaymentRequest unaffected by repointing
+- kill switch off by default, and no burn-address fallback for real settlement
+
 ### Still open, and blocking the features they belong to
 
 These gates remain **unresolved**. Phase 2 did not close either of them, and
@@ -287,7 +313,112 @@ The reference itself is recorded in audit metadata deliberately — once a
 payment is complete it is the identifier a merchant reconciles against, the
 TEST analogue of a transaction hash. The derivation *key* is never logged.
 
-## 13. Pre-production requirements
+## 13. Phase 3 — real settlement
+
+### The x402 authorization flow
+
+Real payments use x402 v2's `exact` scheme with EIP-3009 signed
+authorizations. The ordering — verify, then merchant handler, then settle — is
+taken from the reference implementation's flow phases, not chosen by us. Its
+security consequence: **a payer is never charged for a request the merchant
+could not serve**, because settlement simply never runs if the handler fails.
+
+### Order of checks, and why
+
+Local first, external last:
+
+1. Kill switch and enabled-network check
+2. Payload shape (bounded before decode, bounded before parse)
+3. Binding against the stored `PaymentRequest` — exact, no tolerance
+4. EIP-712 signature recovery (viem; no hand-rolled cryptography)
+5. Atomic authorization claim
+6. Facilitator `/verify`
+
+Everything that can reject a payment locally does so before any outbound
+request. That is a DoS control as much as a correctness one: a forged
+authorization costs the attacker a request and costs us nothing, and Meter402
+cannot be used to amplify traffic at a facilitator.
+
+### Two replay guards, both database constraints
+
+| Guard | Constraint | Window it protects |
+| --- | --- | --- |
+| Authorization | `UNIQUE (chain_id, asset_address, payer_address, authorization_nonce)` | Before settlement, when no transaction exists yet |
+| Transaction | `UNIQUE (chain_id, transaction_hash)` | After settlement |
+
+The first is new in Phase 3 and is not redundant. An EIP-3009 signature does
+not cover the resource being paid for, so an observed authorization can be
+re-pointed at a different payment request and will pass every binding check.
+Only the claim stops it.
+
+### Settlement destinations are human-only
+
+There is **no** `settlement:write` API-key scope. The capability does not exist
+for machine credentials, so it cannot be granted to one by accident. Among
+humans it requires `settlement:write`, held by OWNER and ADMIN; a DEVELOPER —
+who can create endpoints, set prices, and mint API keys — can read it and not
+change it. Every mutation is audited in the same transaction that performs it.
+
+Already-issued `PaymentRequest`s keep their recipient snapshot, so an account
+compromised after a quote was issued cannot retroactively capture that payment.
+
+### What is never logged
+
+Beyond the Phase 2 list, Phase 3 adds: **the signed authorization payload and
+its signature are never written to logs, metrics, audit events, or the
+`payment_attempts` table.** A signature is a bearer instrument valid until
+`validBefore`; a copy in an operational log is a copy anyone with log access
+can spend.
+
+What *is* recorded is the authorization **nonce** and the payer address in
+audit metadata. Those identify the authorization for dispute resolution and
+cannot be used to construct one. Metrics carry neither — labels are restricted
+to a fixed vocabulary (network, reason), so nothing per-payer can leak into a
+dashboard.
+
+### Facilitator trust
+
+The facilitator is outside the trust boundary. HTTP 200 is not a payment:
+`isValid` and `success` are read from a validated body, `success: true` without
+a well-formed transaction hash is rejected, and the settle report is re-checked
+against the PaymentRequest for network, amount and payer. Its verdict cannot
+override our own signature verification, which has already run.
+
+`OnChainConfirmingVerifier` composes an independent on-chain read on top, using
+the Phase 0 ERC-20 primitives. It is **not** enabled by default; a deployment
+using a third-party facilitator should enable it, and that trade-off is a
+deployment decision rather than a hidden one.
+
+### Uncertainty
+
+A settle call that times out is never retried and never marked FAILED. The
+request moves to PENDING with an audit event and the payer is told not to pay
+again. **No reconciliation job exists yet** — see `MAINNET_READINESS.md`.
+
+### Phase 3 self-review
+
+A targeted review was performed against the STEP 55 list: signature confusion,
+authorization replay, transaction replay, PaymentRequest substitution, resource
+substitution, tenant escape, amount tampering, recipient substitution, token
+impersonation, network confusion, mainnet/testnet confusion, facilitator
+spoofing, malformed facilitator response, API-key scope bypass,
+UserPrincipal/ApiKeyPrincipal confusion, state-machine bypass, exactly-once
+failure, and sensitive payload logging.
+
+It found one real defect — the concurrent double-settlement in T-31 — which is
+fixed and now covered by a test that fails without the fix.
+
+**This is a self-review and is not a substitute for an external one**, which
+remains outstanding.
+
+### Release gates after Phase 3
+
+| Gate | Status |
+| --- | --- |
+| x402 wire conformance | **Still OPEN.** Wire format and independent-client interop are verified; independent **facilitator** interop and a Base Sepolia E2E are not, because this environment has no network egress. Two of the gate's conditions are unmet. |
+| Webhook SSRF | **Still OPEN, and untouched.** Phase 3 goes nowhere near merchant-controlled outbound HTTP. The paid surface still serves authorized requests from a built-in handler for exactly this reason. |
+
+## 14. Pre-production requirements
 
 Before processing meaningful production volume:
 

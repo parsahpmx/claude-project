@@ -58,14 +58,44 @@ export function findChainBySlug(slug: string): ChainDescriptor | undefined {
   return CHAINS.find((chain) => chain.slug === slug);
 }
 
+/**
+ * The EIP-712 domain a token contract signs under.
+ *
+ * Needed by any signed-authorization transfer (EIP-3009 `transferWithAuthorization`,
+ * EIP-2612 `permit`), because the domain separator is part of the signed
+ * digest. Get it wrong and every signature fails to recover to the payer —
+ * with no useful error, because a wrong domain produces a valid signature over
+ * the wrong message.
+ *
+ * These values are properties of the deployed contract and are NOT
+ * interchangeable with the display `name` above: Circle's Base Sepolia USDC
+ * signs under the domain name `"USDC"` while Base mainnet USDC signs under
+ * `"USD Coin"`. Deriving one from the other would break signature
+ * verification on exactly one of the two networks — the kind of bug that
+ * passes every test written on the other one.
+ */
+export interface Eip712TokenDomain {
+  readonly name: string;
+  readonly version: string;
+}
+
 export interface TokenAsset {
   /** Ticker used in APIs and challenges, e.g. "USDC". */
   readonly symbol: string;
+  /** Human-readable display name. Never used in a signed message. */
   readonly name: string;
   /** Smallest-unit exponent. USDC is 6, so 1 USDC === 1_000_000 minor units. */
   readonly decimals: number;
   readonly chainId: number;
   readonly address: HexAddress;
+  /** The domain this contract signs under. See {@link Eip712TokenDomain}. */
+  readonly eip712: Eip712TokenDomain;
+  /**
+   * Whether the contract implements EIP-3009 `transferWithAuthorization`.
+   * A signed-authorization payment scheme cannot be offered for an asset
+   * without it, so this is checked before a price is ever quoted.
+   */
+  readonly supportsEip3009: boolean;
 }
 
 /**
@@ -80,6 +110,11 @@ export const USDC_BASE_MAINNET: TokenAsset = {
   decimals: 6,
   chainId: BASE_MAINNET.id,
   address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
+  // Cross-checked against the x402 reference implementation's default asset
+  // table (@x402/evm getDefaultAsset('eip155:8453')), which reports
+  // name "USD Coin", version "2".
+  eip712: { name: 'USD Coin', version: '2' },
+  supportsEip3009: true,
 };
 
 export const USDC_BASE_SEPOLIA: TokenAsset = {
@@ -88,6 +123,13 @@ export const USDC_BASE_SEPOLIA: TokenAsset = {
   decimals: 6,
   chainId: BASE_SEPOLIA.id,
   address: '0x036cbd53842c5426634e7929541ec2318f3dcf7e',
+  /*
+   * Note the domain name is "USDC", NOT the display name above and NOT the
+   * mainnet contract's "USD Coin". Cross-checked against
+   * @x402/evm getDefaultAsset('eip155:84532').
+   */
+  eip712: { name: 'USDC', version: '2' },
+  supportsEip3009: true,
 };
 
 export const SUPPORTED_ASSETS: readonly TokenAsset[] = Object.freeze([

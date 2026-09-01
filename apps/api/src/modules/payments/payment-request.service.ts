@@ -14,6 +14,7 @@ import { chainIdForEnvironment } from '../endpoints/endpoint.service.js';
 import { findOrganization } from '../identity/organization.repository.js';
 import { findProjectInOrganization } from '../projects/project.repository.js';
 import { insertPaymentRequest } from './payment.repository.js';
+import { resolveSettlementRecipient } from '../settlement/settlement.repository.js';
 
 /**
  * The recipient used for TEST payments when a merchant has not configured a
@@ -56,24 +57,72 @@ export interface CreatePaymentRequestInput {
 async function resolveRecipient(
   db: Database,
   scope: TenantScope,
-  projectId: string,
-  environment: MerchantEnvironment,
+  input: {
+    projectId: string;
+    environment: MerchantEnvironment;
+    chainId: number;
+    assetSymbol: string;
+    /** True when this request will settle for real. Changes the rules. */
+    realSettlement: boolean;
+  },
 ): Promise<string> {
+  const { projectId, environment, chainId, assetSymbol, realSettlement } = input;
+
+  /*
+   * A settlement configuration keyed by (project, chain, asset) wins, then the
+   * organization-wide default for that chain and asset. Keyed by chain because
+   * a merchant testing on Base Sepolia and earning on Base mainnet needs
+   * different destinations — conflating them is how testnet configuration ends
+   * up receiving production revenue.
+   */
+  const configured = await resolveSettlementRecipient(db, scope, {
+    projectId,
+    chainId,
+    assetSymbol,
+  });
+  if (configured) {
+    return configured.recipientAddress.toLowerCase();
+  }
+
+  /*
+   * Fall back to the Phase 2 columns so merchants configured before settlement
+   * configurations existed keep working.
+   */
   const project = await findProjectInOrganization(db, scope, projectId);
   const organization = await findOrganization(db, scope);
-  const configured = project?.settlementAddress ?? organization?.settlementAddress ?? null;
+  const legacy = project?.settlementAddress ?? organization?.settlementAddress ?? null;
+  if (legacy && isValidAddress(legacy)) {
+    return legacy.toLowerCase();
+  }
 
-  if (configured && isValidAddress(configured)) {
-    return configured.toLowerCase();
+  /*
+   * No configured destination. What happens next depends on whether real value
+   * will move — and this is the one place where that distinction must not be
+   * approximated by the TEST/LIVE flag alone.
+   *
+   * A real x402 payment settles on-chain even in TEST mode (Base Sepolia), so
+   * falling back to the burn address here would irreversibly destroy a real,
+   * if valueless, transfer — and on mainnet it would destroy actual revenue.
+   * Real settlement therefore requires an explicitly configured recipient,
+   * always.
+   */
+  if (realSettlement) {
+    throw new Meter402Error(
+      'SETTLEMENT_NOT_CONFIGURED',
+      'This project has no settlement destination for that network and asset, so a real payment cannot be requested. Configure one before enabling real settlement.',
+      { details: { projectId, chainId, asset: assetSymbol } },
+    );
   }
 
   if (environment === MerchantEnvironment.Live) {
     throw new Meter402Error(
-      'CONFLICT',
+      'SETTLEMENT_NOT_CONFIGURED',
       'This project has no settlement address configured, so a LIVE payment cannot be requested.',
       { details: { projectId } },
     );
   }
+
+  // Simulated payments only. Nothing is ever sent here.
   return TEST_FALLBACK_RECIPIENT;
 }
 
@@ -162,7 +211,13 @@ export async function createPaymentRequestForEndpoint(
     throw new Meter402Error('INVALID_PRICE', 'Quoted asset is not supported on this chain.');
   }
 
-  const recipient = await resolveRecipient(db, scope, endpoint.projectId, endpoint.environment);
+  const recipient = await resolveRecipient(db, scope, {
+    projectId: endpoint.projectId,
+    environment: endpoint.environment,
+    chainId,
+    assetSymbol: asset.symbol,
+    realSettlement: input.protocol !== 'test',
+  });
 
   const draft = createPaymentRequest({
     organizationId: scope.organizationId,

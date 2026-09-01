@@ -2,6 +2,7 @@ import type { FastifyRequest } from 'fastify';
 import { Meter402Error } from '@meter402/shared';
 import type { Database } from '@meter402/database';
 import type { AppConfig } from '@meter402/config';
+import type { FacilitatorClient } from '@meter402/x402';
 import type { Principal } from '@meter402/auth';
 import type { SessionIssuer } from '../auth/session.js';
 import type { ActorContext } from '../modules/identity/membership.service.js';
@@ -10,6 +11,14 @@ export interface RouteDeps {
   readonly db: Database;
   readonly config: AppConfig;
   readonly sessionIssuer: SessionIssuer;
+  /**
+   * The x402 facilitator, present only when real settlement is configured.
+   *
+   * Optional on purpose: a deployment with settlement disabled has no
+   * facilitator, and the type says so rather than holding a null that every
+   * call site has to remember to check.
+   */
+  readonly facilitator?: FacilitatorClient;
 }
 
 declare module 'fastify' {

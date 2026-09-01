@@ -135,3 +135,25 @@ export const httpMethodEnum = pgEnum('http_method', ['GET', 'POST', 'PUT', 'PATC
  * row, because endpoints own payments and receipts.
  */
 export const endpointStatusEnum = pgEnum('endpoint_status', ['ACTIVE', 'DISABLED', 'ARCHIVED']);
+
+/**
+ * How an endpoint takes payment.
+ *
+ * This is the axis that separates "simulated" from "real", and it is
+ * deliberately distinct from `merchant_environment`. The two answer different
+ * questions, and Phase 3 needs both:
+ *
+ *   environment  — which chain and which credentials (TEST -> Base Sepolia)
+ *   protocol     — how settlement actually happens (simulated vs real x402)
+ *
+ * That gives three honest configurations rather than one overloaded "test"
+ * flag: TEST+test is a simulation with no blockchain, TEST+x402 is a real
+ * signed payment on a testnet, and LIVE+x402 is real money on mainnet.
+ */
+export const settlementProtocolEnum = pgEnum('settlement_protocol', ['test', 'x402']);
+
+/** Lifecycle of a merchant settlement destination. */
+export const settlementConfigStatusEnum = pgEnum('settlement_config_status', [
+  'ACTIVE',
+  'DISABLED',
+]);

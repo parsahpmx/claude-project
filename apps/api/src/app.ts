@@ -4,7 +4,12 @@ import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
 import { Meter402Error, isMeter402Error, newRequestId, toPublicError } from '@meter402/shared';
 import type { AppConfig } from '@meter402/config';
-import { registerHealthRoutes, type HealthProbes } from './routes/health.js';
+import {
+  registerHealthRoutes,
+  registerPaymentHealthRoute,
+  type HealthProbes,
+  type PaymentHealth,
+} from './routes/health.js';
 import { registerV1Routes } from './routes/v1/index.js';
 import type { RouteDeps } from './routes/context.js';
 
@@ -16,6 +21,7 @@ export interface BuildAppOptions {
    * testing and impossible to stage otherwise.
    */
   readonly probes?: HealthProbes;
+  readonly paymentHealth?: PaymentHealth;
   /**
    * Disable logging entirely. For tests only — several of them deliberately
    * provoke 500s, and the resulting stack traces drown the actual results.
@@ -237,6 +243,9 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   registerHealthRoutes(app, options.probes ?? {});
+  if (options.paymentHealth) {
+    registerPaymentHealthRoute(app, options.paymentHealth);
+  }
 
   if (options.routes) {
     await registerV1Routes(app, options.routes);

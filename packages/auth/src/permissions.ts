@@ -42,6 +42,19 @@ export const PERMISSIONS = [
   'payments:read',
   'analytics:read',
 
+  /*
+   * Settlement destinations — where a merchant's money lands.
+   *
+   * Separated from `billing:*` deliberately. Billing is what Meter402 charges
+   * the merchant; settlement is what the merchant receives, and repointing it
+   * is the single highest-value action in the product: it converts a
+   * compromised account into a standing theft of all future revenue. It gets
+   * its own permission so it can be granted to as few people as possible, and
+   * so that widening a billing role never silently widens this.
+   */
+  'settlement:read',
+  'settlement:write',
+
   'webhooks:read',
   'webhooks:write',
 

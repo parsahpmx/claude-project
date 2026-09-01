@@ -2,6 +2,7 @@ import { index, integer, jsonb, pgTable, text, uniqueIndex } from 'drizzle-orm/p
 import { auditTimestamps, tsColumn } from './columns.js';
 import {
   endpointStatusEnum,
+  settlementProtocolEnum,
   httpMethodEnum,
   merchantEnvironmentEnum,
   pricingKindEnum,
@@ -87,6 +88,13 @@ export const endpoints = pgTable(
     method: httpMethodEnum('method').notNull(),
     environment: merchantEnvironmentEnum('environment').notNull(),
     status: endpointStatusEnum('status').notNull().default('ACTIVE'),
+    /**
+     * How this endpoint takes payment: a simulated TEST settlement, or a real
+     * x402 payment. Defaults to `test`, so an endpoint created before Phase 3
+     * — or by a merchant who has not opted in — keeps behaving exactly as it
+     * did, and real settlement is something a merchant switches on knowingly.
+     */
+    settlementProtocol: settlementProtocolEnum('settlement_protocol').notNull().default('test'),
     pricingRuleId: text('pricing_rule_id').references(() => pricingRules.id, {
       onDelete: 'set null',
     }),

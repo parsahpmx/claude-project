@@ -49,6 +49,15 @@ catalog:
   zod: ^3.25.76
   viem: ^2.56.1
 
+  # --- x402 conformance (test-only) ----------------------------------------
+  # The official x402 reference implementation, used ONLY in tests, to check
+  # our wire output against an independent encoder and to generate real signed
+  # authorizations. Deliberately NOT a runtime dependency: the production
+  # parser is our own hardened one, and a payment server should not import a
+  # large dependency tree into its hot path. See docs/X402_V2_CONFORMANCE_PLAN.md.
+  '@x402/core': ^2.24.0
+  '@x402/evm': ^2.24.0
+
   # --- Frontend ------------------------------------------------------------
   next: ^15.5.9
   react: ^19.2.0

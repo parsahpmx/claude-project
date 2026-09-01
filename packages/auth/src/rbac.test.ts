@@ -56,6 +56,8 @@ const EXPECTED: Readonly<Record<Role, readonly Permission[]>> = {
     'api_keys:revoke',
     'endpoints:read',
     'endpoints:write',
+    'settlement:read',
+    'settlement:write',
     'payments:read',
     'analytics:read',
     'webhooks:read',
@@ -78,6 +80,7 @@ const EXPECTED: Readonly<Record<Role, readonly Permission[]>> = {
     'endpoints:write',
     'payments:read',
     'analytics:read',
+    'settlement:read',
     'webhooks:read',
     'webhooks:write',
   ],
@@ -99,6 +102,7 @@ const EXPECTED: Readonly<Record<Role, readonly Permission[]>> = {
     'analytics:read',
     'billing:read',
     'billing:manage',
+    'settlement:read',
   ],
 
   VIEWER: [

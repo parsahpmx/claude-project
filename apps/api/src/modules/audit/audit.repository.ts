@@ -34,7 +34,14 @@ export type AuditAction =
   | 'payment_request.created'
   | 'payment.confirmed'
   | 'receipt.created'
-  | 'test_payment.completed';
+  | 'test_payment.completed'
+  /* Phase 3 */
+  | 'settlement_config.created'
+  | 'settlement_config.updated'
+  | 'settlement_config.disabled'
+  | 'x402_payment.verified'
+  | 'x402_payment.settled'
+  | 'x402_payment.settlement_uncertain';
 
 export interface AuditEventInput {
   readonly organizationId: string;

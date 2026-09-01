@@ -14,3 +14,4 @@ export * from './agents.js';
 export * from './payments.js';
 export * from './operations.js';
 export * from './billing.js';
+export * from './settlement.js';

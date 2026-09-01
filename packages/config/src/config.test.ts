@@ -217,3 +217,75 @@ describe('redactConfig', () => {
     expect(redactConfig(loadConfig(env()))['chain']).toMatchObject({ chainId: 84532 });
   });
 });
+
+describe('real settlement is off unless explicitly enabled', () => {
+  it('defaults every settlement switch to off', () => {
+    const config = loadConfig(env());
+    expect(config.settlement.liveSettlementEnabled).toBe(false);
+    expect(config.settlement.baseMainnetEnabled).toBe(false);
+    // The decisive assertion: a fresh environment can settle on no chain at
+    // all, so it cannot accidentally move real value.
+    expect(config.settlement.enabledChainIds).toEqual([]);
+  });
+
+  it('does not treat the string "false" as true', () => {
+    // Boolean("false") === true. A kill switch that fell for that would be
+    // decoration rather than a control.
+    const config = loadConfig(
+      env({ LIVE_SETTLEMENT_ENABLED: 'false', ENABLE_BASE_MAINNET: 'false' }),
+    );
+    expect(config.settlement.liveSettlementEnabled).toBe(false);
+    expect(config.settlement.baseMainnetEnabled).toBe(false);
+  });
+
+  it('rejects an unrecognised flag value rather than guessing', () => {
+    expect(() => loadConfig(env({ LIVE_SETTLEMENT_ENABLED: 'maybe' }))).toThrow();
+  });
+
+  it('enables only Base Sepolia when settlement is on', () => {
+    const config = loadConfig(
+      env({
+        LIVE_SETTLEMENT_ENABLED: 'true',
+        X402_FACILITATOR_URL: 'https://facilitator.example.test',
+      }),
+    );
+    expect(config.settlement.enabledChainIds).toEqual([84532]);
+    expect(config.settlement.enabledChainIds).not.toContain(8453);
+  });
+
+  it('enables Base mainnet only when both switches are on', () => {
+    const config = loadConfig(
+      env({
+        LIVE_SETTLEMENT_ENABLED: 'true',
+        ENABLE_BASE_MAINNET: 'true',
+        X402_FACILITATOR_URL: 'https://facilitator.example.test',
+      }),
+    );
+    expect(config.settlement.enabledChainIds).toEqual([84532, 8453]);
+  });
+
+  it('refuses mainnet without settlement enabled', () => {
+    expect(() => loadConfig(env({ ENABLE_BASE_MAINNET: 'true' }))).toThrow(
+      /LIVE_SETTLEMENT_ENABLED is false/,
+    );
+  });
+
+  it('refuses settlement without a facilitator', () => {
+    expect(() => loadConfig(env({ LIVE_SETTLEMENT_ENABLED: 'true' }))).toThrow(
+      /requires a facilitator/,
+    );
+  });
+
+  it('never emits the facilitator API key', () => {
+    const config = loadConfig(
+      env({
+        LIVE_SETTLEMENT_ENABLED: 'true',
+        X402_FACILITATOR_URL: 'https://facilitator.example.test',
+        X402_FACILITATOR_API_KEY: 'facilitator-secret-value-xyz',
+      }),
+    );
+    const serialised = JSON.stringify(redactConfig(config));
+    expect(serialised).not.toContain('facilitator-secret-value-xyz');
+    expect(serialised).not.toContain('facilitator-secret');
+  });
+});

@@ -187,6 +187,123 @@ implementation and its test matrix (Phase 1).
 Deferred to the chosen authentication provider, with our requirements listed
 in `SECURITY.md §2`. Not yet integrated.
 
+## 3a. Phase 3 threats — real settlement
+
+Introduced by moving from a simulator to signed authorizations, an external
+facilitator, and a real chain.
+
+### T-30 Malicious payer replays a signed authorization
+
+An EIP-3009 authorization is a bearer instrument. Its signature covers
+`(from, to, value, validAfter, validBefore, nonce)` — and **not** the resource
+being paid for. An attacker who observes one can point it at a different
+payment request by editing `resource.url`, and every binding check still
+passes: same payer, same amount, same recipient.
+
+*Mitigation:* an atomic claim on
+`UNIQUE (chain_id, asset_address, payer_address, authorization_nonce)` before
+the facilitator is contacted. The transaction-hash guard cannot cover this —
+at the moment of the replay no transaction exists. Tested directly, by forging
+exactly this attack.
+
+### T-31 Concurrent submission causes a double settlement
+
+N simultaneous submissions of one valid authorization each find no payment
+committed yet, each call `settle`, each potentially broadcasting a transaction.
+
+*Mitigation:* only the caller that won the authorization claim may settle;
+losers receive a retryable in-flight response. **This was a real defect found
+by the 20-way concurrency test during Phase 3**, not a theoretical one — the
+first implementation checked for an existing payment and let all twenty
+through.
+
+### T-32 Compromised or buggy facilitator
+
+The facilitator is outside the trust boundary. It could report `isValid` for an
+unsigned authorization, report a settlement that never happened, report one on
+a different network, or name a different payer.
+
+*Mitigation:* the signature is verified locally before the facilitator is
+asked, so its verdict cannot manufacture a valid payment. Its settle report is
+re-checked against the PaymentRequest for network, amount and payer. A
+malformed body is a protocol error, never a payment. `success: true` without a
+well-formed transaction hash is rejected.
+
+*Residual:* a facilitator that reports a plausible but fabricated transaction
+hash would be believed unless `OnChainConfirmingVerifier` is composed in.
+That composition exists and is unused by default — a deployment using a
+third-party facilitator should enable it.
+
+### T-33 Facilitator outage or lost settlement response
+
+A settle call that times out may already have broadcast a transaction.
+
+*Mitigation:* never retried automatically, never marked FAILED. The request
+moves to PENDING with an audit event, and the payer is told not to pay again.
+*Residual:* **no reconciliation job exists yet** — see `MAINNET_READINESS.md`.
+
+### T-34 Asset substitution / lookalike token
+
+An attacker offers a token with the symbol `USDC` at an address they control.
+
+*Mitigation:* the expected contract comes from the server-side registry keyed
+on `(symbol, chainId)`, never from the request row and never from the client.
+Tested with both a fabricated contract and the genuine mainnet USDC address
+presented against a Sepolia request.
+
+### T-35 Network downgrade / testnet–mainnet confusion
+
+An authorization for Base Sepolia presented against a mainnet request, or the
+reverse.
+
+*Mitigation:* the expected network is derived from the request's chain and
+compared exactly; no substitution. Separately, the EIP-712 domain differs per
+network (Base Sepolia USDC signs as `"USDC"`, mainnet as `"USD Coin"`), so a
+signature made for one network does not verify against the other — tested.
+Mainnet additionally requires two configuration flags that the config layer
+refuses to let drift apart.
+
+### T-36 Recipient replacement / merchant wallet takeover
+
+An attacker who gains a credential repoints settlement to their own address.
+
+*Mitigation:* settlement mutation is human-only — there is no API-key scope for
+it at all — and requires `settlement:write`, which a DEVELOPER does not hold.
+Every change is audited in the same transaction. Already-issued PaymentRequests
+keep their recipient snapshot, so a compromise cannot retroactively capture
+payments already quoted. All tested.
+
+### T-37 Payment parser abuse and header amplification
+
+An unauthenticated request carrying a huge `PAYMENT-SIGNATURE` header forces
+allocation and parsing; or a flood of authorizations turns Meter402 into an
+amplifier pointed at the facilitator.
+
+*Mitigation:* the encoded length is bounded before the base64 decode and the
+decoded length before the JSON parse. All local checks — shape, binding,
+signature — run before any outbound call, so a forged payload costs zero
+outbound requests. The paid surface has a per-credential rate limit well below
+the global one.
+
+### T-38 Chain reorganisation
+
+A settlement confirmed at low depth is reorganised out.
+
+*Mitigation:* unchanged from Phase 0 — confirmations are configurable and the
+uncertainty states exist. *Residual:* value-scaled finality thresholds are
+still not implemented, and on a testnet this has not been exercised at all.
+
+### T-39 Mainnet misconfiguration
+
+A deployment intended for testnet settles on mainnet.
+
+*Mitigation:* mainnet requires `ENABLE_BASE_MAINNET` **and**
+`LIVE_SETTLEMENT_ENABLED`; enabling only the former refuses to boot. Settlement
+destinations are keyed by chain, so a testnet destination cannot receive
+mainnet revenue by default. Config also refuses a production deploy pointed at
+a testnet chain.
+
+
 ## 4. Explicitly accepted risks
 
 | Risk | Why accepted |

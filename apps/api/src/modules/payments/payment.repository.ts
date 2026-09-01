@@ -1,6 +1,12 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { newId, parseMerchantEnvironment, type MerchantEnvironment } from '@meter402/shared';
-import { payments, paymentReceipts, paymentRequests, usageEvents } from '@meter402/database';
+import {
+  paymentAttempts,
+  payments,
+  paymentReceipts,
+  paymentRequests,
+  usageEvents,
+} from '@meter402/database';
 import { parsePaymentStatus } from '@meter402/payments';
 import type { PaymentRequest, PaymentStatus } from '@meter402/payments';
 import type { Executor } from '../../lib/executor.js';
@@ -608,4 +614,42 @@ export async function findPaymentResourceOrganizationId(
     .where(eq(paymentReceipts.id, resourceId))
     .limit(1);
   return row?.organizationId ?? null;
+}
+
+/* --- Attempts ----------------------------------------------------------- */
+
+/**
+ * Record one attempt to pay a request.
+ *
+ * Written for failures as well as successes, because "this authorization was
+ * rejected four times before one succeeded" is what a support conversation or
+ * an abuse investigation actually needs.
+ *
+ * Deliberately narrow: it stores a transaction hash and a reason code, never
+ * the signed payload. A stored EIP-3009 signature is a bearer instrument, and
+ * an attempts table is exactly the sort of widely-readable operational data
+ * that should not contain one.
+ */
+export async function recordPaymentAttempt(
+  executor: Executor,
+  scope: TenantScope,
+  input: {
+    paymentRequestId: string;
+    transactionHash: string | null;
+    succeeded: boolean;
+    failureReason: string | null;
+    requestId: string | null;
+    sourceIp: string | null;
+  },
+): Promise<void> {
+  await executor.insert(paymentAttempts).values({
+    id: newId('paymentAttempt'),
+    organizationId: scope.organizationId,
+    paymentRequestId: input.paymentRequestId,
+    transactionHash: input.transactionHash,
+    succeeded: input.succeeded,
+    failureReason: input.failureReason,
+    requestId: input.requestId,
+    sourceIp: input.sourceIp,
+  });
 }

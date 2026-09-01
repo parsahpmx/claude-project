@@ -1,7 +1,6 @@
-import { Meter402Error, err, findChainById, ok, type Result } from '@meter402/shared';
+import { findChainById, Meter402Error } from '@meter402/shared';
 import {
   authorizePayment,
-  failureToErrorCode,
   verificationFailure,
   type BuildSuccessInput,
   type ParseProofInput,
@@ -15,31 +14,66 @@ import {
   type VerificationFailure,
   type VerifyPaymentInput,
 } from '@meter402/payments';
+import { err, ok, type Result } from '@meter402/shared';
 import {
-  MAX_PAYMENT_HEADER_BYTES,
-  PAYMENT_HEADER,
+  PAYMENT_REQUIRED_HEADER,
   PAYMENT_RESPONSE_HEADER,
+  PAYMENT_SIGNATURE_HEADER,
   SCHEME_EXACT,
   X402_PROTOCOL,
   X402_VERSION,
 } from './constants.js';
-import { parseX402PaymentHeader, readSingleHeader } from './proof.js';
+import { toPaymentRequired, toPaymentRequirements } from './mapping.js';
+import { parsePaymentPayload, readHeader } from './parse.js';
+import type { X402PaymentRequired, X402SettleResponse } from './wire.js';
 
 /**
- * The x402 adapter.
+ * The x402 v2 protocol adapter.
  *
- * This class, plus `proof.ts`, is the entire surface on which Meter402 knows
- * what x402 looks like on the wire. Everything else in the platform speaks
- * `PaymentProtocolAdapter`. Adding MPP or AP2 later means writing a sibling of
- * this file (product rule 9).
+ * ─────────────────────────────────────────────────────────────────────────
+ * Where this sits. Meter402's payment domain does not know what x402 is. This
+ * adapter renders a domain `PaymentRequest` as an x402 402, decodes an x402
+ * payload back into a domain `PaymentProof`, and — critically — delegates the
+ * settlement decision to the *same* `authorizePayment` pipeline the TEST
+ * adapter uses.
  *
- * See `constants.ts` for the conformance caveat: the shape here follows the
- * public x402 v1 description but has not been validated against the
- * specification or an independent client.
+ * What "the same pipeline" means, precisely. x402's `authorization` flow has
+ * a step the TEST protocol does not: a signed, pre-settlement authorization
+ * that must be bound to the PaymentRequest and then settled by a facilitator.
+ * That step lives in `binding.ts` / `eip3009.ts` and in the API's x402 payment
+ * service. Once a settlement transaction exists, the two protocols converge:
+ * both hand a `PaymentProof` carrying a transaction hash to
+ * `authorizePayment`, and both therefore get the identical expiry rules,
+ * amount and recipient comparisons, transaction-replay claim against
+ * `UNIQUE (chain_id, transaction_hash)`, and state machine.
+ *
+ * So the domain is not forked. What differs is what an adapter is *for*: how
+ * the protocol says "pay me" and how it proves payment happened.
+ * ─────────────────────────────────────────────────────────────────────────
  */
-export class X402Adapter implements PaymentProtocolAdapter {
-  readonly protocol = X402_PROTOCOL;
 
+function base64Json(value: unknown): string {
+  return Buffer.from(JSON.stringify(value), 'utf8').toString('base64');
+}
+
+export class X402V2PaymentProtocolAdapter implements PaymentProtocolAdapter {
+  readonly protocol = X402_PROTOCOL;
+  readonly version = X402_VERSION;
+
+  /**
+   * Base URL used to render `resource.url`.
+   *
+   * Server-owned. The resource identifier a payer signs against must not be
+   * something a payer can influence.
+   */
+  constructor(private readonly resourceBaseUrl: string) {}
+
+  /**
+   * The protocol-neutral challenge the domain understands.
+   *
+   * Kept because the domain's `PaymentChallenge` is what non-x402 code reads.
+   * The x402-shaped body is produced by `buildChallengeResponse` below.
+   */
   createChallenge(request: PaymentRequest): PaymentChallenge {
     const chain = findChainById(request.chainId);
     if (!chain) {
@@ -53,8 +87,6 @@ export class X402Adapter implements PaymentProtocolAdapter {
       paymentRequestId: request.id,
       protocol: X402_PROTOCOL,
       scheme: SCHEME_EXACT,
-      // A string, never a JSON number: JSON numbers are doubles, and a large
-      // minor-unit amount would lose precision in transit.
       amountMinorUnits: request.amountMinorUnits.toString(),
       asset: {
         symbol: request.assetSymbol,
@@ -65,125 +97,127 @@ export class X402Adapter implements PaymentProtocolAdapter {
       recipient: request.recipientAddress,
       nonce: request.nonce,
       expiresAt: request.expiresAt.toISOString(),
-      metadata: {},
+      metadata: { x402Version: X402_VERSION, simulated: false },
     };
   }
 
+  /** Render the x402 v2 `PaymentRequired` for a request. */
+  paymentRequired(request: PaymentRequest, resourcePath: string): X402PaymentRequired {
+    return toPaymentRequired({
+      request,
+      resourceUrl: new URL(resourcePath, this.resourceBaseUrl).toString(),
+    });
+  }
+
   buildChallengeResponse(challenge: PaymentChallenge): ProtocolHttpResponse {
+    /*
+     * `buildChallengeResponse` receives only the protocol-neutral challenge,
+     * which does not carry the resource URL. The API calls
+     * `buildPaymentRequiredResponse` instead; this method exists to satisfy
+     * the shared interface and produces the same body from what it has.
+     */
+    const requirements = {
+      scheme: challenge.scheme,
+      network: `eip155:${challenge.chain.id}`,
+      asset: challenge.asset.address,
+      amount: challenge.amountMinorUnits,
+      payTo: challenge.recipient,
+      maxTimeoutSeconds: Math.max(
+        1,
+        Math.floor((Date.parse(challenge.expiresAt) - Date.now()) / 1000),
+      ),
+      extra: {},
+    };
+    return this.renderPaymentRequired({
+      x402Version: X402_VERSION,
+      resource: { url: new URL(challenge.paymentRequestId, this.resourceBaseUrl).toString() },
+      accepts: [requirements as never],
+    });
+  }
+
+  /** The canonical 402: x402 v2 body plus the `PAYMENT-REQUIRED` header. */
+  buildPaymentRequiredResponse(
+    request: PaymentRequest,
+    resourcePath: string,
+  ): ProtocolHttpResponse {
+    return this.renderPaymentRequired(this.paymentRequired(request, resourcePath));
+  }
+
+  private renderPaymentRequired(body: X402PaymentRequired): ProtocolHttpResponse {
     return {
       status: 402,
       headers: {
         'content-type': 'application/json; charset=utf-8',
-        // A cached 402 is a replayable payment instruction: a shared proxy
-        // could hand the same nonce and deadline to another agent.
+        // A cached 402 is a replayable payment instruction.
         'cache-control': 'no-store',
+        [PAYMENT_REQUIRED_HEADER]: base64Json(body),
       },
-      body: {
-        x402Version: X402_VERSION,
-        error: 'PAYMENT_REQUIRED',
-        accepts: [
-          {
-            scheme: challenge.scheme,
-            network: challenge.chain.slug,
-            maxAmountRequired: challenge.amountMinorUnits,
-            payTo: challenge.recipient,
-            asset: challenge.asset.address,
-            resource: challenge.paymentRequestId,
-            mimeType: 'application/json',
-            maxTimeoutSeconds: Math.max(
-              0,
-              Math.ceil((Date.parse(challenge.expiresAt) - Date.now()) / 1000),
-            ),
-            extra: {
-              name: challenge.asset.symbol,
-              decimals: challenge.asset.decimals,
-              chainId: challenge.chain.id,
-              nonce: challenge.nonce,
-              paymentRequestId: challenge.paymentRequestId,
-              expiresAt: challenge.expiresAt,
-            },
-          },
-        ],
-      },
+      body,
     };
   }
 
+  /**
+   * Decode the `PAYMENT-SIGNATURE` header into a domain proof.
+   *
+   * At this point no settlement has happened, so there is no transaction hash
+   * to report. `transactionHash` is left empty and filled in after the
+   * facilitator settles — the domain proof is completed, not fabricated.
+   */
   parsePaymentProof(input: ParseProofInput): Result<PaymentProof, VerificationFailure> {
-    const header = readSingleHeader(input.headers, PAYMENT_HEADER);
-
-    if ('error' in header) {
+    const raw = readHeader(input.headers, PAYMENT_SIGNATURE_HEADER);
+    if (raw === null) {
       return err(
-        verificationFailure(
-          'MALFORMED_PROOF',
-          header.error === 'MISSING'
-            ? `Missing ${PAYMENT_HEADER} header.`
-            : `Multiple ${PAYMENT_HEADER} headers were supplied.`,
-        ),
+        verificationFailure('MALFORMED_PROOF', `Missing ${PAYMENT_SIGNATURE_HEADER} header.`),
+      );
+    }
+    if (raw === 'DUPLICATED') {
+      // Which value a proxy forwards versus which we read is the ambiguity
+      // request-smuggling attacks exploit.
+      return err(
+        verificationFailure('MALFORMED_PROOF', `Multiple ${PAYMENT_SIGNATURE_HEADER} headers.`),
       );
     }
 
-    if (header.value.length > MAX_PAYMENT_HEADER_BYTES * 2) {
-      return err(
-        verificationFailure('MALFORMED_PROOF', `The ${PAYMENT_HEADER} header is too large.`),
-      );
-    }
+    const parsed = parsePaymentPayload(raw);
+    if (!parsed.ok) return parsed;
+    const payload = parsed.value;
 
-    return parseX402PaymentHeader(header.value);
+    const authorization = payload.payload['authorization'];
+    const payer =
+      typeof authorization === 'object' && authorization !== null
+        ? ((authorization as Record<string, unknown>)['from'] ?? null)
+        : null;
+
+    return ok({
+      protocol: X402_PROTOCOL,
+      // No settlement yet. Filled once the facilitator returns a transaction.
+      transactionHash: '',
+      payer: typeof payer === 'string' ? payer : null,
+      nonce: null,
+      raw: payload as unknown as Readonly<Record<string, unknown>>,
+    });
   }
 
   /**
-   * Offline structural checks.
-   *
-   * These are cheap and run before any RPC call. They catch an agent that paid
-   * on the wrong network or under a scheme we do not implement, and give it a
-   * precise reason instead of a generic verification failure.
+   * Structural checks only. The substantive binding — amount, asset,
+   * recipient, network, expiry — lives in `bindAuthorizationToRequest`, which
+   * needs the `PaymentRequest` rather than the protocol-neutral challenge.
    */
   validatePaymentProof(
     proof: PaymentProof,
     challenge: PaymentChallenge,
   ): Result<void, VerificationFailure> {
     if (proof.protocol !== X402_PROTOCOL) {
-      return err(verificationFailure('MALFORMED_PROOF', `Expected an ${X402_PROTOCOL} proof.`));
+      return err(verificationFailure('MALFORMED_PROOF', 'Expected an x402 payment proof.'));
     }
-
-    const scheme = proof.raw['scheme'];
-    if (typeof scheme === 'string' && scheme !== challenge.scheme) {
-      return err(
-        verificationFailure(
-          'MALFORMED_PROOF',
-          `Unsupported settlement scheme ${scheme}. This endpoint requires ${challenge.scheme}.`,
-        ),
-      );
+    if (challenge.protocol !== X402_PROTOCOL) {
+      /* istanbul ignore next -- the gate pairs adapter and challenge. */
+      return err(verificationFailure('MALFORMED_PROOF', 'Challenge protocol mismatch.'));
     }
-
-    const network = proof.raw['network'];
-    if (typeof network === 'string' && network !== challenge.chain.slug) {
-      return err(
-        verificationFailure(
-          'WRONG_NETWORK',
-          `Payment was made on ${network} but this endpoint settles on ${challenge.chain.slug}.`,
-          { expected: challenge.chain.slug, observed: network },
-        ),
-      );
-    }
-
-    if (proof.nonce !== null && proof.nonce !== challenge.nonce) {
-      return err(
-        verificationFailure('MALFORMED_PROOF', 'The proof does not correspond to this challenge.'),
-      );
-    }
-
     return ok(undefined);
   }
 
-  /**
-   * Full verification.
-   *
-   * Delegates to the shared authorization pipeline rather than reimplementing
-   * it. That pipeline is protocol-agnostic, so every protocol we add inherits
-   * the same replay protection, expiry handling, and RPC-outage semantics
-   * instead of each adapter getting its own subtly different version.
-   */
+  /** Delegates to the shared pipeline — the same one the TEST adapter uses. */
   async verifyPayment(input: VerifyPaymentInput): Promise<PaymentAuthorization> {
     return authorizePayment({
       request: input.request,
@@ -196,21 +230,18 @@ export class X402Adapter implements PaymentProtocolAdapter {
   }
 
   buildSuccessResponse(input: BuildSuccessInput): ProtocolHttpResponse {
-    const chain = findChainById(input.request.chainId);
-    const payload = {
+    const settleResponse: X402SettleResponse = {
       success: true,
       transaction: input.transfer.transactionHash,
-      network: chain?.slug ?? String(input.request.chainId),
+      network: `eip155:${input.request.chainId}`,
       payer: input.transfer.from,
-      receiptId: input.receiptId,
+      amount: input.transfer.minorUnits.toString(),
     };
 
     return {
       status: 200,
-      headers: {
-        [PAYMENT_RESPONSE_HEADER]: Buffer.from(JSON.stringify(payload), 'utf8').toString('base64'),
-      },
-      body: payload,
+      headers: { [PAYMENT_RESPONSE_HEADER]: base64Json(settleResponse) },
+      body: { success: true, receiptId: input.receiptId },
     };
   }
 
@@ -218,27 +249,24 @@ export class X402Adapter implements PaymentProtocolAdapter {
     failure: VerificationFailure,
     challenge?: PaymentChallenge,
   ): ProtocolHttpResponse {
-    const code = failureToErrorCode(failure.reason);
-    const status = new Meter402Error(code).httpStatus;
-
     return {
-      status,
+      status: 402,
       headers: {
         'content-type': 'application/json; charset=utf-8',
         'cache-control': 'no-store',
       },
       body: {
         x402Version: X402_VERSION,
-        error: code,
+        error: failure.reason,
         message: failure.message,
-        ...(failure.details ? { details: failure.details } : {}),
-        // Re-serve the challenge on a retryable failure so an agent can pay
-        // again without a second round trip to fetch fresh terms.
-        ...(challenge && status === 402
-          ? { accepts: this.buildChallengeResponse(challenge).body }
-          : {}),
+        ...(challenge ? { accepts: [] } : {}),
       },
     };
+  }
+
+  /** Requirements as they will be sent to a facilitator. */
+  requirementsFor(request: PaymentRequest) {
+    return toPaymentRequirements(request);
   }
 
   createReceiptMetadata(input: ReceiptMetadataInput): Readonly<Record<string, unknown>> {
@@ -247,17 +275,14 @@ export class X402Adapter implements PaymentProtocolAdapter {
       protocol: X402_PROTOCOL,
       x402Version: X402_VERSION,
       scheme: SCHEME_EXACT,
-      network: chain?.slug ?? String(input.request.chainId),
+      simulated: false,
+      network: chain ? `eip155:${chain.id}` : String(input.request.chainId),
       chainId: input.request.chainId,
-      transaction: input.transfer.transactionHash,
-      blockNumber: input.transfer.blockNumber.toString(),
-      confirmations: input.transfer.confirmations,
+      transactionHash: input.transfer.transactionHash,
       payer: input.transfer.from,
       recipient: input.transfer.to,
       asset: input.request.assetSymbol,
-      assetAddress: input.request.assetAddress,
       amountMinorUnits: input.transfer.minorUnits.toString(),
-      explorerUrl: chain?.blockExplorerTxUrl(input.transfer.transactionHash) ?? null,
     };
   }
 }
