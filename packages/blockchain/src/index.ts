@@ -19,3 +19,4 @@ export * from './circuit-breaker.js';
 export * from './failover-provider.js';
 export * from './transfer-verifier.js';
 export * from './viem-provider.js';
+export * from './settlement-oracle.js';

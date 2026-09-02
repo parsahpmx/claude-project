@@ -13,8 +13,9 @@ import { FailoverBlockchainProvider, ViemBlockchainProvider } from '@meter402/bl
 import type { BlockchainProvider } from '@meter402/blockchain';
 import { buildApp } from './app.js';
 import { DevelopmentSessionIssuer } from './auth/session.js';
-import { HttpFacilitatorClient } from '@meter402/x402';
+import { HttpFacilitatorClient, preflightFacilitator } from '@meter402/x402';
 import { paymentMetrics } from './lib/metrics.js';
+import { settlementBacklog } from './modules/payments/settlement-backlog.js';
 
 async function main(): Promise<void> {
   let config;
@@ -82,6 +83,33 @@ async function main(): Promise<void> {
       })
     : undefined;
 
+  /*
+   * Prove the facilitator can actually settle what this deployment will
+   * promise, before the deployment starts promising it. See
+   * `preflightFacilitator` for why an incompatible answer stops the boot and
+   * an unreachable one does not.
+   */
+  let facilitatorPreflight: string | null = null;
+  if (facilitator) {
+    const preflight = await preflightFacilitator({
+      facilitator,
+      chainIds: config.settlement.enabledChainIds,
+    });
+
+    if (preflight.status === 'INCOMPATIBLE') {
+      console.error(
+        `\nMeter402 refused to start.\n\n${preflight.message}\n\n` +
+          'Fix X402_FACILITATOR_URL, or set LIVE_SETTLEMENT_ENABLED=false to ' +
+          'run without real settlement.\n',
+      );
+      await database.close();
+      process.exitCode = 1;
+      return;
+    }
+
+    facilitatorPreflight = preflight.status;
+  }
+
   const app = await buildApp({
     config,
     routes: {
@@ -121,10 +149,22 @@ async function main(): Promise<void> {
         ...(facilitator ? { facilitator: () => facilitator.health() } : {}),
       },
       metrics: () => paymentMetrics.snapshot(),
+      backlog: () => settlementBacklog(database.db),
     },
   });
 
   app.log.info({ config: redactConfig(config) }, 'Starting Meter402 API');
+
+  if (facilitatorPreflight === 'UNREACHABLE') {
+    /*
+     * Not fatal, but not a footnote either: real settlement is enabled and
+     * the facilitator did not answer, so payments will fail until it does.
+     */
+    app.log.error(
+      { facilitatorUrl: config.settlement.facilitator.url },
+      'Facilitator unreachable at startup; real settlement will fail until it recovers',
+    );
+  }
 
   /*
    * Graceful shutdown. On SIGTERM the orchestrator has already stopped routing

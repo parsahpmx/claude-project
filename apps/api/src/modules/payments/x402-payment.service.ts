@@ -34,6 +34,7 @@ import {
   type ReceiptRecord,
 } from './payment.repository.js';
 import { FacilitatorSettlementVerifier } from './x402-settlement-verifier.js';
+import { enqueueReconciliation } from './reconciliation.repository.js';
 import { countVerificationFailure, paymentMetrics } from '../../lib/metrics.js';
 
 /**
@@ -330,7 +331,16 @@ export async function settleX402Payment(
   payer: string,
   actor: X402PaymentActor,
   ownsAuthorizationClaim: boolean,
+  /**
+   * The authorization's identity, carried through so an uncertain settlement
+   * can be reconciled against the chain later. Not the signature — only the
+   * nonce and deadline, which identify the authorization without being able
+   * to spend it.
+   */
+  authorization: { nonce: string; validBefore: Date | null },
 ): Promise<SettleOutcome> {
+  const authorizationNonce = authorization.nonce;
+  const validBefore = authorization.validBefore;
   /*
    * Idempotency. If this request already has a payment, settlement already
    * happened — a retry must return the same payment and receipt rather than
@@ -403,6 +413,26 @@ export async function settleX402Payment(
       await db.transaction(async (tx) => {
         assertTransition(request.status, PaymentStatus.Pending, request.id);
         await updatePaymentRequestStatus(tx, scope, request.id, PaymentStatus.Pending);
+
+        /*
+         * Schedule reconciliation in the *same transaction* that records the
+         * uncertainty. The process that lost this response may be about to
+         * die — that is often why it was lost — so a payment must never be
+         * able to become uncertain without simultaneously becoming scheduled
+         * for resolution. An in-memory follow-up would be lost with the
+         * process; this row survives it.
+         */
+        await enqueueReconciliation(tx, scope, {
+          paymentRequestId: request.id,
+          facilitator: config.settlement.facilitator.url,
+          chainId: request.chainId,
+          assetAddress: request.assetAddress,
+          payerAddress: payer,
+          authorizationNonce: authorizationNonce ?? '',
+          recipientAddress: request.recipientAddress,
+          amountMinorUnits: request.amountMinorUnits,
+          validBefore: validBefore ?? null,
+        });
         await recordPaymentAttempt(tx, scope, {
           paymentRequestId: request.id,
           transactionHash: null,

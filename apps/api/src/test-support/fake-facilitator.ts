@@ -37,6 +37,14 @@ export class FakeFacilitator implements FacilitatorClient {
   settleAmountOverride: string | null = null;
   /** Overrides the payer the verify response claims. */
   verifyPayerOverride: string | null = null;
+  /**
+   * Whether the facilitator answers a health probe at all.
+   *
+   * Separate from `verifyResult` because reachability and verdict are separate
+   * in reality: a facilitator can be up and rejecting authorizations, or down
+   * while the last verdict it gave was fine.
+   */
+  healthy = true;
 
   async verify(request: FacilitatorRequest): Promise<Result<X402VerifyResponse, FacilitatorError>> {
     this.verifyCalls.push(request);
@@ -100,7 +108,7 @@ export class FakeFacilitator implements FacilitatorClient {
   }
 
   async health(): Promise<boolean> {
-    return this.verifyResult !== 'UNAVAILABLE';
+    return this.healthy && this.verifyResult !== 'UNAVAILABLE';
   }
 
   private payerOf(request: FacilitatorRequest): string | null {

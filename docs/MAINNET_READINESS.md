@@ -35,22 +35,29 @@ and that an unrecognised flag value is refused rather than guessed.
 | 3 | All concurrency tests green | **Done** — 20-way settlement race, exactly one settle call |
 | 4 | All conformance tests green | **Partly** — wire and client conformance done; facilitator not |
 | 5 | Base Sepolia E2E green | **NOT DONE — never executed** |
-| 6 | Security review complete | **Not done** — no external review has taken place |
+| 6 | Security review complete | **Not done** — no external review has taken place; scope prepared in `EXTERNAL_SECURITY_REVIEW_SCOPE.md` |
 | 7 | Settlement mutation controls verified | **Done** — human-only, RBAC-gated, audited, tested |
-| 8 | Monitoring configured | **Partly** — metrics and `/health/payments` exist; no alerting is wired |
-| 9 | Uncertainty recovery verified | **Partly** — uncertain settlement resolves to PENDING and is tested; **no reconciliation job exists** |
+| 8 | Monitoring configured | **Partly** — metrics, settlement backlog and `/health/payments` exist; thresholds are specified in `ALERTING.md`; **nothing is wired to a pager** |
+| 9 | Uncertainty recovery verified | **Partly** — a reconciliation worker now exists and recovers a genuinely interrupted settlement in tests; **never verified against a real chain** |
 | 10 | Rate limits configured | **Done** — per-key limits on the paid surface and simulator |
 | 11 | Mainnet asset/network config independently verified | **Done** — cross-checked against the x402 reference asset table |
 | 12 | Kill switch available | **Done** — `LIVE_SETTLEMENT_ENABLED`, not reachable from any merchant credential |
 | 13 | Production secrets configured safely | **Not done** — deployment concern, outside this repository |
 
-Five items are incomplete. Items 5, 6 and 9 are the blocking ones.
+Five items are incomplete. Items 5 and 6 are the blocking ones.
+
+Item 9 moved from "no reconciliation job exists" to "exists and is tested
+against a fake chain" in Phase 3.5. That is real progress and it is not
+completion: the worker has never asked a real token contract anything.
 
 ---
 
-## The three blockers, stated plainly
+## The gaps, stated plainly
 
-### 1. Nothing has ever settled on a real chain
+Two of these three block mainnet outright. The middle one no longer does, and
+is kept here because what replaced it is unverified rather than done.
+
+### 1. Nothing has ever settled on a real chain (blocking)
 
 No payment has been settled on Base Sepolia or anywhere else. The settlement
 path is exercised only against a test double (`FakeFacilitator`), which proves
@@ -66,19 +73,27 @@ egress, a funded Base Sepolia wallet, and a facilitator account.
 **Going to mainnet before a testnet payment has ever succeeded would mean the
 first real settlement in the system's history is one carrying real money.**
 
-### 2. There is no reconciliation job
+### 2. Reconciliation has never met a real chain
 
-When a settle call times out, Meter402 correctly refuses to guess: the payment
-request moves to `PENDING`, an audit event records the uncertainty, and the
-payer is told not to pay again. That is the right behaviour, and it is tested.
+Phase 3.5 built the missing worker. When a settle call goes uncertain, the
+payment is enqueued for reconciliation in the same transaction that records the
+uncertainty; a worker later asks the token contract whether the authorization
+was consumed (`authorizationState`), and records what already happened. It
+never calls `/settle`, so it cannot itself cause a double charge. It concludes
+failure only when the authorization is both unused and past its deadline, so it
+cannot deny a payer a service they paid for. Twenty concurrent workers converge
+on one Payment, one Receipt and one usage event.
 
-But nothing then resolves it. A PENDING payment stays PENDING until a human
-looks. On a testnet that is an annoyance; on mainnet it is a customer whose
-money may have moved and whose request was never served, with no automated path
-to a resolution. A reconciliation worker that re-reads the chain and closes out
-uncertain settlements is a prerequisite, not a nicety.
+All of that is proven against a `FakeSettlementOracle`. The oracle's real
+implementation — `ViemSettlementOracle`, which does the `readContract` call and
+the `getLogs` search — **has never been run against a chain.** A wrong ABI, a
+log range the RPC provider refuses, or a subtly different `authorizationState`
+answer would all be invisible to the current tests.
 
-### 3. No external security review
+So the failure mode has changed shape rather than closed: a PENDING payment no
+longer waits for a human, but what unblocks it has never been observed working.
+
+### 3. No external security review (blocking)
 
 Item 6 has not happened. The Phase 3 review in `SECURITY.md §14` is a
 self-review, which is worth something and is not a substitute.
@@ -116,13 +131,34 @@ are hardest to retrofit:
 2. Run the Base Sepolia end-to-end scenario. Fix whatever it finds — and expect
    it to find something; no amount of local testing substitutes for the first
    real settlement.
-3. Build the reconciliation worker and prove it recovers a deliberately
-   interrupted settlement.
+3. Point the reconciliation worker at a real Base Sepolia RPC and prove
+   `ViemSettlementOracle` recovers a deliberately interrupted settlement
+   against the real USDC contract. The worker and its logic exist; what is
+   unverified is the chain access underneath them.
 4. Commission the external security review.
-5. Wire alerting to the counters in `/health/payments` — particularly
-   `settle_uncertain`, `authorization_replay_attempts`, and
-   `wrong_recipient_attempts`.
+5. Wire alerting to `/health/payments` following `ALERTING.md` — particularly
+   `backlog.exhausted`, `backlog.oldestUnresolvedAgeSeconds`, and
+   `authorization_replay_attempts`. The thresholds there are guesses until
+   real traffic calibrates them.
 6. Only then consider a **controlled mainnet test** with a hard spend cap and a
    named operator watching, not a general release.
 
 Until at least steps 1–4 are complete, the honest status remains **NOT READY**.
+
+---
+
+## Phase 3.5 changed these lines and no others
+
+Recorded so that a reader can see what moved without diffing:
+
+- Item 9, from "no reconciliation job exists" to "exists, tested against a fake
+  chain, never run against a real one".
+- Item 8, from "no alerting is wired" to "thresholds specified, nothing wired".
+- Item 6 gained a prepared scope document. It is not closer to done.
+
+Items 5 and 6 — the two blockers — are **unchanged**. Phase 3.5 set out to
+close item 5 with a real testnet run and could not: this environment has no
+route to any Base RPC endpoint or facilitator. Every host tested returns a
+policy denial at CONNECT. That is a fact about the environment, not a
+conclusion about the code, and it means the single most important question
+about this system remains unanswered.

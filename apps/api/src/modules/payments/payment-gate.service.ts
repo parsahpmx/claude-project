@@ -428,6 +428,10 @@ async function authorizeX402Request(
         verified.payer,
         input.actor,
         verified.ownsAuthorizationClaim,
+        {
+          nonce: verified.exact.authorization.nonce,
+          validBefore: new Date(Number(verified.exact.authorization.validBefore) * 1000),
+        },
       );
 
       /*

@@ -16,11 +16,36 @@ export type HealthProbes = Readonly<Record<string, () => Promise<boolean>>>;
  * Kept separate from `HealthProbes` on purpose — see `/health/payments` below
  * for why a facilitator outage must not take the whole task out of rotation.
  */
+export interface SettlementBacklog {
+  /** Authorizations accepted but not yet resolved either way. */
+  readonly pendingSettlements: number;
+  /** Reconciliation jobs queued or in flight. */
+  readonly reconciliationBacklog: number;
+  /** Jobs the worker gave up on. Every one of these needs a human. */
+  readonly exhausted: number;
+  /**
+   * Payments whose outcome is unknown right now.
+   *
+   * The single number worth waking someone for: each one is money that may
+   * have moved without a service being delivered, or the reverse.
+   */
+  readonly uncertainSettlements: number;
+  /** Age of the oldest unresolved job. How long the worst case has waited. */
+  readonly oldestUnresolvedAgeSeconds: number | null;
+}
+
 export interface PaymentHealth {
   readonly settlementEnabled: boolean;
   readonly enabledNetworks: readonly string[];
   readonly probes: HealthProbes;
   readonly metrics: () => unknown;
+  /**
+   * The settlement backlog, when this deployment can compute one.
+   *
+   * Optional because it needs a database, and the endpoint must keep
+   * answering when the database is the thing that is down.
+   */
+  readonly backlog?: () => Promise<SettlementBacklog>;
 }
 
 const startedAt = Date.now();
@@ -121,11 +146,27 @@ export function registerPaymentHealthRoute(app: FastifyInstance, payments: Payme
     const dependencies = Object.fromEntries(results);
     const allHealthy = results.every(([, healthy]) => healthy);
 
+    /*
+     * The backlog is read separately from the probes and is allowed to fail on
+     * its own. If the database is unreachable we still want the facilitator
+     * and RPC verdicts — a health endpoint that returns nothing when one part
+     * of it fails is least useful exactly when it is most needed.
+     */
+    let backlog: SettlementBacklog | { readonly unavailable: true } = { unavailable: true };
+    if (payments.backlog) {
+      try {
+        backlog = await payments.backlog();
+      } catch {
+        backlog = { unavailable: true };
+      }
+    }
+
     return {
       // Three honest states rather than a boolean that has to lie about one.
       settlement: !payments.settlementEnabled ? 'disabled' : allHealthy ? 'available' : 'degraded',
       enabledNetworks: payments.enabledNetworks,
       dependencies,
+      backlog,
       metrics: payments.metrics(),
     };
   });

@@ -100,6 +100,8 @@ export const ID_PREFIXES = {
   paymentRequest: 'preq',
   payment: 'pay',
   paymentAttempt: 'patt',
+  /** A settlement reconciliation job. */
+  reconciliation: 'rcn',
   receipt: 'rcpt',
   blockchainTransaction: 'btx',
   /** A claimed pre-settlement signed payment authorization. */

@@ -157,3 +157,20 @@ export const settlementConfigStatusEnum = pgEnum('settlement_config_status', [
   'ACTIVE',
   'DISABLED',
 ]);
+
+/**
+ * Lifecycle of a settlement reconciliation.
+ *
+ * `EXHAUSTED` is deliberately distinct from `RESOLVED_FAILED`. Running out of
+ * attempts means we still do not know what happened — it is an operational
+ * state needing a human, not a determination that the payment failed. Marking
+ * it failed would be a guess, and guessing in this direction loses a payer's
+ * money.
+ */
+export const reconciliationStatusEnum = pgEnum('reconciliation_status', [
+  'PENDING',
+  'IN_PROGRESS',
+  'RESOLVED_CONFIRMED',
+  'RESOLVED_FAILED',
+  'EXHAUSTED',
+]);

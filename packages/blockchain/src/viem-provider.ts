@@ -6,6 +6,13 @@ import {
   type BlockchainProvider,
   type TransactionReceiptView,
 } from './types.js';
+import { err, ok, type Result } from '@meter402/shared';
+import {
+  EIP3009_AUTHORIZATION_STATE_ABI,
+  type AuthorizationQuery,
+  type OracleFailure,
+  type SettlementOracle,
+} from './settlement-oracle.js';
 
 /**
  * viem-backed provider for Base.
@@ -130,3 +137,101 @@ export class ViemBlockchainProvider implements BlockchainProvider {
 
 /** Exported for direct unit testing of the not-found predicate. */
 export const __testing = { isReceiptNotFound };
+
+/**
+ * A settlement oracle backed by a viem public client.
+ *
+ * Reads `authorizationState` from the token contract — the EIP-3009 replay
+ * flag — and searches `Transfer` logs for the transaction that consumed it.
+ * Both are read-only: reconciliation determines what already happened and can
+ * never itself move money.
+ */
+export class ViemSettlementOracle implements SettlementOracle {
+  private readonly client: PublicClient;
+
+  constructor(
+    private readonly chainId: number,
+    rpcUrl: string,
+    options: { timeoutMs?: number; lookbackBlocks?: bigint } = {},
+  ) {
+    const chain = CHAINS_BY_ID[chainId];
+    if (!chain) {
+      throw new Error(`Unsupported chain ${chainId} for settlement oracle.`);
+    }
+    this.client = createPublicClient({
+      chain,
+      transport: http(rpcUrl, { timeout: options.timeoutMs ?? 10_000, retryCount: 1 }),
+    });
+    this.lookbackBlocks = options.lookbackBlocks ?? 50_000n;
+  }
+
+  private readonly lookbackBlocks: bigint;
+
+  async authorizationUsed(query: AuthorizationQuery): Promise<Result<boolean, OracleFailure>> {
+    if (query.chainId !== this.chainId) {
+      return err({
+        kind: 'UNSUPPORTED',
+        message: `Oracle is bound to chain ${this.chainId}, asked about ${query.chainId}.`,
+      });
+    }
+
+    try {
+      const used = await this.client.readContract({
+        address: query.assetAddress as `0x${string}`,
+        abi: EIP3009_AUTHORIZATION_STATE_ABI,
+        functionName: 'authorizationState',
+        args: [query.payerAddress as `0x${string}`, query.authorizationNonce as `0x${string}`],
+      });
+      return ok(Boolean(used));
+    } catch (error) {
+      /*
+       * Unreachable node, reverted call, contract without EIP-3009. All map to
+       * UNAVAILABLE rather than to "not used": an error is not evidence that
+       * the transfer did not happen, and treating it as such is precisely the
+       * mistake that would mark a settled payment as failed.
+       */
+      return err({
+        kind: 'UNAVAILABLE',
+        message: error instanceof Error ? error.message : 'authorizationState read failed',
+      });
+    }
+  }
+
+  async findSettlementTransaction(
+    query: AuthorizationQuery & { recipientAddress: string; amountMinorUnits: bigint },
+  ): Promise<Result<string | null, OracleFailure>> {
+    try {
+      const latest = await this.client.getBlockNumber();
+      const fromBlock = latest > this.lookbackBlocks ? latest - this.lookbackBlocks : 0n;
+
+      const logs = await this.client.getLogs({
+        address: query.assetAddress as `0x${string}`,
+        event: {
+          type: 'event',
+          name: 'Transfer',
+          inputs: [
+            { name: 'from', type: 'address', indexed: true },
+            { name: 'to', type: 'address', indexed: true },
+            { name: 'value', type: 'uint256', indexed: false },
+          ],
+        },
+        args: {
+          from: query.payerAddress as `0x${string}`,
+          to: query.recipientAddress as `0x${string}`,
+        },
+        fromBlock,
+        toBlock: latest,
+      });
+
+      // Match on the exact amount too: a payer may have several transfers to
+      // the same recipient, and only the one for this amount is ours.
+      const match = logs.find((log) => log.args.value === query.amountMinorUnits);
+      return ok(match?.transactionHash ?? null);
+    } catch (error) {
+      return err({
+        kind: 'UNAVAILABLE',
+        message: error instanceof Error ? error.message : 'log search failed',
+      });
+    }
+  }
+}

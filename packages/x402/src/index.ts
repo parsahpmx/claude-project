@@ -6,3 +6,4 @@ export * from './binding.js';
 export * from './eip3009.js';
 export * from './facilitator.js';
 export * from './adapter.js';
+export * from './preflight.js';

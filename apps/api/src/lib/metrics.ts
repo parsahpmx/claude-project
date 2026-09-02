@@ -37,9 +37,18 @@ export type PaymentCounter =
   | 'settle_failed'
   | 'settle_uncertain'
   | 'payments_confirmed'
-  | 'receipts_issued';
+  | 'receipts_issued'
+  /* Phase 3.5 — reconciliation */
+  | 'reconciliation_started'
+  | 'reconciliation_confirmed'
+  | 'reconciliation_definitive_failure'
+  | 'reconciliation_retry'
+  /* Ran out of attempts without determining what happened. Alert on this. */
+  | 'reconciliation_stuck'
+  | 'facilitator_error'
+  | 'rpc_error';
 
-export type LatencyMetric = 'facilitator_verify' | 'facilitator_settle';
+export type LatencyMetric = 'facilitator_verify' | 'facilitator_settle' | 'reconciliation_pass';
 
 interface LatencySummary {
   count: number;

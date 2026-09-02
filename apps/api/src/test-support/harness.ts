@@ -4,6 +4,8 @@ import { createDatabase, type DatabaseHandle } from '@meter402/database';
 import type { Role } from '@meter402/auth';
 import { buildApp } from '../app.js';
 import { DevelopmentSessionIssuer } from '../auth/session.js';
+import { paymentMetrics } from '../lib/metrics.js';
+import { settlementBacklog } from '../modules/payments/settlement-backlog.js';
 import { FakeFacilitator } from './fake-facilitator.js';
 
 /**
@@ -86,6 +88,19 @@ export async function createHarness(
       config,
       sessionIssuer: new DevelopmentSessionIssuer(config.secrets.authSecret),
       ...(facilitator ? { facilitator } : {}),
+    },
+    /*
+     * Wired the same way the composition root wires it, so the operational
+     * endpoint is exercised by tests rather than only existing in production.
+     */
+    paymentHealth: {
+      settlementEnabled: config.settlement.liveSettlementEnabled,
+      enabledNetworks: config.settlement.enabledChainIds.map((id) => `eip155:${id}`),
+      probes: {
+        ...(facilitator ? { facilitator: () => facilitator.health() } : {}),
+      },
+      metrics: () => paymentMetrics.snapshot(),
+      backlog: () => settlementBacklog(handle.db),
     },
   });
   await app.ready();

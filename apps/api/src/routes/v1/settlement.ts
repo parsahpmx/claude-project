@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { findAsset, findChainById, Meter402Error } from '@meter402/shared';
+import { BASE_MAINNET, findAsset, findChainById, Meter402Error } from '@meter402/shared';
 import { requirePermission } from '@meter402/auth';
 import { requireUserPrincipal, resolveOrganizationAccess } from '../../auth/authenticate.js';
 import { actorContext, getPrincipal, type RouteDeps } from '../context.js';
@@ -106,6 +106,25 @@ export function registerSettlementRoutes(app: FastifyInstance, deps: RouteDeps):
       throw new Meter402Error('VALIDATION_FAILED', `Chain ${body.chainId} is not supported.`, {
         details: { chainId: body.chainId },
       });
+    }
+
+    /*
+     * Base mainnet needs its own switch, even to be *named* as a destination.
+     *
+     * Payment-time checks already refuse to settle on a disabled chain, so
+     * nothing would move. But a stored mainnet destination is a loaded gun:
+     * the day someone flips LIVE_SETTLEMENT_ENABLED and ENABLE_BASE_MAINNET
+     * for a legitimate reason, every configuration written under the
+     * assumption that mainnet was unreachable becomes live at once, without
+     * anyone re-reviewing it. Refusing the write keeps the operator's decision
+     * and the merchant's configuration on the same side of the switch.
+     */
+    if (chain.id === BASE_MAINNET.id && !deps.config.settlement.baseMainnetEnabled) {
+      throw new Meter402Error(
+        'VALIDATION_FAILED',
+        'Base mainnet settlement is not enabled on this deployment.',
+        { details: { chainId: body.chainId } },
+      );
     }
 
     const asset = findAsset(body.asset, body.chainId);
