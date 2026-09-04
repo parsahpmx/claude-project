@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { MerchantEnvironment, Meter402Error } from '@meter402/shared';
-import { requirePermission } from '@meter402/auth';
+import { requirePermission, requireScope } from '@meter402/auth';
 import { requireUserPrincipal } from '../../auth/authenticate.js';
 import { actorContext, getPrincipal, type RouteDeps } from '../context.js';
 import { HTTP_METHODS } from '../../lib/http-path.js';
@@ -23,7 +23,7 @@ import {
 } from '../../modules/endpoints/endpoint.service.js';
 import { resolveOrganizationAccess } from '../../auth/authenticate.js';
 import { resolveProjectAccess } from './projects.js';
-import type { TenantScope } from '../../lib/tenant.js';
+import { scopeFromApiKey, type TenantScope } from '../../lib/tenant.js';
 import type { AuthorizationContext, UserPrincipal } from '@meter402/auth';
 import type { Database } from '@meter402/database';
 
@@ -197,14 +197,44 @@ export function registerEndpointRoutes(app: FastifyInstance, deps: RouteDeps): v
   });
 
   app.get('/v1/endpoints', async (request) => {
-    const principal = requireUserPrincipal(getPrincipal(request));
-    const query = parseQuery(listQuerySchema, request.query);
+    const principal = getPrincipal(request);
 
-    const { context, scope } = await resolveProjectAccess(deps.db, principal, query.projectId);
-    requirePermission(context, 'endpoints:read');
+    /*
+     * Readable by a machine as well as a human, unlike the rest of this file.
+     *
+     * A merchant's server needs this at startup to check that the route it is
+     * about to protect is registered, and at the price its own source says.
+     * `endpoints:read` exists in the API-key scope vocabulary for exactly
+     * that, and until now no route accepted it — so the scope granted nothing
+     * and the check it was meant to enable could not be written.
+     *
+     * A key reads its own project and only its own: the project comes from the
+     * credential, not the query, so there is no ID to substitute. It stays
+     * read-only — creating and repricing endpoints remains human work, because
+     * a leaked server-side key must not be able to change what agents are
+     * charged.
+     */
+    let scope;
+    let projectId: string;
+    let environment: string | undefined;
 
-    const records = await listEndpointsInProject(deps.db, scope, query.projectId, {
-      ...(query.environment ? { environment: query.environment } : {}),
+    if (principal.type === 'api_key') {
+      requireScope(principal, 'endpoints:read');
+      scope = scopeFromApiKey(principal);
+      projectId = principal.projectId;
+      // And only the environment this credential belongs to.
+      environment = principal.environment;
+    } else {
+      const query = parseQuery(listQuerySchema, request.query);
+      const access = await resolveProjectAccess(deps.db, principal, query.projectId);
+      requirePermission(access.context, 'endpoints:read');
+      scope = access.scope;
+      projectId = query.projectId;
+      environment = query.environment;
+    }
+
+    const records = await listEndpointsInProject(deps.db, scope, projectId, {
+      ...(environment ? { environment: environment as MerchantEnvironment } : {}),
     });
 
     const data = await Promise.all(

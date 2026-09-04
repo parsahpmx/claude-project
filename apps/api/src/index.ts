@@ -121,20 +121,27 @@ async function main(): Promise<void> {
       ...(facilitator ? { facilitator } : {}),
     },
     /*
-     * Only dependencies we genuinely check appear here. Redis is configured
-     * but not yet used by the API, so it is deliberately absent rather than
+     * Readiness names only the dependencies this deployment actually needs to
+     * serve traffic.
+     *
+     * Redis is configured but unused by the API, so it is absent rather than
      * reported as a hardcoded `true` — a check that always passes is worse
      * than no check, because it reports health nobody verified.
-     */
-    /*
-     * Only dependencies we genuinely check. The facilitator probe is added
-     * only when settlement is enabled: reporting on a dependency this
-     * deployment does not use would be noise, and reporting it as healthy
-     * when it is not configured would be a lie.
+     *
+     * The chain is conditional for a sharper reason. With settlement disabled
+     * no request path touches an RPC provider: TEST payments are simulated
+     * end to end. Probing it anyway means a deployment that is completely
+     * healthy for what it does is held out of the load balancer because
+     * something it never calls is unreachable — and the first thing a
+     * developer meets, running locally behind a firewall, is a server that
+     * says it is not ready and is wrong about it. When settlement *is*
+     * enabled the chain is genuinely required, and then it is probed.
      */
     probes: {
       database: () => database.ping(),
-      blockchain: () => blockchain.healthCheck(),
+      ...(config.settlement.liveSettlementEnabled
+        ? { blockchain: () => blockchain.healthCheck() }
+        : {}),
     },
     /*
      * Payment capability is reported separately from readiness. A facilitator
@@ -144,10 +151,17 @@ async function main(): Promise<void> {
     paymentHealth: {
       settlementEnabled: config.settlement.liveSettlementEnabled,
       enabledNetworks: config.settlement.enabledChainIds.map((id) => `eip155:${id}`),
-      probes: {
-        blockchain: () => blockchain.healthCheck(),
-        ...(facilitator ? { facilitator: () => facilitator.health() } : {}),
-      },
+      /*
+       * Same reasoning as readiness: with settlement disabled nothing here
+       * touches a chain or a facilitator, so reporting either as unhealthy
+       * describes a dependency this deployment does not have.
+       */
+      probes: config.settlement.liveSettlementEnabled
+        ? {
+            blockchain: () => blockchain.healthCheck(),
+            ...(facilitator ? { facilitator: () => facilitator.health() } : {}),
+          }
+        : {},
       metrics: () => paymentMetrics.snapshot(),
       backlog: () => settlementBacklog(database.db),
     },

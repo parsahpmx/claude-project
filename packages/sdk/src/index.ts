@@ -99,14 +99,22 @@ export function createMeter402(options: Meter402Options): Meter402 {
       }
 
       if (route.price !== undefined && match.price) {
+        /*
+         * Both sides normalised to minor units before comparing, so '0.03',
+         * '0.030' and '0.0300' all agree with each other and with the stored
+         * price. Done on strings: 0.03 * 1e6 is 30000.000000000004, and a
+         * price that is wrong in the seventh decimal place is a wrong price.
+         */
         const declared = toMinorUnits(route.price, match.price.decimals);
-        if (declared !== match.price.amountMinorUnits) {
+        const registered = toMinorUnits(match.price.amount, match.price.decimals);
+        if (declared !== registered) {
           throw new Meter402SdkError(
             'configuration',
-            `Price mismatch for ${method} ${path}: this code declares ${route.price} ` +
-              `${route.currency ?? match.price.asset}, but Meter402 has it registered at a ` +
-              `different amount. Change one of them deliberately — a price is what agents ` +
-              `agreed to pay, so it is not adjusted automatically.`,
+            `Price mismatch for ${method} ${path}: this code declares ` +
+              `${route.price} ${route.currency ?? match.price.asset}, but Meter402 has it ` +
+              `registered at ${match.price.amount} ${match.price.asset}. Change one of them ` +
+              `deliberately — a price is what agents agreed to pay, so it is not adjusted ` +
+              `automatically.`,
           );
         }
       }

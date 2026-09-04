@@ -67,7 +67,7 @@ const authorizeBodySchema = z.object({
    * Bounded because this is attacker-influenced input arriving over a
    * merchant's credential.
    */
-  headers: z.record(z.string().max(256), z.string().max(8192)).default({}),
+  headers: z.record(z.string().max(256), z.string().max(8192)).optional(),
 });
 
 export function registerAuthorizeRoutes(app: FastifyInstance, deps: RouteDeps): void {
@@ -120,7 +120,7 @@ export function registerAuthorizeRoutes(app: FastifyInstance, deps: RouteDeps): 
           environment: principal.environment,
           method,
           path: body.path,
-          headers: body.headers,
+          headers: body.headers ?? {},
           actor: {
             actorType: 'api_key',
             actorId: principal.apiKeyId,

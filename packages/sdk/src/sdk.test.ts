@@ -244,7 +244,7 @@ describe('error classification', () => {
 });
 
 describe('verifyRoute', () => {
-  const endpoints = (price: { amountMinorUnits: string; decimals: number } | null) => ({
+  const endpoints = (price: { amount: string; decimals: number } | null) => ({
     data: [
       {
         id: 'end_01',
@@ -261,7 +261,7 @@ describe('verifyRoute', () => {
       apiKey: 'k',
       fetch: stubFetch(() => ({
         status: 200,
-        body: endpoints({ amountMinorUnits: '30000', decimals: 6 }),
+        body: endpoints({ amount: '0.03', decimals: 6 }),
       })),
     });
 
@@ -275,7 +275,7 @@ describe('verifyRoute', () => {
       apiKey: 'k',
       fetch: stubFetch(() => ({
         status: 200,
-        body: endpoints({ amountMinorUnits: '500000', decimals: 6 }),
+        body: endpoints({ amount: '0.50', decimals: 6 }),
       })),
     });
 
@@ -324,7 +324,7 @@ describe('verifyRoute', () => {
       apiKey: 'k',
       fetch: stubFetch(() => ({
         status: 200,
-        body: endpoints({ amountMinorUnits: '30000', decimals: 6 }),
+        body: endpoints({ amount: '0.03', decimals: 6 }),
       })),
     });
 
@@ -340,7 +340,7 @@ describe('verifyRoute', () => {
       apiKey: 'k',
       fetch: stubFetch(() => ({
         status: 200,
-        body: endpoints({ amountMinorUnits: '30000', decimals: 6 }),
+        body: endpoints({ amount: '0.03', decimals: 6 }),
       })),
     });
 
@@ -356,7 +356,7 @@ describe('verifyRoute', () => {
         apiKey: 'k',
         fetch: stubFetch(() => ({
           status: 200,
-          body: endpoints({ amountMinorUnits: '30000', decimals: 6 }),
+          body: endpoints({ amount: '0.03', decimals: 6 }),
         })),
       });
 
@@ -371,7 +371,7 @@ describe('verifyRoute', () => {
       apiKey: 'k',
       fetch: stubFetch(() => ({
         status: 200,
-        body: endpoints({ amountMinorUnits: '30000', decimals: 6 }),
+        body: endpoints({ amount: '0.03', decimals: 6 }),
       })),
     });
 

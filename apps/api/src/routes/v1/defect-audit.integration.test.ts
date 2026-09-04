@@ -538,3 +538,154 @@ describe.skipIf(!hasDatabase)('audit: error mapping', () => {
     }
   });
 });
+
+describe.skipIf(!hasDatabase)('audit: machine-readable endpoint listing', () => {
+  let harness: Harness;
+
+  beforeAll(async () => {
+    harness = await createHarness({});
+  });
+
+  afterAll(async () => {
+    await harness.close();
+  });
+
+  it('lets a key with endpoints:read see its own project endpoints', async () => {
+    const app = harness.app;
+    const org = await createTestOrganization(app, 'eplist');
+    const projectId = await createTestProject(app, org.organizationId, org.owner.token, 'eplist');
+    const endpoint = await createTestEndpoint(app, projectId, org.owner.token, {
+      path: '/eplist-route',
+    });
+
+    const key = await createTestApiKey(app, projectId, org.owner.token, {
+      scopes: ['payments:write', 'endpoints:read'],
+    });
+
+    const response = await call(app, { method: 'GET', url: '/v1/endpoints', token: key.secret });
+
+    expect(response.status).toBe(200);
+    const rows = response.body['data'] as Array<{ id: string; path: string }>;
+    expect(rows.map((row) => row.id)).toContain(endpoint.id);
+  });
+
+  it('refuses a key without endpoints:read', async () => {
+    const app = harness.app;
+    const org = await createTestOrganization(app, 'epnoscope');
+    const projectId = await createTestProject(
+      app,
+      org.organizationId,
+      org.owner.token,
+      'epnoscope',
+    );
+    await createTestEndpoint(app, projectId, org.owner.token, {});
+
+    const key = await createTestApiKey(app, projectId, org.owner.token, {
+      scopes: ['payments:write'],
+    });
+
+    const response = await call(app, { method: 'GET', url: '/v1/endpoints', token: key.secret });
+    expect(response.status).toBeGreaterThanOrEqual(400);
+    expect(response.status).toBeLessThan(500);
+  });
+
+  it('shows a key only its own project, whatever it asks for', async () => {
+    const app = harness.app;
+
+    const victim = await createTestOrganization(app, 'epvictim');
+    const victimProject = await createTestProject(
+      app,
+      victim.organizationId,
+      victim.owner.token,
+      'epvictim',
+    );
+    const victimEndpoint = await createTestEndpoint(app, victimProject, victim.owner.token, {
+      path: '/victim-secret-route',
+    });
+
+    const attacker = await createTestOrganization(app, 'epattacker');
+    const attackerProject = await createTestProject(
+      app,
+      attacker.organizationId,
+      attacker.owner.token,
+      'epattacker',
+    );
+    const attackerKey = await createTestApiKey(app, attackerProject, attacker.owner.token, {
+      scopes: ['payments:write', 'endpoints:read'],
+    });
+
+    // The project comes from the credential, so the query parameter is inert.
+    const response = await call(app, {
+      method: 'GET',
+      url: `/v1/endpoints?projectId=${victimProject}`,
+      token: attackerKey.secret,
+    });
+
+    expect(response.status).toBe(200);
+    const rows = response.body['data'] as Array<{ id: string; path: string }>;
+    expect(rows.map((row) => row.id)).not.toContain(victimEndpoint.id);
+    expect(response.raw).not.toContain('/victim-secret-route');
+  });
+
+  it('shows a key only its own environment', async () => {
+    const app = harness.app;
+    const org = await createTestOrganization(app, 'epenv');
+    const projectId = await createTestProject(app, org.organizationId, org.owner.token, 'epenv');
+    const testEndpoint = await createTestEndpoint(app, projectId, org.owner.token, {
+      path: '/epenv-route',
+      environment: 'TEST',
+    });
+
+    const liveKey = await createTestApiKey(app, projectId, org.owner.token, {
+      environment: 'LIVE',
+      scopes: ['payments:write', 'endpoints:read'],
+    });
+
+    const response = await call(app, {
+      method: 'GET',
+      url: '/v1/endpoints',
+      token: liveKey.secret,
+    });
+    expect(response.status).toBe(200);
+    const rows = response.body['data'] as Array<{ id: string }>;
+    expect(rows.map((row) => row.id)).not.toContain(testEndpoint.id);
+  });
+
+  it('does not let a key create or change an endpoint', async () => {
+    const app = harness.app;
+    const org = await createTestOrganization(app, 'epwrite');
+    const projectId = await createTestProject(app, org.organizationId, org.owner.token, 'epwrite');
+    const endpoint = await createTestEndpoint(app, projectId, org.owner.token, {});
+
+    // Every scope a key can hold. Repricing an endpoint changes what agents
+    // are charged, so it stays human work whatever the key carries.
+    const key = await createTestApiKey(app, projectId, org.owner.token, {
+      scopes: ['payments:read', 'payments:write', 'endpoints:read', 'endpoints:write'],
+    });
+
+    const created = await call(app, {
+      method: 'POST',
+      url: '/v1/endpoints',
+      token: key.secret,
+      payload: {
+        projectId,
+        name: 'Injected',
+        path: '/injected',
+        method: 'POST',
+        environment: 'TEST',
+        price: { amount: '0.01', asset: 'USDC' },
+      },
+    });
+    expect(created.status).toBeGreaterThanOrEqual(400);
+    expect(created.status).toBeLessThan(500);
+
+    const repriced = await call(app, {
+      method: 'PATCH',
+      url: `/v1/endpoints/${endpoint.id}`,
+      token: key.secret,
+      payload: { price: { amount: '0.00', asset: 'USDC' } },
+    });
+    expect(repriced.status).toBeGreaterThanOrEqual(400);
+    expect(repriced.status).toBeLessThan(500);
+  });
+});

@@ -38,7 +38,8 @@ export interface RegisteredEndpoint {
   readonly method: string;
   readonly status: string;
   readonly price: {
-    readonly amountMinorUnits: string;
+    /** A decimal string, as the API renders it: `'0.03'`. */
+    readonly amount: string;
     readonly asset: string;
     readonly decimals: number;
   } | null;
