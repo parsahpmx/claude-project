@@ -27,17 +27,32 @@ export class Meter402SdkError extends Error {
   readonly code: string | null;
   /** Meter402's request ID, for support. Safe to log and to show a developer. */
   readonly requestId: string | null;
+  /**
+   * The HTTP status Meter402 used, when this came from a response.
+   *
+   * Carried so a `rejected` outcome can reach the caller with the status
+   * Meter402 chose. A replayed payment is a 409 about the *caller*, and
+   * flattening it to 500 would tell an agent the merchant is broken when in
+   * fact the agent tried to spend one payment twice.
+   */
+  readonly status: number | null;
 
   constructor(
     kind: Meter402ErrorKind,
     message: string,
-    options: { code?: string | null; requestId?: string | null; cause?: unknown } = {},
+    options: {
+      code?: string | null;
+      requestId?: string | null;
+      status?: number | null;
+      cause?: unknown;
+    } = {},
   ) {
     super(message, options.cause === undefined ? undefined : { cause: options.cause });
     this.name = 'Meter402SdkError';
     this.kind = kind;
     this.code = options.code ?? null;
     this.requestId = options.requestId ?? null;
+    this.status = options.status ?? null;
   }
 
   /** Whether retrying the same call could plausibly succeed. */

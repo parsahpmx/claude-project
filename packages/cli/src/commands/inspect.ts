@@ -122,7 +122,7 @@ export async function listPayments(options: InspectOptions): Promise<number> {
         id: string;
         status: string;
         amountMinorUnits?: string;
-        asset?: string;
+        asset?: { symbol: string; decimals: number };
         simulated?: boolean;
         createdAt?: string;
       }>
@@ -141,7 +141,7 @@ export async function listPayments(options: InspectOptions): Promise<number> {
     ...payments.map((payment) => [
       payment.id,
       payment.status,
-      payment.amountMinorUnits ? `${payment.amountMinorUnits} ${payment.asset ?? ''}`.trim() : '—',
+      formatMoney(payment.amountMinorUnits, payment.asset),
       payment.simulated === true ? 'yes' : 'no',
       payment.createdAt ?? '—',
     ]),
@@ -240,4 +240,24 @@ export async function testPayment(
   line(`    ${dim(`-H 'meter402-payment: ${proof}'`)}`);
   line();
   return 0;
+}
+
+/**
+ * Minor units to something a person reads, on strings.
+ *
+ * Never through a float: 30000 / 1e6 is fine, but the same operation on a
+ * larger amount is not, and a CLI that prints a subtly wrong number about
+ * money is worse than one that prints nothing.
+ */
+function formatMoney(
+  amountMinorUnits: string | undefined,
+  asset: { symbol: string; decimals: number } | undefined,
+): string {
+  if (!amountMinorUnits || !asset) return '—';
+
+  const digits = amountMinorUnits.padStart(asset.decimals + 1, '0');
+  const whole = digits.slice(0, digits.length - asset.decimals);
+  const fraction = digits.slice(digits.length - asset.decimals).replace(/0+$/, '');
+
+  return `${fraction ? `${whole}.${fraction}` : whole} ${asset.symbol}`;
 }

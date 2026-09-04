@@ -12,18 +12,21 @@ import {
 import type { Database } from '@meter402/database';
 import { resolveOrganizationAccess } from '../../auth/authenticate.js';
 import { getPrincipal, type RouteDeps } from '../context.js';
-import { parseParams } from '../../lib/validation.js';
+import { parseParams, parseQuery } from '../../lib/validation.js';
 import { scopeFromApiKey, scopeFromContext, type TenantScope } from '../../lib/tenant.js';
 import {
   findPaymentInOrganization,
   findPaymentRequestInOrganization,
   findPaymentResourceOrganizationId,
   findReceiptInOrganization,
+  listPaymentsInProject,
+  listReceiptsInProject,
   type PaymentRecord,
   type PaymentResourceKind,
   type ReceiptRecord,
 } from '../../modules/payments/payment.repository.js';
 import { completeTestPayment } from '../../modules/payments/test-payment.service.js';
+import { resolveProjectAccess } from './projects.js';
 import type { PaymentRequest } from '@meter402/payments';
 
 /*
@@ -155,7 +158,77 @@ async function readScope(
   return scopeFromContext(context);
 }
 
+/**
+ * Resolve a project-scoped read for either kind of principal.
+ *
+ * A machine credential reads its own project and only its own — the project
+ * comes from the key, so the query parameter is inert and there is no ID to
+ * substitute. A human names a project and has their membership checked.
+ *
+ * Machine access matters here because these are the routes a merchant's own
+ * dashboard, worker, or `meter402 payments` reads to reconcile against their
+ * side of the ledger, and requiring a human session for that would mean
+ * putting a person's credential in a server process.
+ */
+async function listScope(
+  db: RouteDeps['db'],
+  principal: Principal,
+  requestedProjectId: string | undefined,
+): Promise<{ scope: TenantScope; projectId: string }> {
+  if (principal.type === 'api_key') {
+    requireScope(principal, 'payments:read');
+    return { scope: scopeFromApiKey(principal), projectId: principal.projectId };
+  }
+
+  if (!requestedProjectId) {
+    throw new Meter402Error('VALIDATION_FAILED', 'projectId is required.');
+  }
+
+  const { context, scope } = await resolveProjectAccess(db, principal, requestedProjectId);
+  requirePermission(context, 'payments:read');
+  return { scope, projectId: requestedProjectId };
+}
+
+const DEFAULT_LIST_LIMIT = 50;
+
+const listQuerySchema = z.object({
+  projectId: z.string().min(1).max(64).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+});
+
 export function registerPaymentRoutes(app: FastifyInstance, deps: RouteDeps): void {
+  app.get('/v1/payments', async (request) => {
+    const query = parseQuery(listQuerySchema, request.query);
+    const { scope, projectId } = await listScope(deps.db, getPrincipal(request), query.projectId);
+    const limit = query.limit ?? DEFAULT_LIST_LIMIT;
+
+    const records = await listPaymentsInProject(deps.db, scope, projectId);
+    /*
+     * Newest first (the repository orders by creation), then truncated here.
+     * A caller debugging a payment wants the last few, and an unbounded list
+     * of a busy merchant's payments is a slow query and a large response
+     * nobody asked for.
+     */
+    return {
+      data: records.slice(0, limit).map(serializePayment),
+      hasMore: records.length > limit,
+      nextCursor: null,
+    };
+  });
+
+  app.get('/v1/receipts', async (request) => {
+    const query = parseQuery(listQuerySchema, request.query);
+    const { scope, projectId } = await listScope(deps.db, getPrincipal(request), query.projectId);
+    const limit = query.limit ?? DEFAULT_LIST_LIMIT;
+
+    const records = await listReceiptsInProject(deps.db, scope, projectId);
+    return {
+      data: records.slice(0, limit).map(serializeReceipt),
+      hasMore: records.length > limit,
+      nextCursor: null,
+    };
+  });
+
   app.get('/v1/payment-requests/:paymentRequestId', async (request) => {
     const principal = getPrincipal(request);
     const { paymentRequestId } = parseParams(paymentRequestParams, request.params);

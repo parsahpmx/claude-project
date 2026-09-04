@@ -199,21 +199,23 @@ export class Meter402Client {
     const requestId = envelope.error?.requestId ?? null;
     const message = envelope.error?.message ?? `Meter402 returned ${response.status}.`;
 
-    if (response.status >= 500 || response.status === 429) {
-      throw new Meter402SdkError('unavailable', message, { code, requestId });
+    const status = response.status;
+
+    if (status >= 500 || status === 429) {
+      throw new Meter402SdkError('unavailable', message, { code, requestId, status });
     }
-    if (response.status === 401 || response.status === 403) {
-      throw new Meter402SdkError('authentication', message, { code, requestId });
+    if (status === 401 || status === 403) {
+      throw new Meter402SdkError('authentication', message, { code, requestId, status });
     }
-    if (response.status === 404 && code === 'ENDPOINT_NOT_FOUND') {
+    if (status === 404 && code === 'ENDPOINT_NOT_FOUND') {
       throw new Meter402SdkError(
         'configuration',
         `${message} Register it with \`meter402 endpoints create\`, or check that the ` +
           `path and method match what you registered.`,
-        { code, requestId },
+        { code, requestId, status },
       );
     }
-    throw new Meter402SdkError('rejected', message, { code, requestId });
+    throw new Meter402SdkError('rejected', message, { code, requestId, status });
   }
 }
 

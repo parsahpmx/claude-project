@@ -178,6 +178,48 @@ describe('express adapter', () => {
     expect(sent.status).toBe(500);
   });
 
+  it('passes a rejected payment through with its own status, not a 500', async () => {
+    /*
+     * The replay case, which is the one that actually happens: an agent
+     * presents one payment twice. That is a 409 about the agent. Answering 500
+     * would tell it the merchant is broken and invite a retry — the exact
+     * wrong response to "you already spent this".
+     */
+    const { res, sent, next, handlerRan } = expressDouble();
+    const alreadyUsed = meterReturning(
+      { error: { code: 'PAYMENT_ALREADY_USED', message: 'This payment has already been used.' } },
+      409,
+    );
+
+    await expressProtect(alreadyUsed)(
+      { method: 'POST', path: '/research', headers: {} } as never,
+      res as never,
+      next,
+    );
+
+    expect(handlerRan()).toBe(false);
+    expect(sent.status).toBe(409);
+    expect((sent.body as { error: { code: string } }).error.code).toBe('PAYMENT_ALREADY_USED');
+  });
+
+  it('still answers 500 for a merchant configuration problem, and says nothing specific', async () => {
+    const { res, sent, next } = expressDouble();
+    const badCredential = meterReturning(
+      { error: { code: 'INVALID_API_KEY', message: 'key mk_live_abc is revoked' } },
+      401,
+    );
+
+    await expressProtect(badCredential)(
+      { method: 'POST', path: '/research', headers: {} } as never,
+      res as never,
+      next,
+    );
+
+    expect(sent.status).toBe(500);
+    // The caller learns nothing about the merchant's account.
+    expect(JSON.stringify(sent.body)).not.toContain('mk_live_abc');
+  });
+
   it('reports errors to onError without letting them escape', async () => {
     const { res, next } = expressDouble();
     const seen: unknown[] = [];

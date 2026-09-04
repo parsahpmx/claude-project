@@ -68,25 +68,58 @@ export function decisionFrom(result: AuthorizationResult): ProtectDecision {
  * unavailable Meter402 is subject to `onUnavailable`.
  */
 export function decisionFromError(error: unknown, mode: FailureMode): ProtectDecision {
-  const unavailable = isMeter402SdkError(error) && error.kind === 'unavailable';
+  const sdkError = isMeter402SdkError(error) ? error : null;
+  const unavailable = sdkError?.kind === 'unavailable';
 
   if (unavailable && mode === 'open') {
     return { action: 'proceed' };
   }
 
-  const message =
-    isMeter402SdkError(error) && error.kind !== 'unavailable'
-      ? 'This paid endpoint is misconfigured.'
-      : 'Payment authorization is temporarily unavailable. Retry shortly.';
+  if (unavailable) {
+    return {
+      action: 'respond',
+      status: 503,
+      headers: { 'retry-after': '5' },
+      body: {
+        error: {
+          code: 'PAYMENT_AUTHORIZATION_UNAVAILABLE',
+          message: 'Payment authorization is temporarily unavailable. Retry shortly.',
+        },
+      },
+    };
+  }
 
+  /*
+   * Meter402 rejected the caller's payment, not the merchant's setup.
+   *
+   * Passed through with the status and message Meter402 chose. The common case
+   * is an agent presenting one payment twice: that is a 409 about the agent,
+   * and answering 500 would tell it the merchant is broken and invite it to
+   * retry — which is exactly the wrong response to "you already spent this".
+   */
+  if (sdkError?.kind === 'rejected' && sdkError.status !== null) {
+    return {
+      action: 'respond',
+      status: sdkError.status,
+      headers: {},
+      body: { error: { code: sdkError.code ?? 'PAYMENT_REJECTED', message: sdkError.message } },
+    };
+  }
+
+  /*
+   * A configuration or authentication problem. The merchant's to fix, and
+   * never absorbed: serving requests for free because the API key is wrong
+   * would hide the exact problem they most need to see. The caller is told
+   * nothing specific, because the specifics are about the merchant's account.
+   */
   return {
     action: 'respond',
-    status: unavailable ? 503 : 500,
-    headers: unavailable ? { 'retry-after': '5' } : {},
+    status: 500,
+    headers: {},
     body: {
       error: {
-        code: unavailable ? 'PAYMENT_AUTHORIZATION_UNAVAILABLE' : 'PAYMENT_MISCONFIGURED',
-        message,
+        code: 'PAYMENT_MISCONFIGURED',
+        message: 'This paid endpoint is misconfigured.',
       },
     },
   };

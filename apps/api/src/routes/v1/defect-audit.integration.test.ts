@@ -689,3 +689,148 @@ describe.skipIf(!hasDatabase)('audit: machine-readable endpoint listing', () => 
     expect(repriced.status).toBeLessThan(500);
   });
 });
+
+describe.skipIf(!hasDatabase)('audit: payment and receipt listing', () => {
+  let harness: Harness;
+
+  beforeAll(async () => {
+    harness = await createHarness({});
+  });
+
+  afterAll(async () => {
+    await harness.close();
+  });
+
+  /** Drive one payment all the way to a receipt, so there is something to list. */
+  async function payOnce(label: string) {
+    const app = harness.app;
+    const org = await createTestOrganization(app, label);
+    const projectId = await createTestProject(app, org.organizationId, org.owner.token, label);
+    const endpoint = await createTestEndpoint(app, projectId, org.owner.token, {
+      path: `/${label}`,
+    });
+    const key = await createTestApiKey(app, projectId, org.owner.token, {
+      scopes: ['payments:read', 'payments:write'],
+    });
+
+    const challenge = await callPaid(app, key.secret, endpoint);
+    const paymentRequestId = (challenge.body['payment'] as { paymentRequestId: string })
+      .paymentRequestId;
+
+    const completed = await call(app, {
+      method: 'POST',
+      url: `/v1/test/payment-requests/${paymentRequestId}/complete`,
+      token: key.secret,
+      payload: {},
+    });
+    const reference = (completed.body['data'] as { reference: string }).reference;
+    await callPaid(app, key.secret, endpoint, { paymentRequestId, reference });
+
+    return { org, projectId, key };
+  }
+
+  it('lists a key own payments and receipts', async () => {
+    const { key } = await payOnce('listpay');
+
+    const payments = await call(harness.app, {
+      method: 'GET',
+      url: '/v1/payments',
+      token: key.secret,
+    });
+    expect(payments.status).toBe(200);
+    expect((payments.body['data'] as unknown[]).length).toBeGreaterThanOrEqual(1);
+
+    const receipts = await call(harness.app, {
+      method: 'GET',
+      url: '/v1/receipts',
+      token: key.secret,
+    });
+    expect(receipts.status).toBe(200);
+    expect((receipts.body['data'] as unknown[]).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('never shows one project payments to another project key', async () => {
+    const victim = await payOnce('listvictim');
+    const attacker = await payOnce('listattacker');
+
+    const victimPayments = await call(harness.app, {
+      method: 'GET',
+      url: '/v1/payments',
+      token: victim.key.secret,
+    });
+    const victimIds = (victimPayments.body['data'] as Array<{ id: string }>).map((row) => row.id);
+    expect(victimIds.length).toBeGreaterThanOrEqual(1);
+
+    // The project comes from the credential, so naming the victim's is inert.
+    const stolen = await call(harness.app, {
+      method: 'GET',
+      url: `/v1/payments?projectId=${victim.projectId}`,
+      token: attacker.key.secret,
+    });
+
+    expect(stolen.status).toBe(200);
+    const stolenIds = (stolen.body['data'] as Array<{ id: string }>).map((row) => row.id);
+    for (const id of victimIds) {
+      expect(stolenIds).not.toContain(id);
+    }
+  });
+
+  it('refuses a key without payments:read', async () => {
+    const app = harness.app;
+    const org = await createTestOrganization(app, 'listnoscope');
+    const projectId = await createTestProject(
+      app,
+      org.organizationId,
+      org.owner.token,
+      'listnoscope',
+    );
+    const key = await createTestApiKey(app, projectId, org.owner.token, {
+      scopes: ['endpoints:read'],
+    });
+
+    const response = await call(app, { method: 'GET', url: '/v1/payments', token: key.secret });
+    expect(response.status).toBeGreaterThanOrEqual(400);
+    expect(response.status).toBeLessThan(500);
+  });
+
+  it('requires a human to name a project, and checks membership', async () => {
+    const victim = await payOnce('listhuman');
+    const outsider = await createTestOrganization(harness.app, 'listoutsider');
+
+    const missing = await call(harness.app, {
+      method: 'GET',
+      url: '/v1/payments',
+      token: victim.org.owner.token,
+    });
+    expect(missing.status).toBe(422);
+
+    const crossed = await call(harness.app, {
+      method: 'GET',
+      url: `/v1/payments?projectId=${victim.projectId}`,
+      token: outsider.owner.token,
+    });
+    expect(crossed.status).toBe(404);
+  });
+
+  it('bounds the list, and rejects an absurd limit', async () => {
+    const { key } = await payOnce('listlimit');
+
+    const bounded = await call(harness.app, {
+      method: 'GET',
+      url: '/v1/payments?limit=1',
+      token: key.secret,
+    });
+    expect(bounded.status).toBe(200);
+    expect((bounded.body['data'] as unknown[]).length).toBeLessThanOrEqual(1);
+
+    for (const limit of ['0', '-1', '10000', 'lots']) {
+      const response = await call(harness.app, {
+        method: 'GET',
+        url: `/v1/payments?limit=${limit}`,
+        token: key.secret,
+      });
+      expect(response.status, limit).toBeGreaterThanOrEqual(400);
+      expect(response.status, limit).toBeLessThan(500);
+    }
+  });
+});
