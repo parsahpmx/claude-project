@@ -37,7 +37,28 @@ export class ConfigurationError extends Error {
  * production — a shared, publicly-known webhook signing secret means anyone
  * can forge a payment notification to a merchant.
  */
-const PLACEHOLDER_MARKERS = ['replace_me', 'changeme', 'placeholder', 'example', 'todo'];
+/*
+ * Markers written without separators, and matched against a value whose own
+ * separators have been stripped.
+ *
+ * The list used to hold `replace_me` literally, which meant the extremely
+ * common `replace-me-...` template spelling sailed through into production as
+ * a real secret. Matching on the separator-free form catches every spelling of
+ * the same word — replace-me, replace_me, "replace me", ReplaceMe — instead of
+ * requiring someone to have anticipated the punctuation.
+ */
+const PLACEHOLDER_MARKERS = [
+  'replaceme',
+  'changeme',
+  'placeholder',
+  'example',
+  'todo',
+  'yoursecret',
+  'secrethere',
+  'dummy',
+  'insertyour',
+  'xxxxxxxx',
+];
 
 const MIN_SECRET_LENGTH = 32;
 
@@ -56,8 +77,10 @@ const booleanFlag = z
   .transform((value) => value === 'true' || value === '1' || value === 'yes');
 
 function looksLikePlaceholder(value: string): boolean {
-  const lower = value.toLowerCase();
-  return PLACEHOLDER_MARKERS.some((marker) => lower.includes(marker));
+  // Strip anything that is not a letter or digit, so punctuation cannot be
+  // used (deliberately or accidentally) to slip a template value past this.
+  const normalized = value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return PLACEHOLDER_MARKERS.some((marker) => normalized.includes(marker));
 }
 
 const rawSchema = z.object({
