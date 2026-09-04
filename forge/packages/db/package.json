@@ -1,0 +1,45 @@
+{
+  "name": "@forge/db",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "FORGE database: Drizzle schema, migrations, connection factory and seed.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema/index.d.ts",
+      "default": "./dist/schema/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "generate": "drizzle-kit generate",
+    "seed": "tsx src/seed/run.ts",
+    "clean": "rimraf dist",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "catalog:",
+    "@forge/core": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "postgres": "catalog:"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@types/node": "catalog:",
+    "drizzle-kit": "catalog:",
+    "eslint": "catalog:",
+    "rimraf": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vitest": "catalog:"
+  }
+}

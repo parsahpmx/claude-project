@@ -1,0 +1,41 @@
+{
+  "name": "@forge/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "FORGE REST API \u2014 Fastify control plane for the member app, coach app and mobile clients.",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "clean": "rimraf dist",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@fastify/cookie": "catalog:",
+    "@fastify/cors": "catalog:",
+    "@fastify/helmet": "catalog:",
+    "@fastify/rate-limit": "catalog:",
+    "@fastify/sensible": "catalog:",
+    "@forge/core": "workspace:*",
+    "@forge/db": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "fastify": "catalog:",
+    "pino": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "pino-pretty": "catalog:",
+    "rimraf": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vitest": "catalog:"
+  }
+}

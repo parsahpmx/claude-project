@@ -1,5 +1,12 @@
 # Meter402
 
+> **This repository also contains [FORGE](forge/README.md)** — a complete
+> premium fitness, nutrition and online-coaching platform (marketing site,
+> member app, coach workspace, REST API and Postgres schema), built as a
+> separate self-contained workspace under [`forge/`](forge/). It shares no code
+> or dependencies with Meter402; `cd forge && pnpm install && pnpm dev` runs it.
+
+
 **Billing infrastructure for autonomous software.**
 
 Add machine-native payments to any API or MCP server. An agent calls your

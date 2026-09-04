@@ -1,0 +1,54 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# pnpm 10 blocks dependency lifecycle scripts by default. Each entry below is an
+# explicit, reviewed exception: esbuild (Vitest) and sharp (Next image pipeline)
+# fetch platform-specific binaries in postinstall and cannot work without it.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+
+# Single source of truth for dependency versions across the FORGE workspace.
+catalog:
+  # --- Toolchain ---
+  typescript: 5.9.3
+  eslint: ^9.39.0
+  '@eslint/js': ^9.39.0
+  typescript-eslint: ^8.68.0
+  'eslint-config-next': ^15.5.9
+  'eslint-config-prettier': ^10.1.8
+  tsx: ^4.20.3
+  vitest: ^3.2.4
+  '@types/node': ^22.15.3
+  rimraf: ^6.0.1
+
+  # --- Backend ---
+  fastify: ^5.12.1
+  '@fastify/cookie': ^11.0.2
+  '@fastify/cors': ^11.1.0
+  '@fastify/helmet': ^13.1.1
+  '@fastify/rate-limit': ^11.2.0
+  '@fastify/sensible': ^6.0.3
+  pino: ^9.13.1
+  pino-pretty: ^13.1.2
+
+  # --- Data ---
+  'drizzle-orm': ^0.45.2
+  'drizzle-kit': ^0.31.10
+  '@electric-sql/pglite': ^0.5.8
+  postgres: ^3.4.9
+
+  # --- Domain ---
+  zod: ^3.25.76
+
+  # --- Frontend ---
+  next: ^15.5.9
+  react: ^19.2.0
+  react-dom: ^19.2.0
+  '@types/react': ^19.2.0
+  '@types/react-dom': ^19.2.0
+  tailwindcss: ^3.4.18
+  autoprefixer: ^10.4.21
+  postcss: ^8.5.6
+  clsx: ^2.1.1

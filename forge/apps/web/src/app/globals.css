@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * FORGE base layer.
+ *
+ * Typography is set once here rather than per component: a product with 40
+ * screens cannot hold a type scale together by convention.
+ */
+
+@layer base {
+  :root {
+    --font-display: 'Archivo Black', 'Arial Black', 'Helvetica Neue', sans-serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --shell-gutter: clamp(1.25rem, 4vw, 4rem);
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-bone-200 text-ink-900 antialiased;
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Focus is always visible and always the same shape. A keyboard user must
+     never have to guess where they are. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ember ring-offset-2 ring-offset-bone-200;
+    border-radius: 4px;
+  }
+
+  .dark-surface :focus-visible {
+    @apply ring-offset-ink-900;
+  }
+
+  ::selection {
+    @apply bg-ember text-bone-100;
+  }
+
+  /* Respect the system setting. Every animation in FORGE is decoration. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .shell {
+    width: 100%;
+    max-width: theme('maxWidth.shell');
+    margin-inline: auto;
+    padding-inline: var(--shell-gutter);
+  }
+
+  .display {
+    font-family: var(--font-display);
+    font-weight: 800;
+    text-transform: uppercase;
+    /* A single long word set at display size is wider than a 390px viewport.
+       Breaking it is worse-looking than not; pushing the whole page sideways
+       is worse than both. */
+    overflow-wrap: break-word;
+  }
+
+  .eyebrow {
+    @apply text-eyebrow uppercase tracking-[0.18em] text-smoke-500;
+  }
+
+  .dark-surface .eyebrow {
+    @apply text-smoke-400;
+  }
+
+  .rule {
+    @apply h-px w-full bg-ink-900/10;
+  }
+
+  .dark-surface .rule {
+    @apply bg-bone-200/15;
+  }
+
+  /* The grain overlay is what stops large flat areas reading as "unfinished
+     placeholder" and gives generated imagery a photographic surface. */
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.22;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  }
+
+  .hairline {
+    @apply border border-ink-900/10;
+  }
+
+  .dark-surface .hairline {
+    @apply border-bone-200/10;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Wide content scrolls inside its own container; the page body never does.
+     `min-width: 0` is the load-bearing line: a flex or grid child defaults to
+     `min-width: auto`, which lets its content push the track wider than the
+     viewport instead of scrolling inside it. */
+  .scroll-x {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Grid and flex children opt into being narrower than their content. */
+  .min-w-0-safe {
+    min-width: 0;
+  }
+}
