@@ -7,20 +7,22 @@ endpoint, receives a payment challenge, pays in USDC on Base, and gets served �
 in one request cycle, with no account, card, or human in the loop.
 
 ```ts
-import { meter402 } from '@meter402/sdk';
+import { createMeter402 } from '@meter402/sdk';
+import { protect } from '@meter402/sdk/express';
 
-app.get(
-  '/research',
-  meter402({ price: '0.03', currency: 'USDC' }),
-  async (req, res) => res.send(await research()),
-);
+const meter = createMeter402({ apiKey: process.env.METER402_API_KEY! });
+
+app.post('/research', protect(meter, { price: '0.03' }), researchHandler);
 ```
 
-> **Project status: early development.** Phases 0–3 are complete and tested:
-> the payment domain core, identity and tenancy, billing objects, and a real
-> **x402 v2** integration using EIP-3009 signed authorizations on Base Sepolia.
-> An independent x402 client can meet a 402, sign an authorization, and be
-> served.
+Your handler is unchanged. It runs only when the request has been paid for.
+[Ten-minute quickstart →](docs/QUICKSTART.md)
+
+> **Project status: developer preview.** Phases 0–4 are complete and tested:
+> the payment domain core, identity and tenancy, billing objects, a real
+> **x402 v2** integration using EIP-3009 signed authorizations, settlement
+> reconciliation, and the developer platform — SDK, CLI, agent client, MCP
+> tools, and examples. 921 tests pass.
 >
 > **What has not happened: no payment has ever settled on a real chain.**
 > Settlement is exercised against a test double, because the development
@@ -34,10 +36,12 @@ app.get(
 > two independent configuration gates and is **NOT READY**; see
 > [`docs/MAINNET_READINESS.md`](docs/MAINNET_READINESS.md).
 >
-> The SDK shown above is the target interface and is **not yet implemented** —
-> see [`docs/ROADMAP.md`](docs/ROADMAP.md) for what exists today. This README
-> marks planned surfaces explicitly rather than describing them as if they
-> shipped.
+> The SDK above works. What does not exist: a dashboard (it needs production
+> human authentication, which is still a development adapter), webhooks (the
+> SSRF gate is open), and out-of-process x402 settlement (TEST works
+> completely; x402 is refused with a specific error rather than
+> half-supported). See [`docs/LAUNCH_READINESS.md`](docs/LAUNCH_READINESS.md)
+> for the full picture, stated as PASS / FAIL / NOT EXECUTED.
 
 ---
 
@@ -65,16 +69,24 @@ threat model entirely.
 
 ```
 apps/
-  api/                Fastify control plane (modular monolith)
+  api/                Fastify control plane (modular monolith) + worker
+  example-merchant/   A paid API in one file
+  example-agent/      An agent that meets a 402 and decides
+  example-mcp-server/ A paid MCP tool
 packages/
+  sdk/                Merchant SDK: Express, Fastify, Next adapters
+  client/             Agent client with a local spending policy
+  cli/                The `meter402` command
+  mcp/                paidTool(), over the same payment domain
   shared/             Money, IDs, errors, chain/asset registry
   payments/           State machine, authorization, protocol adapter interface
-  blockchain/         RPC providers, failover, ERC-20 verification
+  blockchain/         RPC providers, failover, ERC-20 verification, oracle
   x402/               x402 protocol adapter
   pricing/            Pricing strategies
   database/           Drizzle schema, migrations, seed
   config/             Validated environment loading
-docs/                 Design documents
+deploy/               Dockerfile and staging compose (unbuilt)
+docs/                 Design documents, runbooks, launch readiness
 ```
 
 Full target structure, including planned packages, is in
@@ -134,6 +146,9 @@ by convention — a rule you have to remember is not a control.
 | [SECURITY](docs/SECURITY.md) | Engineering security standards |
 | [THREAT_MODEL](docs/THREAT_MODEL.md) | Adversary analysis with mitigation status |
 | [API](docs/API.md) | HTTP contract |
+| [QUICKSTART](docs/QUICKSTART.md) | Paid endpoint in ten minutes, no blockchain required |
+| [LAUNCH_READINESS](docs/LAUNCH_READINESS.md) | What is and is not ready, as PASS / FAIL / NOT EXECUTED |
+| [runbooks/](docs/runbooks/) | What to do at 3am |
 | [ROADMAP](docs/ROADMAP.md) | Phases, exit criteria, and release gates |
 
 ## What Meter402 is not

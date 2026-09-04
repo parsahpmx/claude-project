@@ -10,6 +10,7 @@ import {
   type HealthProbes,
   type PaymentHealth,
 } from './routes/health.js';
+import { recordRoutes, registerOpenApiRoute } from './openapi.js';
 import { registerV1Routes } from './routes/v1/index.js';
 import type { RouteDeps } from './routes/context.js';
 
@@ -166,6 +167,12 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
 
   const app = Fastify(serverOptions);
 
+  /*
+   * Before any route is registered, so the specification is built from the
+   * routing table rather than from a list someone maintains by hand.
+   */
+  recordRoutes(app);
+
   await app.register(helmet, {
     // The API serves JSON only, so nothing needs to execute or embed.
     contentSecurityPolicy: {
@@ -243,6 +250,13 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   });
 
   registerHealthRoutes(app, options.probes ?? {});
+
+  /*
+   * The document is built per request, not here, so by the time anyone asks
+   * for it every route is registered and it describes the server that exists
+   * rather than a file someone remembered to update.
+   */
+  registerOpenApiRoute(app, process.env['PUBLIC_BASE_URL'] ?? 'http://localhost:4000');
   if (options.paymentHealth) {
     registerPaymentHealthRoute(app, options.paymentHealth);
   }

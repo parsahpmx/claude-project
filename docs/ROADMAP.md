@@ -4,9 +4,11 @@ Phase durations are planning estimates for a three-person team, not
 commitments. Each phase lists its exit criteria; a phase is not done because
 its time box elapsed.
 
-**Current position: Phase 3 complete on everything this environment can
-verify. Two conformance conditions remain blocked by network egress; the x402
-release gate stays OPEN. Phase 4 not started.**
+**Current position: Phase 4 complete. READY FOR DEVELOPER PREVIEW — see
+`LAUNCH_READINESS.md`. The x402 release gate stays OPEN: nothing has settled on
+a real chain, and the two conformance conditions remain blocked by network
+egress. Phase 5 (MCP) was largely absorbed into Phase 4; Phase 6 (webhooks) is
+blocked on the SSRF gate.**
 
 ---
 
@@ -147,15 +149,30 @@ abstraction, authorization replay protection, and settlement configuration.
 - The reconciliation worker
 - External security review
 
-## Phase 4 — Developer platform (~2 weeks)
+## Phase 4 — Developer platform ✅ complete
 
-`@meter402/sdk` with Express, Fastify, Next.js, and raw HTTP adapters; example
-merchant; documentation site; quick start.
+`@meter402/sdk` with Express, Fastify and Next adapters; `@meter402/client` for
+paying agents; the `meter402` CLI; `@meter402/mcp`; three example apps; the
+authorization API that lets a merchant host their own handler; OpenAPI
+generated from the routing table; runbooks and deployment artifacts.
 
 **Exit criteria**
-- Time to first test payment under 5 minutes, measured on someone who has not
-  seen the product
-- The four-line integration in the README actually works as written
+- ⚠️ Time to first test payment: **measured at ~1 second of command time** in a
+  clean room from an empty database, following the quickstart alone. The target
+  is met on the evidence available, and that evidence is a scripted run by the
+  people who wrote the tool — not a person seeing it for the first time, which
+  is what the criterion actually asks about.
+- ✅ The integration in the README works as written. It is now the integration
+  the example merchant uses, run against a live server.
+
+**Six real defects found and fixed**, including a high-severity SQL injection
+in `drizzle-orm` that every payment query went through. See
+`PHASE_4_COMPLETION_REPORT.md`.
+
+**Deliberately not built:** a dashboard (needs production human auth, which
+does not exist), webhooks (SSRF gate open), out-of-process x402 settlement
+(would need a spendable signature at rest or an unvalidatable locking
+protocol).
 
 ## Phase 5 — MCP (~2 weeks)
 

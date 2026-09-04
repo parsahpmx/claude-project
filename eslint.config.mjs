@@ -91,7 +91,7 @@ export default tseslint.config(
    * write `process.stdout.write` in a tutorial.
    */
   {
-    files: ['apps/example-*/**/*.ts', 'packages/cli/**/*.ts'],
+    files: ['apps/example-*/**/*.ts', 'packages/cli/**/*.ts', 'apps/api/src/worker.ts'],
     rules: {
       'no-console': 'off',
     },

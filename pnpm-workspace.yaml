@@ -40,7 +40,7 @@ catalog:
   pino-pretty: ^13.1.2
 
   # --- Data ----------------------------------------------------------------
-  'drizzle-orm': ^0.44.7
+  'drizzle-orm': ^0.45.2
   'drizzle-kit': ^0.31.10
   postgres: ^3.4.9
   ioredis: ^5.9.0

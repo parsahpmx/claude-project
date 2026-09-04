@@ -1,0 +1,96 @@
+name: meter402-staging
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Staging: the smallest thing that is production-shaped.
+#
+# Deliberately not Kubernetes. This runs an API, a worker, a database and a
+# cache — a topology that fits on one host and gains nothing from an
+# orchestrator except operational surface nobody here has time to maintain.
+# If the traffic ever justifies it, the Dockerfile is the same either way.
+#
+# Every secret comes from the environment. Nothing here has a default, so a
+# missing variable fails the deploy rather than silently starting something
+# insecure — which is the same posture the config loader takes.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Not published. Only the API and worker reach it, over the compose network.
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--save', '', '--appendonly', 'no']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    environment: &meter402-env
+      NODE_ENV: production
+      DEPLOY_ENV: staging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      API_PORT: 8080
+      API_HOST: 0.0.0.0
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL}
+      DASHBOARD_ORIGIN: ${DASHBOARD_ORIGIN:?set DASHBOARD_ORIGIN}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
+      API_KEY_HASH_PEPPER: ${API_KEY_HASH_PEPPER:?set API_KEY_HASH_PEPPER}
+      WEBHOOK_SIGNING_SECRET: ${WEBHOOK_SIGNING_SECRET:?set WEBHOOK_SIGNING_SECRET}
+      TEST_SIMULATOR_SECRET: ${TEST_SIMULATOR_SECRET:?set TEST_SIMULATOR_SECRET}
+      BASE_CHAIN_ID: ${BASE_CHAIN_ID:-84532}
+      BASE_RPC_URL: ${BASE_RPC_URL:?set BASE_RPC_URL}
+      SECONDARY_BASE_RPC_URL: ${SECONDARY_BASE_RPC_URL:-}
+      USDC_CONTRACT_ADDRESS: ${USDC_CONTRACT_ADDRESS:?set USDC_CONTRACT_ADDRESS}
+      # Both default to off. Staging turns settlement on deliberately or not at
+      # all; mainnet stays off regardless — see docs/MAINNET_READINESS.md.
+      LIVE_SETTLEMENT_ENABLED: ${LIVE_SETTLEMENT_ENABLED:-false}
+      ENABLE_BASE_MAINNET: 'false'
+      X402_FACILITATOR_URL: ${X402_FACILITATOR_URL:-}
+      X402_FACILITATOR_API_KEY: ${X402_FACILITATOR_API_KEY:-}
+    ports:
+      - '127.0.0.1:8080:8080'
+    # Long enough for the API's own 20s drain deadline to complete first.
+    stop_grace_period: 30s
+
+  worker:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres: { condition: service_healthy }
+    command: ['node', 'apps/api/dist/worker.js']
+    environment: *meter402-env
+    # The worker exits immediately when settlement is disabled, by design: a
+    # running reconciliation worker should mean uncertain payments are being
+    # resolved, and there are none to resolve without real settlement.
+    stop_grace_period: 20s
+
+volumes:
+  postgres-data:

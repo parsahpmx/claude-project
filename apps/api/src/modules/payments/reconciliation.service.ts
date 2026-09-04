@@ -506,13 +506,27 @@ async function failReconciledPayment(
  * characteristics, and burying it inside a request-serving process is how it
  * ends up competing with payments for the connection pool.
  */
+export interface ReconciliationWorkerOptions {
+  /**
+   * Whether the timer should hold the process open.
+   *
+   * `true` in a dedicated worker process, which exists to do exactly this and
+   * should not exit the moment its event loop is otherwise idle. `false` when
+   * embedded in something else — a test, or a process with its own reason to
+   * be alive — where an unreffed timer keeps it from ever exiting.
+   */
+  readonly keepProcessAlive?: boolean;
+}
+
 export class ReconciliationWorker {
   private timer: NodeJS.Timeout | null = null;
-  private running = false;
+  /** The pass currently running, so shutdown can wait for it. */
+  private inFlight: Promise<unknown> | null = null;
 
   constructor(
     private readonly deps: ReconciliationDeps,
     private readonly intervalMs = 30_000,
+    private readonly options: ReconciliationWorkerOptions = {},
   ) {}
 
   start(): void {
@@ -520,8 +534,10 @@ export class ReconciliationWorker {
     this.timer = setInterval(() => {
       void this.tick();
     }, this.intervalMs);
-    // Never hold the process open on this alone.
-    this.timer.unref?.();
+
+    if (this.options.keepProcessAlive !== true) {
+      this.timer.unref?.();
+    }
   }
 
   stop(): void {
@@ -531,17 +547,33 @@ export class ReconciliationWorker {
     }
   }
 
+  /**
+   * Wait for any pass already running to finish.
+   *
+   * Called after `stop()` during shutdown. A pass is a sequence of
+   * transactions, each safe to be interrupted between — the constraints do the
+   * work, not the process — so this is not about correctness. It is about not
+   * abandoning a job in IN_PROGRESS for the whole stall timeout when a second
+   * or two would have let it resolve.
+   */
+  async drain(): Promise<void> {
+    await this.inFlight;
+  }
+
   /** One pass. Skips if the previous pass is still running — no pile-up. */
   async tick(): Promise<ReconciliationOutcome | null> {
-    if (this.running) return null;
-    this.running = true;
-    try {
-      return await runReconciliationPass(this.deps);
-    } catch {
+    if (this.inFlight) return null;
+
+    const pass = runReconciliationPass(this.deps).catch(() => {
       /* istanbul ignore next -- runReconciliationPass handles its own errors. */
       return null;
+    });
+    this.inFlight = pass;
+
+    try {
+      return await pass;
     } finally {
-      this.running = false;
+      this.inFlight = null;
     }
   }
 }

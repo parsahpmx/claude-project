@@ -17,7 +17,21 @@ import { HttpFacilitatorClient, preflightFacilitator } from '@meter402/x402';
 import { paymentMetrics } from './lib/metrics.js';
 import { settlementBacklog } from './modules/payments/settlement-backlog.js';
 
+/**
+ * How long to let in-flight requests finish before closing anyway.
+ *
+ * Under a typical orchestrator's 30-second SIGKILL timer, so the process ends
+ * on its own terms with room to spare rather than being killed mid-write.
+ */
+const SHUTDOWN_DEADLINE_MS = 20_000;
+
 async function main(): Promise<void> {
+  /*
+   * Flipped at the first signal, read by the readiness probe. Declared here so
+   * the probe closes over it before `shutdown` is defined.
+   */
+  let draining = false;
+
   let config;
   try {
     config = loadConfig();
@@ -138,6 +152,17 @@ async function main(): Promise<void> {
      * enabled the chain is genuinely required, and then it is probed.
      */
     probes: {
+      /*
+       * Named for what it reports, not for the state it watches: every other
+       * probe here answers "is this healthy", and a check called `draining`
+       * answering `true` for "not draining" reads backwards at exactly the
+       * moment someone is reading it in a hurry.
+       *
+       * Flips the instant shutdown begins, before anything is actually closed,
+       * so the load balancer stops routing here while in-flight requests
+       * finish.
+       */
+      acceptingTraffic: async () => !draining,
       database: () => database.ping(),
       ...(config.settlement.liveSettlementEnabled
         ? { blockchain: () => blockchain.healthCheck() }
@@ -191,8 +216,43 @@ async function main(): Promise<void> {
     if (shuttingDown) return;
     shuttingDown = true;
     app.log.info({ signal }, 'Shutting down');
+
+    /*
+     * Leave the rotation first, and only then drain.
+     *
+     * `/ready` starts answering not-ready immediately, so the load balancer
+     * stops sending new requests while the ones already in flight finish. The
+     * other order — close, then stop being routed to — means every request
+     * arriving during the close is refused by a socket that is going away, and
+     * some of those are payments.
+     */
+    draining = true;
+
+    /*
+     * A deadline, because `app.close()` waits for in-flight requests and a
+     * request waiting on an unresponsive facilitator can outlive the
+     * orchestrator's patience. Being killed mid-close is worse than closing
+     * ourselves: it strands a payment in SUBMITTED that reconciliation then has
+     * to work out from the chain.
+     *
+     * Deliberately shorter than a typical 30s SIGKILL timer, so we finish on
+     * our own terms with room to spare.
+     */
+    const deadline = new Promise<'timeout'>((resolve) => {
+      const timer = setTimeout(() => resolve('timeout'), SHUTDOWN_DEADLINE_MS);
+      timer.unref?.();
+    });
+
     try {
-      await app.close();
+      const outcome = await Promise.race([app.close().then(() => 'closed' as const), deadline]);
+      if (outcome === 'timeout') {
+        app.log.warn(
+          { deadlineMs: SHUTDOWN_DEADLINE_MS },
+          'Requests still in flight at the shutdown deadline; closing anyway',
+        );
+      }
+
+      // The pool last, so nothing is still trying to write when it goes.
       await database.close();
       process.exitCode = 0;
     } catch (error) {
