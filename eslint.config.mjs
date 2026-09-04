@@ -83,6 +83,20 @@ export default tseslint.config(
     },
   },
 
+  /*
+   * Example apps and the CLI talk to a person at a terminal.
+   *
+   * `console` is their output device, not a leftover debug statement, so the
+   * rule that keeps stray logging out of the server would only teach people to
+   * write `process.stdout.write` in a tutorial.
+   */
+  {
+    files: ['apps/example-*/**/*.ts', 'packages/cli/**/*.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+
   /* Test files may use `any` when constructing deliberately malformed input. */
   {
     files: ['**/*.test.ts', '**/*.spec.ts', '**/test/**/*.ts'],

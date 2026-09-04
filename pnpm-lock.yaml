@@ -166,6 +166,47 @@ importers:
         specifier: 'catalog:'
         version: 3.2.7(@types/node@22.20.1)(tsx@4.23.13)
 
+  apps/example-agent:
+    dependencies:
+      '@meter402/client':
+        specifier: workspace:*
+        version: link:../../packages/client
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.1
+      tsx:
+        specifier: ^4.20.6
+        version: 4.23.13
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.20.1)(tsx@4.23.13)
+
+  apps/example-merchant:
+    dependencies:
+      '@meter402/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
+      fastify:
+        specifier: 'catalog:'
+        version: 5.12.1
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.1
+      tsx:
+        specifier: ^4.20.6
+        version: 4.23.13
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.20.1)(tsx@4.23.13)
+
   packages/auth:
     dependencies:
       '@meter402/shared':
@@ -209,6 +250,18 @@ importers:
       '@meter402/sdk':
         specifier: workspace:*
         version: link:../sdk
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.1
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.7(@types/node@22.20.1)(tsx@4.23.13)
+
+  packages/client:
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
