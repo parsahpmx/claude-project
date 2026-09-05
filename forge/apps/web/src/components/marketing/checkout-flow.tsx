@@ -172,7 +172,7 @@ export function CheckoutFlow({
 
             <section>
               <p className="eyebrow mb-5">01 — Your details</p>
-              <div className="grid gap-5 sm:grid-cols-2 [&_input]:border-bone-200/20 [&_input]:bg-ink-800 [&_input]:text-bone-100 [&_label]:text-bone-200/70">
+              <div className="dark-surface grid gap-5 sm:grid-cols-2 [&_input]:border-bone-200/20 [&_input]:bg-ink-800 [&_input]:text-bone-100 [&_label]:text-bone-200/70">
                 <TextInput label="First name" name="firstName" required autoComplete="given-name" error={errors.firstName} />
                 <TextInput label="Last name" name="lastName" required autoComplete="family-name" error={errors.lastName} />
                 <div className="sm:col-span-2">
@@ -204,7 +204,7 @@ export function CheckoutFlow({
                       key={option.tier}
                       className={clsx(
                         'flex cursor-pointer items-start justify-between gap-4 rounded-card border p-5 transition-all duration-200',
-                        active ? 'border-ember bg-ember/[0.08]' : 'border-bone-200/12 bg-ink-800 hover:border-bone-200/30',
+                        active ? 'accent-tint border-ember bg-ember/[0.08]' : 'dark-surface border-bone-200/12 bg-ink-800 hover:border-bone-200/30',
                       )}
                     >
                       <span className="flex items-start gap-4">
@@ -220,7 +220,7 @@ export function CheckoutFlow({
                           aria-hidden
                           className={clsx(
                             'mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full border text-[0.625rem]',
-                            active ? 'border-ember bg-ember text-bone-100' : 'border-bone-200/30',
+                            active ? 'border-ember bg-ember-600 text-bone-100' : 'border-bone-200/30',
                           )}
                         >
                           {active ? '✓' : ''}
@@ -235,7 +235,7 @@ export function CheckoutFlow({
                       </span>
                       <span className="shrink-0 text-right">
                         <span className="block font-semibold tabular-nums text-bone-100">{formatCents(price)}</span>
-                        <span className="block text-[0.6875rem] text-bone-200/45">/ month</span>
+                        <span className="block text-[0.6875rem] text-muted">/ month</span>
                       </span>
                     </label>
                   );
@@ -259,8 +259,8 @@ export function CheckoutFlow({
                     className={clsx(
                       'min-h-[56px] rounded-[10px] border text-sm font-medium transition-all duration-200',
                       method === value
-                        ? 'border-ember bg-ember/[0.08] text-bone-100'
-                        : 'border-bone-200/15 bg-ink-800 text-bone-200/70 hover:border-bone-200/35',
+                        ? 'border-ember bg-ember-600/[0.08] text-bone-100'
+                        : 'dark-surface border-bone-200/15 bg-ink-800 text-bone-200/70 hover:border-bone-200/35',
                     )}
                   >
                     {label}
@@ -269,7 +269,7 @@ export function CheckoutFlow({
               </div>
 
               {method === 'card' && (
-                <div className="mt-5 rounded-card border border-bone-200/12 bg-ink-800 p-5">
+                <div className="dark-surface mt-5 rounded-card border border-bone-200/12 bg-ink-800 p-5">
                   <p className="text-xs leading-relaxed text-bone-200/55">
                     Card details are collected by the payment processor, not by FORGE. This prototype does not
                     take real payments — no card is charged and none is stored.
@@ -288,7 +288,7 @@ export function CheckoutFlow({
                 />
               </div>
               {errors.accepted && (
-                <p role="alert" className="mt-3 text-xs text-signal-bad">
+                <p role="alert" className="mt-3 text-xs text-status-bad">
                   <span aria-hidden>!</span> {errors.accepted}
                 </p>
               )}
@@ -298,14 +298,14 @@ export function CheckoutFlow({
                   {pending ? 'Creating your account…' : 'Start My Free Trial'}
                 </Button>
               </div>
-              <p className="mt-3 text-center text-xs text-bone-200/45">
+              <p className="mt-3 text-center text-xs text-muted">
                 Cancel anytime · Secure payments · No hidden fees
               </p>
             </section>
           </form>
 
           {/* ------------------------------------------------ summary */}
-          <aside className="lg:sticky lg:top-8 lg:self-start">
+          <aside aria-label="Order summary" className="lg:sticky lg:top-8 lg:self-start">
             <Card tone="dark">
               <p className="eyebrow mb-5">Order summary</p>
 
@@ -321,10 +321,10 @@ export function CheckoutFlow({
                     <span className="text-bone-100">{summary.planName}</span>
                     <span className="tabular-nums text-bone-200/70">{formatCents(summary.subtotalCents)}</span>
                   </div>
-                  <p className="mt-1 text-xs capitalize text-bone-200/45">Billed {summary.interval}</p>
+                  <p className="mt-1 text-xs capitalize text-muted">Billed {summary.interval}</p>
 
                   {summary.discountCents > 0 && (
-                    <div className="mt-4 flex items-baseline justify-between gap-4 text-signal-good">
+                    <div className="mt-4 flex items-baseline justify-between gap-4 text-status-good">
                       <span className="text-sm">Promotion {appliedPromo}</span>
                       <span className="tabular-nums">−{formatCents(summary.discountCents)}</span>
                     </div>
@@ -339,14 +339,14 @@ export function CheckoutFlow({
                         value={promo}
                         onChange={(event) => setPromo(event.target.value)}
                         placeholder="Promo code"
-                        className="min-h-[44px] w-full rounded-[8px] border border-bone-200/20 bg-ink-900 px-4 text-sm text-bone-100 placeholder:text-bone-200/35"
+                        className="dark-surface min-h-[44px] w-full rounded-[8px] border border-bone-200/20 bg-ink-900 px-4 text-sm text-bone-100 placeholder:text-muted"
                       />
                       <Button type="button" variant="ghost" size="sm" onClick={() => void applyPromo()}>
                         Apply
                       </Button>
                     </div>
                     {promoError && (
-                      <p role="alert" className="text-xs text-signal-bad">
+                      <p role="alert" className="text-xs text-status-bad">
                         <span aria-hidden>!</span> {promoError}
                       </p>
                     )}
@@ -377,7 +377,7 @@ export function CheckoutFlow({
                   <ul className="space-y-2.5">
                     {plan.features.slice(0, 6).map((feature) => (
                       <li key={feature} className="flex gap-3 text-xs">
-                        <span aria-hidden className="text-ember">✓</span>
+                        <span aria-hidden className="text-accent">✓</span>
                         <span className="text-bone-200/70">{feature}</span>
                       </li>
                     ))}

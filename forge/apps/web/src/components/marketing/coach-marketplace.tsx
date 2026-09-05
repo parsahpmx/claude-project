@@ -72,7 +72,7 @@ export function CoachMarketplace({ coaches }: { coaches: CoachCard[] }) {
 
   return (
     <div className="grid gap-10 lg:grid-cols-[280px_1fr] lg:gap-14">
-      <aside className="space-y-7 lg:sticky lg:top-28 lg:self-start">
+      <aside aria-label="Coach filters" className="space-y-7 lg:sticky lg:top-28 lg:self-start">
         <FilterChips label="Goal" options={GOALS} selected={goals} onChange={setGoals} multi />
         <FilterChips
           label="Language"
@@ -115,7 +115,7 @@ export function CoachMarketplace({ coaches }: { coaches: CoachCard[] }) {
       </aside>
 
       <div>
-        <p className="mb-8 text-sm opacity-60">
+        <p className="mb-8 text-sm text-muted">
           <span className="font-semibold text-ink-900">{results.length}</span> coach
           {results.length === 1 ? '' : 'es'} available
         </p>

@@ -7,6 +7,8 @@ import { apiFetch } from '@/lib/api';
 import { formatCents, formatDateLabel } from '@/lib/format';
 import type { MemberProfile, Subscription } from '@/lib/types';
 
+export const metadata = { title: 'Profile' };
+
 export const dynamic = 'force-dynamic';
 
 interface ProfileResponse {
@@ -77,7 +79,7 @@ export default async function ProfilePage() {
               {profile.user && profile.profile ? (
                 <ProfileForm user={profile.user} profile={profile.profile} />
               ) : (
-                <p className="text-sm opacity-60">Complete the assessment to set up your profile.</p>
+                <p className="text-sm text-muted">Complete the assessment to set up your profile.</p>
               )}
             </Card>
           </section>
@@ -85,7 +87,7 @@ export default async function ProfilePage() {
           <section id="my-equipment" className="scroll-mt-24">
             <Card>
               <p className="eyebrow mb-4">My equipment</p>
-              <p className="text-sm leading-relaxed opacity-70">
+              <p className="text-sm leading-relaxed text-muted">
                 We only recommend workouts you can actually perform with your setup. Change this and your plan
                 re-checks every session in the block.
               </p>
@@ -96,7 +98,7 @@ export default async function ProfilePage() {
                   </Chip>
                 ))}
               </div>
-              <p className="mt-4 text-xs opacity-45">Edit your equipment in the form above.</p>
+              <p className="mt-4 text-xs text-muted">Edit your equipment in the form above.</p>
             </Card>
           </section>
 
@@ -104,7 +106,7 @@ export default async function ProfilePage() {
             <Card padded={false}>
               <div className="border-b border-ink-900/10 p-6">
                 <p className="eyebrow">Wearables</p>
-                <p className="mt-2 text-sm opacity-65">
+                <p className="mt-2 text-sm text-muted">
                   Connected devices supply sleep, HRV, resting heart rate and steps. FORGE reads only what each
                   permission below allows.
                 </p>
@@ -115,14 +117,14 @@ export default async function ProfilePage() {
                     <div>
                       <p className="font-medium">{PROVIDER_LABEL[device.provider] ?? device.provider}</p>
                       {device.permissions.length > 0 ? (
-                        <p className="mt-1 text-xs opacity-50">
+                        <p className="mt-1 text-xs text-muted">
                           Reads: {device.permissions.map((p) => p.replace(/-/g, ' ')).join(', ')}
                         </p>
                       ) : (
-                        <p className="mt-1 text-xs opacity-45">No data permissions granted</p>
+                        <p className="mt-1 text-xs text-muted">No data permissions granted</p>
                       )}
                       {device.lastSyncedAt && (
-                        <p className="mt-0.5 text-xs opacity-40">
+                        <p className="mt-0.5 text-xs text-muted">
                           Last sync {formatDateLabel(device.lastSyncedAt.slice(0, 10))}
                         </p>
                       )}
@@ -131,7 +133,7 @@ export default async function ProfilePage() {
                       <Status status={device.status as 'connected' | 'not-connected' | 'syncing'} />
                       <Link
                         href="/app/settings"
-                        className="text-xs font-semibold uppercase tracking-[0.08em] text-ember"
+                        className="text-xs font-semibold uppercase tracking-[0.08em] text-accent"
                       >
                         {device.status === 'connected' ? 'Manage' : 'Connect'}
                       </Link>
@@ -177,7 +179,7 @@ export default async function ProfilePage() {
             <Card>
               <p className="eyebrow mb-4">Payment method</p>
               {billing.paymentMethods.length === 0 ? (
-                <p className="text-sm opacity-60">No payment method on file.</p>
+                <p className="text-sm text-muted">No payment method on file.</p>
               ) : (
                 <ul className="space-y-3">
                   {billing.paymentMethods.map((method) => (
@@ -186,7 +188,7 @@ export default async function ProfilePage() {
                         {method.brand} ···· {method.last4}
                         {method.isDefault && <Chip size="sm">Default</Chip>}
                       </span>
-                      <span className="text-xs tabular-nums opacity-50">
+                      <span className="text-xs tabular-nums text-muted">
                         {String(method.expiryMonth).padStart(2, '0')}/{method.expiryYear}
                       </span>
                     </li>
@@ -202,7 +204,7 @@ export default async function ProfilePage() {
                   <li key={invoice.id} className="flex items-center justify-between gap-3 text-sm">
                     <div className="min-w-0">
                       <p className="truncate">{invoice.description}</p>
-                      <p className="text-xs opacity-45">{formatDateLabel(invoice.issuedOn)}</p>
+                      <p className="text-xs text-muted">{formatDateLabel(invoice.issuedOn)}</p>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
                       <span className="tabular-nums">{formatCents(invoice.amountCents)}</span>
@@ -230,7 +232,7 @@ export default async function ProfilePage() {
                       className="block rounded-[8px] border border-ink-900/10 p-4 transition-colors hover:border-ink-900/30"
                     >
                       <span className="font-medium">{title}</span>
-                      <span className="mt-0.5 block text-xs opacity-55">{body}</span>
+                      <span className="mt-0.5 block text-xs text-muted">{body}</span>
                     </Link>
                   </li>
                 ))}
@@ -246,7 +248,7 @@ export default async function ProfilePage() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4">
-      <dt className="capitalize opacity-50">{label}</dt>
+      <dt className="capitalize text-muted">{label}</dt>
       <dd className="capitalize">{value}</dd>
     </div>
   );

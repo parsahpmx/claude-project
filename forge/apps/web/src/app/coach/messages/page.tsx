@@ -6,6 +6,8 @@ import { MessageThread } from '@/components/app/message-thread';
 import { apiFetch } from '@/lib/api';
 import { relativeTime } from '@/lib/format';
 
+export const metadata = { title: 'Coach messages' };
+
 export const dynamic = 'force-dynamic';
 
 interface CoachThreads {
@@ -69,7 +71,7 @@ export default async function CoachMessagesPage({
                 >
                   <span
                     aria-hidden
-                    className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
+                    className="dark-surface grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
                   >
                     {entry.member.firstName.charAt(0)}{entry.member.lastName.charAt(0)}
                   </span>
@@ -77,7 +79,7 @@ export default async function CoachMessagesPage({
                     <p className="truncate text-sm font-medium">
                       {entry.member.firstName} {entry.member.lastName}
                     </p>
-                    <p className="truncate text-xs opacity-45">{relativeTime(entry.thread.lastMessageAt)}</p>
+                    <p className="truncate text-xs text-muted">{relativeTime(entry.thread.lastMessageAt)}</p>
                   </div>
                   {entry.unread > 0 && <Chip tone="accent" size="sm">{entry.unread}</Chip>}
                 </Link>

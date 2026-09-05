@@ -105,7 +105,7 @@ export function CoachApplication() {
             multi
           />
           {errors.specialties && (
-            <p role="alert" className="mt-2 text-xs text-signal-bad">
+            <p role="alert" className="mt-2 text-xs text-status-bad">
               <span aria-hidden>!</span> {errors.specialties}
             </p>
           )}
@@ -122,7 +122,7 @@ export function CoachApplication() {
         <Button type="submit" size="lg" block disabled={state === 'submitting'}>
           {state === 'submitting' ? 'Submitting…' : 'Submit Application'}
         </Button>
-        <p className="text-center text-xs opacity-50">
+        <p className="text-center text-xs text-muted">
           We reply to every application, including the ones we decline.
         </p>
       </form>

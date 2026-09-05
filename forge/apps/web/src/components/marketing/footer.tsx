@@ -51,7 +51,7 @@ export function MarketingFooter() {
             </p>
             <Link
               href="/assessment"
-              className="mt-7 inline-flex min-h-[48px] items-center rounded-[8px] bg-ember px-6 text-xs font-semibold uppercase tracking-[0.1em] text-bone-100 transition-colors hover:bg-ember-600"
+              className="mt-7 inline-flex min-h-[48px] items-center rounded-[8px] bg-ember-600 px-6 text-xs font-semibold uppercase tracking-[0.1em] text-bone-100 transition-colors hover:bg-ember-700"
             >
               Take the Assessment
             </Link>
@@ -80,7 +80,7 @@ export function MarketingFooter() {
 
         <div className="rule my-12" />
 
-        <div className="flex flex-col gap-4 text-xs text-bone-200/45 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 text-xs text-muted md:flex-row md:items-center md:justify-between">
           <p>© 2026 FORGE. A demonstration product. Not affiliated with any existing fitness company.</p>
           <p className="max-w-xl">
             FORGE is not a medical service. Training, nutrition and recovery guidance is general in nature —

@@ -4,6 +4,8 @@ import { Status } from '@/components/ui/feedback';
 import { apiFetch } from '@/lib/api';
 import { formatCents } from '@/lib/format';
 
+export const metadata = { title: 'Payments' };
+
 export const dynamic = 'force-dynamic';
 
 interface Analytics {
@@ -58,13 +60,13 @@ export default async function CoachPaymentsPage() {
                 <div className="flex items-center gap-4">
                   <span
                     aria-hidden
-                    className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
+                    className="dark-surface grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
                   >
                     {client.member.firstName.charAt(0)}{client.member.lastName.charAt(0)}
                   </span>
                   <div>
                     <p className="font-medium">{client.member.firstName} {client.member.lastName}</p>
-                    <p className="mt-0.5 text-xs opacity-50">Client since {client.startedOn}</p>
+                    <p className="mt-0.5 text-xs text-muted">Client since {client.startedOn}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -80,19 +82,19 @@ export default async function CoachPaymentsPage() {
           <Card>
             <p className="eyebrow mb-4">Next payout</p>
             <p className="display text-display-sm tabular-nums">{formatCents(Math.round(net / 4))}</p>
-            <p className="mt-2 text-sm opacity-60">Friday, weekly cycle</p>
+            <p className="mt-2 text-sm text-muted">Friday, weekly cycle</p>
             <div className="rule my-5" />
             <dl className="space-y-3 text-sm">
               <div className="flex justify-between gap-4">
-                <dt className="opacity-55">Method</dt>
+                <dt className="text-muted">Method</dt>
                 <dd>Bank transfer</dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="opacity-55">Account</dt>
+                <dt className="text-muted">Account</dt>
                 <dd>···· 4417</dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="opacity-55">Currency</dt>
+                <dt className="text-muted">Currency</dt>
                 <dd>USD</dd>
               </div>
             </dl>
@@ -108,11 +110,11 @@ export default async function CoachPaymentsPage() {
               ].map(([title, body]) => (
                 <li key={title} className="border-b border-ink-900/8 pb-3 last:border-0">
                   <p className="font-medium">{title}</p>
-                  <p className="mt-1 text-xs opacity-60">{body}</p>
+                  <p className="mt-1 text-xs text-muted">{body}</p>
                 </li>
               ))}
             </ul>
-            <p className="mt-5 text-xs opacity-45">
+            <p className="mt-5 text-xs text-muted">
               Payment processing is not connected in this prototype — the earnings model and its arithmetic are.
             </p>
           </Card>

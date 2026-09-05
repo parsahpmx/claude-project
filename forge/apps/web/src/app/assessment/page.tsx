@@ -43,7 +43,7 @@ export default async function AssessmentPage({
       <header className="border-b border-bone-200/10">
         <div className="shell flex h-[72px] items-center justify-between">
           <Link href="/" className="display text-xl tracking-[0.08em] text-bone-100">FORGE</Link>
-          <Link href="/" className="text-xs uppercase tracking-[0.12em] text-bone-200/50 hover:text-bone-100">
+          <Link href="/" className="text-xs uppercase tracking-[0.12em] text-muted hover:text-bone-100">
             Save &amp; exit
           </Link>
         </div>

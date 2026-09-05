@@ -24,15 +24,15 @@ const BUTTON_BASE =
   'active:translate-y-px';
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-ember text-bone-100 hover:bg-ember-600 shadow-card hover:shadow-lift',
-  secondary: 'bg-ink-900 text-bone-100 hover:bg-ink-700 shadow-card hover:shadow-lift',
+  primary: 'bg-ember-600 text-bone-100 hover:bg-ember-700 shadow-card hover:shadow-lift',
+  secondary: 'dark-surface bg-ink-900 text-bone-100 hover:bg-ink-700 shadow-card hover:shadow-lift',
   // `currentColor` rather than a fixed ink, so the same ghost button is legible
   // on the bone page ground and inside a dark card without a second variant.
   ghost:
     'bg-transparent text-current border border-current/25 hover:border-current/60 ' +
     'hover:bg-current/[0.06]',
-  inverse: 'bg-bone-200 text-ink-900 hover:bg-bone-100 shadow-card',
-  danger: 'bg-signal-bad text-bone-100 hover:brightness-95',
+  inverse: 'light-surface bg-bone-200 text-ink-900 hover:bg-bone-100 shadow-card',
+  danger: 'bg-signal-bad-ink text-bone-100 hover:brightness-95',
 };
 
 // 44px minimum height at every size — a touch target, not a mouse target.
@@ -92,11 +92,13 @@ export function Chip({
   size?: 'sm' | 'md';
 }) {
   const tones = {
-    neutral: 'bg-ink-900/[0.05] text-ink-700 border-ink-900/10',
-    accent: 'bg-ember/10 text-ember-600 border-ember/25',
-    good: 'bg-signal-good/10 text-signal-good border-signal-good/25',
-    warn: 'bg-signal-warn/12 text-signal-warn border-signal-warn/30',
-    bad: 'bg-signal-bad/10 text-signal-bad border-signal-bad/25',
+    // currentColor rather than a fixed ink, so one neutral chip works on the
+    // bone page ground and inside a dark card. Fixed inks gave 1.07:1 on ink-800.
+    neutral: 'bg-current/[0.06] text-current border-current/20',
+    accent: 'accent-tint bg-ember/10 text-chip-accent border-ember/25',
+    good: 'bg-signal-good/10 text-status-good border-signal-good/25',
+    warn: 'bg-signal-warn/12 text-status-warn border-signal-warn/30',
+    bad: 'bg-signal-bad/10 text-status-bad border-signal-bad/25',
     inverse: 'bg-bone-200/10 text-bone-200 border-bone-200/20',
   } as const;
   return (
@@ -134,7 +136,7 @@ export function Card({
       className={clsx(
         'relative rounded-card border transition-all duration-300 ease-forge',
         tone === 'dark' && 'dark-surface bg-ink-800 border-bone-200/10 text-bone-200',
-        tone === 'light' && 'bg-bone-100 border-ink-900/10',
+        tone === 'light' && 'light-surface bg-bone-100 border-ink-900/10 text-ink-900',
         tone === 'bare' && 'bg-transparent border-ink-900/10',
         padded && 'p-5 sm:p-6',
         interactive && 'hover:-translate-y-0.5 hover:shadow-lift',
@@ -163,7 +165,7 @@ export function CardLink({
         'group relative block rounded-card border transition-all duration-300 ease-forge',
         'hover:-translate-y-0.5 hover:shadow-lift',
         tone === 'dark' && 'dark-surface bg-ink-800 border-bone-200/10 text-bone-200',
-        tone === 'light' && 'bg-bone-100 border-ink-900/10',
+        tone === 'light' && 'light-surface bg-bone-100 border-ink-900/10 text-ink-900',
         tone === 'bare' && 'bg-transparent border-ink-900/10',
         padded && 'p-5 sm:p-6',
       )}
@@ -238,8 +240,8 @@ export function Section({
       id={id}
       className={clsx(
         tone === 'dark' && 'dark-surface bg-ink-900 text-bone-200',
-        tone === 'bone' && 'bg-bone-300/40',
-        tone === 'light' && 'bg-bone-200',
+        tone === 'bone' && 'light-surface bg-bone-300/40 text-ink-900',
+        tone === 'light' && 'light-surface bg-bone-200 text-ink-900',
         size === 'sm' && 'py-12 sm:py-16',
         size === 'md' && 'py-16 sm:py-24',
         size === 'lg' && 'py-20 sm:py-32',
@@ -273,7 +275,7 @@ export function SectionHeading({
       <div className={clsx('max-w-3xl', align === 'center' && 'mx-auto')}>
         {eyebrow && <p className="eyebrow mb-4">{eyebrow}</p>}
         <h2 className="display text-display-md text-balance">{title}</h2>
-        {lead && <p className="mt-4 max-w-prose text-base leading-relaxed opacity-70">{lead}</p>}
+        {lead && <p className="mt-4 max-w-prose text-base leading-relaxed text-muted">{lead}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </div>
@@ -285,17 +287,29 @@ export function Stat({
   value,
   hint,
   tone = 'light',
+  inList = false,
 }: {
   label: string;
   value: ReactNode;
   hint?: string;
   tone?: 'light' | 'dark';
+  /**
+   * Set when the stat is a child of a `<dl>`. A description list may only
+   * contain `dt`/`dd` pairs — optionally wrapped in a `div` — so a stat grid
+   * that reads as term-and-value to a screen reader has to say so in markup.
+   * Outside a list the same pair would itself be invalid, hence the flag.
+   */
+  inList?: boolean;
 }) {
+  const Term = inList ? 'dt' : 'p';
+  // A term may carry more than one description, so the hint is a second `dd`
+  // rather than a `p` — a bare paragraph inside a `dl` group is invalid.
+  const Value = inList ? 'dd' : 'p';
   return (
     <div className={clsx(tone === 'dark' && 'dark-surface')}>
-      <p className="eyebrow">{label}</p>
-      <p className="display mt-2 text-display-sm tabular-nums">{value}</p>
-      {hint && <p className="mt-1 text-xs opacity-60">{hint}</p>}
+      <Term className="eyebrow">{label}</Term>
+      <Value className="display mt-2 text-display-sm tabular-nums">{value}</Value>
+      {hint && <Value className="mt-1 text-xs text-muted">{hint}</Value>}
     </div>
   );
 }

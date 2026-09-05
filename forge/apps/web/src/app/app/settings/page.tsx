@@ -3,6 +3,8 @@ import { Card } from '@/components/ui/primitives';
 import { DeviceManager } from '@/components/app/device-manager';
 import { apiFetch } from '@/lib/api';
 
+export const metadata = { title: 'Settings' };
+
 export const dynamic = 'force-dynamic';
 
 interface Device {
@@ -40,9 +42,9 @@ export default async function SettingsPage() {
                   <ul className="mt-3 space-y-2.5">
                     {items.map((item) => (
                       <li key={item} className="flex items-center justify-between gap-3 text-sm">
-                        <span className="opacity-75">{item}</span>
-                        <span aria-hidden className="h-5 w-9 rounded-pill bg-ember/80 p-0.5">
-                          <span className="block h-4 w-4 translate-x-4 rounded-full bg-bone-100" />
+                        <span className="text-muted">{item}</span>
+                        <span aria-hidden className="accent-tint h-5 w-9 rounded-pill bg-ember/80 p-0.5">
+                          <span className="light-surface block h-4 w-4 translate-x-4 rounded-full bg-bone-100" />
                         </span>
                       </li>
                     ))}
@@ -50,7 +52,7 @@ export default async function SettingsPage() {
                 </div>
               ))}
             </div>
-            <p className="mt-6 text-xs opacity-45">
+            <p className="mt-6 text-xs text-muted">
               Notification delivery is not wired up in this prototype; the preferences model is.
             </p>
           </Card>
@@ -66,7 +68,7 @@ export default async function SettingsPage() {
               ].map(([title, body]) => (
                 <li key={title} className="border-b border-ink-900/8 pb-3 last:border-0">
                   <p className="font-medium">{title}</p>
-                  <p className="mt-1 text-xs opacity-60">{body}</p>
+                  <p className="mt-1 text-xs text-muted">{body}</p>
                 </li>
               ))}
             </ul>

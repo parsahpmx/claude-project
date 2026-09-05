@@ -7,7 +7,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
     // refuses to shrink below its content, so one wide table inside a page
     // makes the whole document scroll sideways instead of the table scrolling
     // inside its own container.
-    <div className="flex min-h-dvh flex-col bg-bone-200">
+    <div className="light-surface flex min-h-dvh flex-col bg-bone-200">
       <MarketingHeader />
       <main id="main" className="min-w-0 flex-1">
         {children}

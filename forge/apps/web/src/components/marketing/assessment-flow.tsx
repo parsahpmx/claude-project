@@ -124,7 +124,7 @@ export function AssessmentFlow({ steps, prefill }: { steps: Step[]; prefill: Rec
         <div className="mb-12">
           <div className="flex items-baseline justify-between">
             <p className="eyebrow">{step?.eyebrow ?? 'Building your plan'}</p>
-            <p className="text-xs tabular-nums text-bone-200/50">
+            <p className="text-xs tabular-nums text-muted">
               {Math.min(index + 1, steps.length)} / {steps.length}
             </p>
           </div>
@@ -171,26 +171,26 @@ export function AssessmentFlow({ steps, prefill }: { steps: Step[]; prefill: Rec
                 )}
               >
                 {step.options.map((option) => (
-                  <div key={option.value} className="[&_label]:border-bone-200/15 [&_label]:bg-ink-800 [&_label]:text-bone-200">
-                    <ChoiceCard
-                      name={step.id}
-                      value={option.value}
-                      label={option.label}
-                      {...(option.description ? { description: option.description } : {})}
-                      checked={selected.includes(option.value)}
-                      onChange={choose}
-                      multi={step.kind === 'multi'}
-                    />
-                  </div>
+                  <ChoiceCard
+                    key={option.value}
+                    name={step.id}
+                    value={option.value}
+                    label={option.label}
+                    {...(option.description ? { description: option.description } : {})}
+                    checked={selected.includes(option.value)}
+                    onChange={choose}
+                    multi={step.kind === 'multi'}
+                    tone="dark"
+                  />
                 ))}
               </div>
             </fieldset>
 
             {step.optional && selected.length === 0 && (
-              <p className="mt-5 text-xs text-bone-200/45">This one is optional — skip it if nothing applies.</p>
+              <p className="mt-5 text-xs text-muted">This one is optional — skip it if nothing applies.</p>
             )}
             {NUMERIC_STEPS.has(step.id) && (
-              <p className="mt-5 text-xs text-bone-200/45">
+              <p className="mt-5 text-xs text-muted">
                 You can change this later without losing your plan.
               </p>
             )}
@@ -230,12 +230,12 @@ function AssessmentResult({ result, answers }: { result: Result; answers: Record
         <div className="mt-12 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
           <Card tone="dark">
             <dl className="grid gap-7 sm:grid-cols-2">
-              <Stat label="Training level" value={capitalise(profile.trainingLevel)} tone="dark" />
-              <Stat label="Suggested frequency" value={`${profile.suggestedFrequency}× / week`} tone="dark" />
-              <Stat label="Training focus" value={profile.trainingFocus} tone="dark" />
-              <Stat label="Recovery priority" value={capitalise(profile.recoveryPriority)} tone="dark" />
-              <Stat label="Nutrition goal" value={profile.nutritionGoal} tone="dark" />
-              <Stat label="Session length" value={`${profile.sessionMinutes} min`} tone="dark" />
+              <Stat inList label="Training level" value={capitalise(profile.trainingLevel)} tone="dark" />
+              <Stat inList label="Suggested frequency" value={`${profile.suggestedFrequency}× / week`} tone="dark" />
+              <Stat inList label="Training focus" value={profile.trainingFocus} tone="dark" />
+              <Stat inList label="Recovery priority" value={capitalise(profile.recoveryPriority)} tone="dark" />
+              <Stat inList label="Nutrition goal" value={profile.nutritionGoal} tone="dark" />
+              <Stat inList label="Session length" value={`${profile.sessionMinutes} min`} tone="dark" />
             </dl>
 
             <div className="rule my-8" />
@@ -244,7 +244,7 @@ function AssessmentResult({ result, answers }: { result: Result; answers: Record
             <ul className="space-y-3">
               {profile.rationale.map((reason) => (
                 <li key={reason} className="flex gap-3 text-sm">
-                  <span aria-hidden className="text-ember">→</span>
+                  <span aria-hidden className="text-accent">→</span>
                   <span className="text-bone-200/75">{reason}</span>
                 </li>
               ))}
@@ -277,7 +277,7 @@ function AssessmentResult({ result, answers }: { result: Result; answers: Record
               <ol className="space-y-4">
                 {(['foundation', 'build', 'perform'] as const).map((phase, i) => (
                   <li key={phase}>
-                    <p className="text-xs uppercase tracking-[0.12em] text-ember">Phase 0{i + 1} · {phase}</p>
+                    <p className="text-xs uppercase tracking-[0.12em] text-accent">Phase 0{i + 1} · {phase}</p>
                     <p className="mt-1 text-sm text-bone-200/70">{profile.phaseEmphasis[phase]}</p>
                   </li>
                 ))}
@@ -290,11 +290,11 @@ function AssessmentResult({ result, answers }: { result: Result; answers: Record
           <ButtonLink href={`/signup?${query.toString()}`} size="lg">Create My Account</ButtonLink>
           <ButtonLink href="/pricing" variant="inverse" size="lg">Compare Plans</ButtonLink>
         </div>
-        <p className="mt-5 text-xs text-bone-200/45">
+        <p className="mt-5 text-xs text-muted">
           Seven-day free trial. Cancel any time before it ends and you are not charged.
         </p>
 
-        <p className="mt-10 max-w-prose text-xs leading-relaxed text-bone-200/40">
+        <p className="mt-10 max-w-prose text-xs leading-relaxed text-muted">
           This profile is a training recommendation, not medical advice. If you have an injury, a medical
           condition, or you are pregnant or post-natal, speak to a qualified healthcare professional before
           starting any programme. <Link href="/coaching" className="underline">A FORGE coach</Link> can work

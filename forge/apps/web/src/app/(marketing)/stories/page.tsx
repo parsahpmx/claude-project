@@ -55,8 +55,8 @@ export default async function StoriesPage() {
                   <ul className="mt-6 space-y-2">
                     {story.outcomes.map((outcome) => (
                       <li key={outcome} className="flex gap-3 text-sm">
-                        <span aria-hidden className="text-ember">→</span>
-                        <span className="opacity-75">{outcome}</span>
+                        <span aria-hidden className="text-accent">→</span>
+                        <span className="text-muted">{outcome}</span>
                       </li>
                     ))}
                   </ul>
@@ -64,14 +64,14 @@ export default async function StoriesPage() {
                   <div className="mt-7 flex flex-wrap gap-3">
                     <Link
                       href={`/programs/${story.programSlug}`}
-                      className="text-xs font-semibold uppercase tracking-[0.1em] text-ember"
+                      className="text-xs font-semibold uppercase tracking-[0.1em] text-accent"
                     >
                       View {story.programName} →
                     </Link>
                     {story.coachSlug && (
                       <Link
                         href={`/coaching/${story.coachSlug}`}
-                        className="text-xs font-semibold uppercase tracking-[0.1em] opacity-55 hover:opacity-100"
+                        className="text-xs font-semibold uppercase tracking-[0.1em] text-muted hover:opacity-100"
                       >
                         Meet their coach →
                       </Link>
@@ -99,7 +99,7 @@ export default async function StoriesPage() {
 function Detail({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[0.625rem] uppercase tracking-[0.12em] opacity-45">{label}</dt>
+      <dt className="text-[0.625rem] uppercase tracking-[0.12em] text-muted">{label}</dt>
       <dd className="mt-1 text-sm font-medium">{value}</dd>
     </div>
   );

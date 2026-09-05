@@ -8,6 +8,8 @@ import { apiFetch } from '@/lib/api';
 import { formatNumber } from '@/lib/format';
 import type { Recipe } from '@/lib/types';
 
+export const metadata = { title: 'Nutrition' };
+
 export const dynamic = 'force-dynamic';
 
 interface MacroProgress {
@@ -70,7 +72,7 @@ export default async function NutritionPage() {
             key={label}
             href={`#${label.toLowerCase().replace(/\s/g, '-')}`}
             className={`min-h-[40px] rounded-pill border px-4 text-xs font-medium leading-[38px] transition-colors ${
-              index === 0 ? 'border-ink-900 bg-ink-900 text-bone-100' : 'border-ink-900/15 hover:border-ink-900/40'
+              index === 0 ? 'dark-surface border-ink-900 bg-ink-900 text-bone-100' : 'border-ink-900/15 hover:border-ink-900/40'
             }`}
           >
             {label}
@@ -86,7 +88,7 @@ export default async function NutritionPage() {
               <p className="eyebrow">Consumed today</p>
               <p className="display mt-2 text-display-md tabular-nums text-bone-100">
                 {formatNumber(macros.calories.consumed)}
-                <span className="text-lg font-normal opacity-45"> / {formatNumber(targets.calories)}</span>
+                <span className="text-lg font-normal text-muted"> / {formatNumber(targets.calories)}</span>
               </p>
               <p className="mt-2 text-sm text-bone-200/55">
                 {macros.calories.remaining > 0
@@ -135,19 +137,19 @@ export default async function NutritionPage() {
                         {meal.planned.status === 'logged' && <Chip tone="good" size="sm">Logged</Chip>}
                       </div>
                       <h3 className="mt-2 font-semibold leading-snug">{meal.planned.recipe.name}</h3>
-                      <p className="mt-2 text-xs opacity-55">
+                      <p className="mt-2 text-xs text-muted">
                         {meal.planned.recipe.calories} kcal · {meal.planned.recipe.proteinGrams}g protein ·{' '}
                         {meal.planned.recipe.prepMinutes + meal.planned.recipe.cookMinutes} min
                       </p>
                       {target && (
-                        <p className="mt-1 text-[0.6875rem] opacity-40">
+                        <p className="mt-1 text-[0.6875rem] text-muted">
                           Target for this slot: {target.calories} kcal
                         </p>
                       )}
                       <div className="mt-4 flex flex-wrap gap-2">
                         <Link
                           href={`/nutrition/recipes/${meal.planned.recipe.slug}`}
-                          className="text-xs font-semibold uppercase tracking-[0.08em] text-ember"
+                          className="text-xs font-semibold uppercase tracking-[0.08em] text-accent"
                         >
                           View recipe →
                         </Link>
@@ -157,7 +159,7 @@ export default async function NutritionPage() {
                 ) : (
                   <div className="p-5">
                     <p className="eyebrow">{meal.slot}</p>
-                    <p className="mt-3 text-sm opacity-55">Nothing planned for this slot.</p>
+                    <p className="mt-3 text-sm text-muted">Nothing planned for this slot.</p>
                     <div className="mt-4">
                       <ButtonLink href="/nutrition" variant="ghost" size="sm">Pick a meal</ButtonLink>
                     </div>
@@ -189,7 +191,7 @@ function MacroBar({ label, progress, unit }: { label: string; progress: MacroPro
         tone={progress.over ? 'warn' : progress.percent >= 90 ? 'good' : 'accent'}
       />
       {progress.over && (
-        <p className="mt-2 text-[0.6875rem] text-signal-warn">
+        <p className="mt-2 text-[0.6875rem] text-status-warn">
           <span aria-hidden>!</span> Over target — not a problem on a training day, worth watching across a week.
         </p>
       )}

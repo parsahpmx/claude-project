@@ -73,9 +73,9 @@ export default async function HomePage() {
             <h2 className="display text-display-md text-balance">
               NOT ANOTHER WORKOUT LIBRARY.
               <br />
-              <span className="text-ember">YOUR PERSONAL PERFORMANCE SYSTEM.</span>
+              <span className="text-accent">YOUR PERSONAL PERFORMANCE SYSTEM.</span>
             </h2>
-            <p className="mt-6 max-w-prose text-base leading-relaxed opacity-70">
+            <p className="mt-6 max-w-prose text-base leading-relaxed text-muted">
               A library gives you a thousand workouts and no answer to the only question that matters: what
               should I do today? FORGE builds a twelve-week plan from your goal, your experience, your week and
               the equipment you actually own — then rewrites it every time you log a session.
@@ -90,7 +90,7 @@ export default async function HomePage() {
               ].map(([title, body]) => (
                 <div key={title}>
                   <dt className="font-semibold">{title}</dt>
-                  <dd className="mt-1.5 text-sm leading-relaxed opacity-65">{body}</dd>
+                  <dd className="mt-1.5 text-sm leading-relaxed text-muted">{body}</dd>
                 </div>
               ))}
             </dl>
@@ -110,14 +110,14 @@ export default async function HomePage() {
 
         <div className="mt-14 grid gap-px overflow-hidden rounded-card border border-bone-200/10 bg-bone-200/10 sm:grid-cols-2 xl:grid-cols-4">
           {SYSTEM.map((item, index) => (
-            <article key={item.key} className="group relative bg-ink-900 p-7 transition-colors duration-300 hover:bg-ink-800">
+            <article key={item.key} className="dark-surface group relative bg-ink-900 p-7 transition-colors duration-300 hover:bg-ink-800">
               <div className="mb-6 overflow-hidden rounded-[10px]">
                 <Media imageKey={item.imageKey} ratio="3/2" rounded={false} alt={`${item.title} pillar`} />
               </div>
               <p className="eyebrow">0{index + 1}</p>
               <h3 className="display mt-2 text-3xl leading-none text-bone-100">{item.title}</h3>
               <p className="mt-3 text-sm leading-relaxed text-bone-200/70">{item.body}</p>
-              <p className="mt-5 text-[0.6875rem] uppercase tracking-[0.1em] text-bone-200/45">{item.detail}</p>
+              <p className="mt-5 text-[0.6875rem] uppercase tracking-[0.1em] text-muted">{item.detail}</p>
             </article>
           ))}
         </div>
@@ -146,7 +146,7 @@ export default async function HomePage() {
             </div>
 
             <div className="grid gap-px bg-bone-200/10 sm:grid-cols-2">
-              <div className="bg-ink-800 p-6">
+              <div className="dark-surface bg-ink-800 p-6">
                 <p className="eyebrow mb-3">Today&rsquo;s training</p>
                 <p className="display text-2xl leading-none text-bone-100">UPPER BODY STRENGTH</p>
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -167,7 +167,7 @@ export default async function HomePage() {
 
             <div className="p-6 sm:p-8">
               <p className="eyebrow mb-5">Your day</p>
-              <ol className="scroll-x scrollbar-none flex gap-3 pb-1">
+              <ol className="scroll-x scrollbar-none flex gap-3 pb-1" tabIndex={0}>
                 {TIMELINE.map((entry, index) => (
                   <li key={entry.time} className="min-w-[132px] flex-1">
                     <div className="relative">
@@ -210,7 +210,7 @@ export default async function HomePage() {
                 &ldquo;Heavy and moving is exactly where week five should feel. Hold 100kg one more session, then
                 we step to 102.5kg.&rdquo;
               </p>
-              <p className="mt-4 text-xs text-bone-200/45">Maya Roberts · 6:00 PM today</p>
+              <p className="mt-4 text-xs text-muted">Maya Roberts · 6:00 PM today</p>
             </Card>
           </div>
         </div>
@@ -273,7 +273,7 @@ export default async function HomePage() {
               <br />
               REAL ACCOUNTABILITY.
             </h2>
-            <p className="mt-6 max-w-prose text-base leading-relaxed opacity-70">
+            <p className="mt-6 max-w-prose text-base leading-relaxed text-muted">
               Work 1-to-1 with certified professionals who understand your goals. Weekly check-ins they actually
               read, form reviews with timestamped notes, and a plan that changes when your week does.
             </p>
@@ -285,8 +285,8 @@ export default async function HomePage() {
                 'Monthly 1-to-1 video session',
               ].map((line) => (
                 <li key={line} className="flex gap-3 text-sm">
-                  <span aria-hidden className="text-ember">✓</span>
-                  <span className="opacity-75">{line}</span>
+                  <span aria-hidden className="text-accent">✓</span>
+                  <span className="text-muted">{line}</span>
                 </li>
               ))}
             </ul>
@@ -313,7 +313,7 @@ export default async function HomePage() {
             <ButtonLink href="/assessment" size="lg">Start Your 7-Day Free Trial</ButtonLink>
             <ButtonLink href="/pricing" variant="inverse" size="lg">See Pricing</ButtonLink>
           </div>
-          <p className="mt-6 text-xs text-bone-200/45">Cancel anytime. No hidden fees.</p>
+          <p className="mt-6 text-xs text-muted">Cancel anytime. No hidden fees.</p>
         </div>
       </Section>
     </>
@@ -322,10 +322,10 @@ export default async function HomePage() {
 
 function MetricTile({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <div className="bg-ink-800 p-5">
+    <div className="dark-surface bg-ink-800 p-5">
       <p className="eyebrow">{label}</p>
       <p className="display mt-2 text-xl leading-none text-bone-100 tabular-nums">{value}</p>
-      <p className="mt-1 text-[0.6875rem] text-bone-200/45">{hint}</p>
+      <p className="mt-1 text-[0.6875rem] text-muted">{hint}</p>
     </div>
   );
 }

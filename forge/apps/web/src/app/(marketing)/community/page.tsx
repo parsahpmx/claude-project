@@ -65,7 +65,7 @@ export default async function CommunityPage() {
                   <div className="flex items-start gap-4">
                     <span
                       aria-hidden
-                      className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
+                      className="dark-surface grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
                     >
                       {post.author.firstName.charAt(0)}{post.author.lastName.charAt(0)}
                     </span>
@@ -77,11 +77,11 @@ export default async function CommunityPage() {
                         {post.group && (
                           <>
                             <span aria-hidden className="opacity-30">·</span>
-                            <span className="opacity-55">{post.group.name}</span>
+                            <span className="text-muted">{post.group.name}</span>
                           </>
                         )}
                         <span aria-hidden className="opacity-30">·</span>
-                        <span className="text-xs opacity-45">{relativeTime(post.createdAt)}</span>
+                        <span className="text-xs text-muted">{relativeTime(post.createdAt)}</span>
                       </div>
 
                       {post.kind === 'personal-record' && (
@@ -90,7 +90,7 @@ export default async function CommunityPage() {
 
                       <p className="mt-3 leading-relaxed opacity-85">{post.body}</p>
 
-                      <div className="mt-4 flex items-center gap-5 text-xs opacity-55">
+                      <div className="mt-4 flex items-center gap-5 text-xs text-muted">
                         <span><span aria-hidden>♡</span> {post.likeCount}</span>
                         <span><span aria-hidden>💬</span> {post.commentCount}</span>
                         <span><span aria-hidden>⌸</span> Save</span>
@@ -113,8 +113,8 @@ export default async function CommunityPage() {
                   'Coaches identify themselves as coaches.',
                 ].map((rule) => (
                   <li key={rule} className="flex gap-3">
-                    <span aria-hidden className="text-ember">→</span>
-                    <span className="opacity-75">{rule}</span>
+                    <span aria-hidden className="text-accent">→</span>
+                    <span className="text-muted">{rule}</span>
                   </li>
                 ))}
               </ul>
@@ -127,11 +127,11 @@ export default async function CommunityPage() {
                   <li key={challenge.slug}>
                     <div className="flex items-baseline justify-between gap-3">
                       <p className="text-sm font-medium text-bone-100">{challenge.name}</p>
-                      <span className="text-xs tabular-nums text-bone-200/50">
+                      <span className="text-xs tabular-nums text-muted">
                         {formatNumber(challenge.participants)}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-bone-200/50">{challenge.tagline}</p>
+                    <p className="mt-1 text-xs text-muted">{challenge.tagline}</p>
                     <div className="mt-2">
                       <ProgressBar value={62} tone="accent" />
                     </div>
@@ -155,8 +155,8 @@ export default async function CommunityPage() {
                 <Media imageKey={group.imageKey} ratio="16/9" rounded={false} alt={group.name} />
               </div>
               <h3 className="display text-xl leading-none">{group.name}</h3>
-              <p className="mt-3 text-sm leading-relaxed opacity-65">{group.description}</p>
-              <p className="mt-4 text-xs opacity-45">{formatNumber(group.memberCount)} members</p>
+              <p className="mt-3 text-sm leading-relaxed text-muted">{group.description}</p>
+              <p className="mt-4 text-xs text-muted">{formatNumber(group.memberCount)} members</p>
             </Card>
           ))}
         </div>
@@ -182,12 +182,12 @@ export default async function CommunityPage() {
               <ul className="mt-5 space-y-2">
                 {challenge.rules.map((rule) => (
                   <li key={rule} className="flex gap-2.5 text-xs text-bone-200/55">
-                    <span aria-hidden className="text-ember">·</span>
+                    <span aria-hidden className="text-accent">·</span>
                     <span>{rule}</span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-5 text-xs text-bone-200/40">
+              <p className="mt-5 text-xs text-muted">
                 {formatNumber(challenge.participants)} members taking part
               </p>
             </Card>

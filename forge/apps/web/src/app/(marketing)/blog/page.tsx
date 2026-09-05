@@ -36,8 +36,11 @@ export default async function BlogPage() {
         </div>
 
         {featured.length > 0 && (
-          <div className="mt-12 grid gap-6 lg:grid-cols-2">
-            {featured.map((article) => <ArticleCard key={article.slug} article={article} featured />)}
+          <div className="mt-12">
+            <SectionHeading eyebrow="Featured" title="START HERE." />
+            <div className="mt-10 grid gap-6 lg:grid-cols-2">
+              {featured.map((article) => <ArticleCard key={article.slug} article={article} featured />)}
+            </div>
           </div>
         )}
 

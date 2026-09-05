@@ -17,7 +17,7 @@ export function PageHeader({
       <div>
         {eyebrow && <p className="eyebrow mb-3">{eyebrow}</p>}
         <h1 className="display text-display-sm text-balance">{title}</h1>
-        {lead && <p className="mt-3 max-w-prose text-sm leading-relaxed opacity-65">{lead}</p>}
+        {lead && <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted">{lead}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </div>

@@ -183,8 +183,8 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
                 className={clsx(
                   'w-full rounded-card border p-5 text-left transition-all duration-200 disabled:opacity-50',
                   feedback === value
-                    ? 'border-ember bg-ember/[0.08]'
-                    : 'border-bone-200/15 bg-ink-800 hover:border-bone-200/40',
+                    ? 'accent-tint border-ember bg-ember/[0.08]'
+                    : 'dark-surface border-bone-200/15 bg-ink-800 hover:border-bone-200/40',
                 )}
               >
                 <p className="font-semibold text-bone-100">{label}</p>
@@ -209,7 +209,7 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
     <div className="dark-surface flex min-h-dvh flex-col bg-ink-900 text-bone-200">
       {/* ------------------------------------------------------- top bar */}
       <header className="flex items-center justify-between gap-4 border-b border-bone-200/10 px-5 py-4">
-        <Link href="/app/plan" className="text-xs uppercase tracking-[0.12em] text-bone-200/50 hover:text-bone-100">
+        <Link href="/app/plan" className="text-xs uppercase tracking-[0.12em] text-muted hover:text-bone-100">
           ← Exit
         </Link>
         <div className="flex-1 px-4">
@@ -285,7 +285,7 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
                 <p className="eyebrow mb-2">Coach tip</p>
                 <p className="text-sm leading-relaxed text-bone-200/80">&ldquo;{exercise.cue}&rdquo;</p>
                 {exercise.prescription.tempo && (
-                  <p className="mt-3 text-xs text-bone-200/50">
+                  <p className="mt-3 text-xs text-muted">
                     Tempo {exercise.prescription.tempo} · Rest {exercise.prescription.restSeconds}s
                   </p>
                 )}
@@ -308,7 +308,7 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
         </div>
 
         {/* ----------------------------------------------------- logging */}
-        <aside className="w-full shrink-0 border-t border-bone-200/10 bg-ink-800 p-6 lg:w-[380px] lg:border-l lg:border-t-0">
+        <aside aria-label="Set logging" className="dark-surface w-full shrink-0 border-t border-bone-200/10 bg-ink-800 p-6 lg:w-[380px] lg:border-l lg:border-t-0">
           <p className="eyebrow mb-5">Log set {setIndex}</p>
 
           <div className="space-y-6">
@@ -339,7 +339,7 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
                 aria-label="Rate of perceived exertion"
                 className="w-full accent-[#E8462B]"
               />
-              <div className="mt-1 flex justify-between text-[0.625rem] text-bone-200/40">
+              <div className="mt-1 flex justify-between text-[0.625rem] text-muted">
                 <span>5 · easy</span>
                 <span>10 · maximal</span>
               </div>
@@ -409,7 +409,7 @@ function SubstituteList({ dayId, exercise }: { dayId: string; exercise: SessionE
             type="button"
             disabled={pending}
             onClick={() => void swap(substitute.id)}
-            className="w-full rounded-[8px] border border-bone-200/15 px-4 py-3 text-left text-sm text-bone-200/80 transition-colors hover:border-bone-200/40 hover:text-bone-100 disabled:opacity-50"
+            className="w-full rounded-[8px] border border-bone-200/15 px-4 py-3 text-left text-sm text-bone-200/80 transition-colors hover:border-bone-200/40 hover:text-bone-100 disabled:text-muted"
           >
             {substitute.name}
           </button>
@@ -447,7 +447,7 @@ function WorkoutComplete({
         {result.personalRecords.length > 0 && (
           <Card tone="dark">
             <div className="mt-12">
-              <p className="eyebrow mb-5 text-ember">
+              <p className="eyebrow mb-5 text-accent">
                 {result.personalRecords.length} personal record{result.personalRecords.length === 1 ? '' : 's'}
               </p>
               <ul className="space-y-4">
@@ -455,14 +455,14 @@ function WorkoutComplete({
                   <li key={index} className="flex items-baseline justify-between gap-4 border-b border-bone-200/10 pb-4 last:border-0">
                     <div>
                       <p className="font-semibold text-bone-100">{record.exerciseName}</p>
-                      <p className="mt-0.5 text-xs text-bone-200/50">
+                      <p className="mt-0.5 text-xs text-muted">
                         {record.kind === 'load' ? 'Heaviest load' : 'Estimated one-rep max'} · {record.reps} reps
                       </p>
                     </div>
                     <p className="shrink-0 text-right">
                       <span className="display text-lg tabular-nums">{formatLoad(record.value)}</span>
                       {record.previousValue > 0 && (
-                        <span className="block text-xs text-bone-200/45">
+                        <span className="block text-xs text-muted">
                           was {formatLoad(record.previousValue)}
                         </span>
                       )}
@@ -479,7 +479,7 @@ function WorkoutComplete({
             <p className="eyebrow mb-4">What changes next session</p>
             <ul className="space-y-3">
               {result.progression.slice(0, 5).map((entry) => (
-                <li key={entry.exerciseId} className="rounded-card border border-bone-200/10 bg-ink-800 p-4">
+                <li key={entry.exerciseId} className="dark-surface rounded-card border border-bone-200/10 bg-ink-800 p-4">
                   <div className="flex items-center gap-3">
                     <Chip tone={entry.action === 'deload' ? 'warn' : 'accent'} size="sm">
                       {entry.action.replace(/-/g, ' ')}
@@ -496,7 +496,7 @@ function WorkoutComplete({
         )}
 
         {feedback && (
-          <p className="mt-8 text-center text-xs text-bone-200/45">
+          <p className="mt-8 text-center text-xs text-muted">
             You rated this session &ldquo;{feedback.replace(/-/g, ' ')}&rdquo; — the next one of the same kind
             is adjusted accordingly.
           </p>
@@ -505,7 +505,7 @@ function WorkoutComplete({
         <div className="mt-12 flex flex-col justify-center gap-3 sm:flex-row">
           <Link
             href="/app"
-            className="flex min-h-[52px] items-center justify-center rounded-[10px] bg-ember px-8 text-xs font-semibold uppercase tracking-[0.1em] text-bone-100"
+            className="flex min-h-[52px] items-center justify-center rounded-[10px] bg-ember-600 px-8 text-xs font-semibold uppercase tracking-[0.1em] text-bone-100"
           >
             Back to Home
           </Link>
@@ -524,7 +524,7 @@ function WorkoutComplete({
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[0.625rem] uppercase tracking-[0.12em] text-bone-200/45">{label}</p>
+      <p className="text-[0.625rem] uppercase tracking-[0.12em] text-muted">{label}</p>
       <p className="display mt-1 text-xl leading-none tabular-nums text-bone-100">{value}</p>
     </div>
   );
@@ -534,7 +534,7 @@ function SmallStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[8px] border border-bone-200/10 py-3">
       <p className="display text-sm tabular-nums text-bone-100">{value}</p>
-      <p className="mt-1 text-[0.625rem] uppercase tracking-[0.1em] text-bone-200/40">{label}</p>
+      <p className="mt-1 text-[0.625rem] uppercase tracking-[0.1em] text-muted">{label}</p>
     </div>
   );
 }
@@ -543,7 +543,7 @@ function BigStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="text-center">
       <dd className="display text-display-sm tabular-nums text-bone-100">{value}</dd>
-      <dt className="mt-2 text-[0.625rem] uppercase tracking-[0.12em] text-bone-200/45">{label}</dt>
+      <dt className="mt-2 text-[0.625rem] uppercase tracking-[0.12em] text-muted">{label}</dt>
     </div>
   );
 }

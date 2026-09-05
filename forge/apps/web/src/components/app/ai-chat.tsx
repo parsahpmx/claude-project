@@ -99,7 +99,7 @@ export function AiChat({ suggestions, initialQuestion }: { suggestions: string[]
           {turns.map((turn) => (
             <li key={turn.id}>
               <div className="flex justify-end">
-                <p className="max-w-[80%] rounded-card rounded-tr-sm bg-ink-900 px-5 py-3.5 text-sm text-bone-100">
+                <p className="dark-surface max-w-[80%] rounded-card rounded-tr-sm bg-ink-900 px-5 py-3.5 text-sm text-bone-100">
                   {turn.question}
                 </p>
               </div>
@@ -107,7 +107,7 @@ export function AiChat({ suggestions, initialQuestion }: { suggestions: string[]
               <div className="mt-4">
                 {turn.failed ? (
                   <Card>
-                    <p className="text-sm text-signal-bad">
+                    <p className="text-sm text-status-bad">
                       <span aria-hidden>!</span> I could not reach the assistant. Try again in a moment.
                     </p>
                   </Card>
@@ -139,7 +139,7 @@ export function AiChat({ suggestions, initialQuestion }: { suggestions: string[]
             value={input}
             onChange={(event) => setInput(event.target.value)}
             placeholder="Ask about today's session, your recovery, or what to eat…"
-            className="min-h-[56px] flex-1 rounded-pill border border-ink-900/15 bg-bone-100 px-6 text-sm shadow-card transition-colors focus:border-ember"
+            className="light-surface min-h-[56px] flex-1 rounded-pill border border-ink-900/15 bg-bone-100 px-6 text-sm shadow-card transition-colors focus:border-ember"
           />
           <Button type="submit" size="lg" disabled={pending || input.trim().length === 0}>
             Ask
@@ -147,7 +147,7 @@ export function AiChat({ suggestions, initialQuestion }: { suggestions: string[]
         </form>
       </div>
 
-      <aside className="space-y-6 lg:sticky lg:top-8 lg:self-start">
+      <aside aria-label="Suggested questions" className="space-y-6 lg:sticky lg:top-8 lg:self-start">
         <Card>
           <p className="eyebrow mb-4">Try asking</p>
           <ul className="space-y-2">
@@ -157,7 +157,7 @@ export function AiChat({ suggestions, initialQuestion }: { suggestions: string[]
                   type="button"
                   onClick={() => void ask(question)}
                   disabled={pending}
-                  className="w-full rounded-[8px] border border-ink-900/10 px-4 py-3 text-left text-sm transition-colors hover:border-ink-900/30 hover:bg-ink-900/[0.02] disabled:opacity-50"
+                  className="w-full rounded-[8px] border border-ink-900/10 px-4 py-3 text-left text-sm transition-colors hover:border-ink-900/30 hover:bg-ink-900/[0.02] disabled:text-muted"
                 >
                   {question}
                 </button>
@@ -176,13 +176,13 @@ export function AiChat({ suggestions, initialQuestion }: { suggestions: string[]
               'Your nutrition targets',
               'The equipment on your profile',
             ].map((item) => (
-              <li key={item} className="flex gap-2.5 opacity-70">
-                <span aria-hidden className="text-ember">·</span>
+              <li key={item} className="flex gap-2.5 text-muted">
+                <span aria-hidden className="text-accent">·</span>
                 {item}
               </li>
             ))}
           </ul>
-          <p className="mt-5 text-xs leading-relaxed opacity-50">
+          <p className="mt-5 text-xs leading-relaxed text-muted">
             FORGE AI does not replace a human coach. For anything about pain, injury or a medical condition,
             speak to a qualified healthcare professional.
           </p>
@@ -196,7 +196,7 @@ function AnswerCard({ answer }: { answer: AiAnswer }) {
   return (
     <Card>
       <div className="flex items-start gap-4">
-        <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ember/12 text-ember">✦</span>
+        <span aria-hidden className="accent-tint grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ember/12 text-accent">✦</span>
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold leading-snug">{answer.headline}</h3>
           <div className="mt-3 space-y-3">
@@ -226,7 +226,7 @@ function AnswerCard({ answer }: { answer: AiAnswer }) {
                 ) : (
                   <span
                     key={action.action}
-                    className="min-h-[40px] rounded-[8px] border border-ink-900/10 px-4 text-xs uppercase leading-[38px] tracking-[0.08em] opacity-40"
+                    className="min-h-[40px] rounded-[8px] border border-ink-900/10 px-4 text-xs uppercase leading-[38px] tracking-[0.08em] text-muted"
                   >
                     {action.label}
                   </span>
@@ -237,7 +237,7 @@ function AnswerCard({ answer }: { answer: AiAnswer }) {
 
           {answer.sources.length > 0 && (
             <div className="mt-5 border-t border-ink-900/8 pt-4">
-              <p className="text-[0.625rem] uppercase tracking-[0.12em] opacity-45">Based on</p>
+              <p className="text-[0.625rem] uppercase tracking-[0.12em] text-muted">Based on</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {answer.sources.map((source) => <Chip key={source} size="sm">{source}</Chip>)}
               </div>

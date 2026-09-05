@@ -71,7 +71,7 @@ export function ShoppingList({ weekStart, items }: { weekStart: string; items: I
           <p className="text-sm font-semibold">
             {remaining} of {items.length} items remaining
           </p>
-          <p className="mt-0.5 text-xs opacity-50">Week beginning {weekStart}</p>
+          <p className="mt-0.5 text-xs text-muted">Week beginning {weekStart}</p>
         </div>
         <Button variant="ghost" size="sm" onClick={() => void regenerate()} disabled={generating}>
           {generating ? 'Rebuilding…' : 'Rebuild from meal plan'}
@@ -94,13 +94,13 @@ export function ShoppingList({ weekStart, items }: { weekStart: string; items: I
                         onChange={() => void toggle(item.id)}
                         className="mt-0.5 h-5 w-5 shrink-0 rounded-[4px] border-ink-900/25 accent-[#E8462B]"
                       />
-                      <span className={clsx('flex-1', done && 'opacity-40 line-through')}>
+                      <span className={clsx('flex-1', done && 'text-muted line-through')}>
                         {item.name}
-                        <span className="ml-2 tabular-nums opacity-55">
+                        <span className="ml-2 tabular-nums text-muted">
                           {formatQuantity(item.quantity)} {item.unit}
                         </span>
                         {item.recipeCount > 1 && (
-                          <span className="block text-[0.6875rem] opacity-40">
+                          <span className="block text-[0.6875rem] text-muted">
                             for {item.recipeCount} meals
                           </span>
                         )}

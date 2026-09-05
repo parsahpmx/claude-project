@@ -5,6 +5,8 @@ import { EmptyState } from '@/components/ui/feedback';
 import { apiFetch } from '@/lib/api';
 import { formatCents, formatLongDate, formatTime } from '@/lib/format';
 
+export const metadata = { title: 'Coach calendar' };
+
 export const dynamic = 'force-dynamic';
 
 interface CoachCalendar {
@@ -59,13 +61,13 @@ export default async function CoachCalendarPage() {
                         <Chip size="sm">{entry.booking.durationMinutes}m</Chip>
                       </div>
 
-                      <p className="mt-3 text-xs capitalize opacity-55">
+                      <p className="mt-3 text-xs capitalize text-muted">
                         {entry.booking.kind.replace(/-/g, ' ')}
                         {entry.booking.priceCents > 0 && ` · ${formatCents(entry.booking.priceCents)}`}
                       </p>
 
                       {entry.booking.agenda && (
-                        <p className="mt-3 text-sm leading-relaxed opacity-70">{entry.booking.agenda}</p>
+                        <p className="mt-3 text-sm leading-relaxed text-muted">{entry.booking.agenda}</p>
                       )}
 
                       <div className="mt-5 flex flex-wrap gap-2">
@@ -74,7 +76,7 @@ export default async function CoachCalendarPage() {
                         </ButtonLink>
                         <Link
                           href="/coach/calendar"
-                          className="min-h-[40px] rounded-[6px] bg-ember px-4 text-[0.6875rem] font-semibold uppercase leading-[38px] tracking-[0.08em] text-bone-100"
+                          className="min-h-[40px] rounded-[6px] bg-ember-600 px-4 text-[0.6875rem] font-semibold uppercase leading-[38px] tracking-[0.08em] text-bone-100"
                         >
                           Join Call
                         </Link>
@@ -92,12 +94,12 @@ export default async function CoachCalendarPage() {
         <Card tone="dark">
           <p className="eyebrow mb-4">Live session view</p>
           <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-            <div className="grain relative aspect-video overflow-hidden rounded-card bg-ink-800">
-              <div className="absolute inset-0 grid place-items-center text-bone-200/40">
+            <div className="dark-surface grain relative aspect-video overflow-hidden rounded-card bg-ink-800">
+              <div className="absolute inset-0 grid place-items-center text-muted">
                 <p className="text-sm">Coach video</p>
               </div>
               <div className="absolute bottom-4 right-4 aspect-video w-1/4 rounded-[8px] border border-bone-200/20 bg-ink-900/80">
-                <div className="grid h-full place-items-center text-[0.625rem] text-bone-200/40">Client</div>
+                <div className="grid h-full place-items-center text-[0.625rem] text-muted">Client</div>
               </div>
               <div className="absolute inset-x-0 bottom-0 flex justify-center gap-2 p-4">
                 {['Mute', 'Camera', 'Share', 'End'].map((label) => (
@@ -125,7 +127,7 @@ export default async function CoachCalendarPage() {
                 <ul className="space-y-1.5 text-sm text-bone-200/70">
                   {['Back squat — retest 3RM', 'Bench press — technique review', 'Row — volume check'].map((item) => (
                     <li key={item} className="flex gap-2.5">
-                      <span aria-hidden className="text-ember">·</span>
+                      <span aria-hidden className="text-accent">·</span>
                       {item}
                     </li>
                   ))}
@@ -134,13 +136,13 @@ export default async function CoachCalendarPage() {
               <div>
                 <p className="eyebrow mb-2">Metrics</p>
                 <dl className="grid grid-cols-2 gap-3 text-sm">
-                  <div><dt className="text-xs opacity-45">Adherence</dt><dd className="tabular-nums text-bone-100">92%</dd></div>
-                  <div><dt className="text-xs opacity-45">Streak</dt><dd className="tabular-nums text-bone-100">18d</dd></div>
+                  <div><dt className="text-xs text-muted">Adherence</dt><dd className="tabular-nums text-bone-100">92%</dd></div>
+                  <div><dt className="text-xs text-muted">Streak</dt><dd className="tabular-nums text-bone-100">18d</dd></div>
                 </dl>
               </div>
             </div>
           </div>
-          <p className="mt-5 text-xs text-bone-200/40">
+          <p className="mt-5 text-xs text-muted">
             Video calling is not wired up in this prototype — the session layout, agenda and metric panel are.
           </p>
         </Card>

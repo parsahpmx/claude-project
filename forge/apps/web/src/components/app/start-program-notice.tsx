@@ -51,7 +51,7 @@ export function StartProgramNotice() {
         <div className="mb-5"><ErrorState title="Could not start programme" body={message} /></div>
       )}
       <p className="eyebrow mb-3">Start a programme</p>
-      <p className="text-sm leading-relaxed opacity-70">
+      <p className="text-sm leading-relaxed text-muted">
         Paste a programme slug (for example <code className="font-mono">muscle-builder</code>) or open a
         programme below and start it from there.
       </p>

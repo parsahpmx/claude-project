@@ -58,10 +58,10 @@ export default async function CoachingPage() {
         <SectionHeading eyebrow="How it works" title="FOUR STEPS TO A COACH WHO KNOWS YOUR NUMBERS." />
         <div className="mt-12 grid gap-px overflow-hidden rounded-card border border-ink-900/10 bg-ink-900/10 sm:grid-cols-2 xl:grid-cols-4">
           {HOW.map((item) => (
-            <div key={item.step} className="bg-bone-100 p-7">
-              <p className="display text-3xl leading-none text-ember">{item.step}</p>
+            <div key={item.step} className="light-surface bg-bone-100 p-7">
+              <p className="display text-3xl leading-none text-accent">{item.step}</p>
               <h3 className="mt-4 font-semibold">{item.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed opacity-65">{item.body}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{item.body}</p>
             </div>
           ))}
         </div>
@@ -100,7 +100,7 @@ export default async function CoachingPage() {
               {['Energy', 'Sleep quality', 'Stress', 'Nutrition adherence', 'Training adherence', 'Weight', 'Progress photos', 'Pain or injury notes', 'Questions for your coach'].map(
                 (item, index) => (
                   <li key={item} className="flex items-center gap-3 border-b border-ink-900/8 pb-2.5">
-                    <span className="w-5 text-xs tabular-nums opacity-40">{String(index + 1).padStart(2, '0')}</span>
+                    <span className="w-5 text-xs tabular-nums text-muted">{String(index + 1).padStart(2, '0')}</span>
                     <span className="opacity-80">{item}</span>
                   </li>
                 ),
@@ -111,12 +111,12 @@ export default async function CoachingPage() {
             <h2 className="display text-display-md text-balance">
               THE CHECK-IN IS THE PRODUCT.
             </h2>
-            <p className="mt-6 max-w-prose leading-relaxed opacity-70">
+            <p className="mt-6 max-w-prose leading-relaxed text-muted">
               Everything else can be automated. What cannot is somebody reading that you slept badly for four
               nights, that your knee is complaining, and that your week fell apart on Wednesday — and changing
               the plan accordingly before you decide the plan is the problem.
             </p>
-            <p className="mt-5 max-w-prose leading-relaxed opacity-70">
+            <p className="mt-5 max-w-prose leading-relaxed text-muted">
               FORGE scores every check-in and flags what needs attention, so your coach opens with the thing
               that matters rather than scrolling for it. Pain notes go to the top, every time.
             </p>

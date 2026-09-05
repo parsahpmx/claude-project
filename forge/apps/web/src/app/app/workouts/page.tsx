@@ -1,6 +1,8 @@
 import { AppSection, PageHeader } from '@/components/app/page-header';
 import { WorkoutDiscovery } from '@/components/marketing/workout-discovery';
 
+export const metadata = { title: 'Workouts' };
+
 export default function AppWorkoutsPage() {
   return (
     <AppSection>

@@ -4,11 +4,36 @@ What FORGE guarantees, and how each guarantee is checked rather than asserted.
 
 ## Guaranteed
 
-**Contrast.** Body text meets WCAG AA against every surface it is used on. The
-single accent (`#E8462B`) is never used for small text on the light ground —
-it appears as a fill behind light text, as a border, or at 600 weight on
-headings. Secondary text uses `smoke-500` on bone and `bone-200/60` on ink,
-both of which clear 4.5:1.
+**Contrast.** Every text node on all 43 routes clears WCAG AA, verified with
+axe-core in a real browser at 390px and 1280px, signed out, as a member and as
+a coach. That is a measured claim, not a design intention: an earlier version of
+this document asserted AA compliance and the first machine pass found 166
+failing nodes behind the assertion.
+
+Three rules came out of that pass and now hold across the system:
+
+1. **Secondary text is a colour, not a transparency.** `opacity-50` on body copy
+   looks like hierarchy and measures like a defect — dimming text that is
+   already muted compounds, and the worst case here landed at 1.72:1. The
+   `.text-muted` class carries a real token instead.
+2. **The accent has three steps, and only one goes under small text.**
+   `ember-500` is the brand red and stays the graphic colour, where the bar is
+   3:1. It reaches only 3.76:1 against bone, so text and text-bearing surfaces
+   take `ember-600`, and text on an accent-tinted ground takes `ember-700` —
+   a tint of the same hue costs about a quarter point of contrast.
+3. **Status colours are for marks, not words.** The bright signal hues label
+   dots, bars, borders and chart strokes. Under a 10px badge label on a tint of
+   their own hue they measure between 2.2:1 and 4.1:1, so text takes a darkened
+   step on bone and a lightened one on ink.
+
+**Surfaces carry their own palette.** FORGE puts light cards inside dark
+sections and dark cards inside light ones, so "muted" has no single value. Each
+of these classes reads a CSS custom property that `.light-surface` and
+`.dark-surface` re-point for their subtree. Custom properties inherit from the
+nearest ancestor that sets one, which is exactly the needed rule and is
+something descendant selectors cannot express: `.dark-surface .text-muted` and
+`.light-surface .text-muted` have equal specificity, so source order would
+decide globally and one of the two nestings would always be wrong.
 
 **Focus.** One focus ring, one shape, everywhere: a 2px accent ring with a 2px
 offset, defined once in `globals.css` on `:focus-visible`. On dark surfaces the
@@ -68,5 +93,7 @@ push the whole document sideways.
 - No screen-reader testing with an actual screen reader.
 - The generated imagery carries descriptive `aria-label`s derived from its key,
   which is honest but thinner than a human-written alt text would be.
-- Colour contrast is designed to AA and spot-checked, not machine-verified on
-  every token pair.
+- Contrast is machine-verified on every rendered text node across all 43 routes
+  at 390px and 1280px, in all three signed-in states. It is not verified for
+  colour combinations that only appear in states the crawl does not reach —
+  for example a form field mid-validation on a route it did not submit.

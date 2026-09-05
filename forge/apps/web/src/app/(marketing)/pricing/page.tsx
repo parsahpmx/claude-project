@@ -59,7 +59,12 @@ export default async function PricingPage() {
 
       <Section tone="bone" size="md">
         <SectionHeading eyebrow="Compare" title="WHAT CHANGES BETWEEN PLANS." />
-        <div className="mt-10 w-full max-w-full overflow-x-auto rounded-card border border-ink-900/10 bg-bone-100">
+        <div
+          className="light-surface mt-10 w-full max-w-full overflow-x-auto rounded-card border border-ink-900/10 bg-bone-100"
+          tabIndex={0}
+          role="region"
+          aria-label="Plan comparison"
+        >
           <table className="w-full min-w-[720px] text-sm">
             <caption className="sr-only">Feature comparison across FORGE plans</caption>
             <thead>
@@ -77,9 +82,9 @@ export default async function PricingPage() {
                   {row.values.map((value, index) => (
                     <td key={index} className="p-5">
                       {value === true ? (
-                        <span className="text-signal-good"><span aria-hidden>✓</span><span className="sr-only">Included</span></span>
+                        <span className="text-status-good"><span aria-hidden>✓</span><span className="sr-only">Included</span></span>
                       ) : value === false ? (
-                        <span className="opacity-30"><span aria-hidden>—</span><span className="sr-only">Not included</span></span>
+                        <span className="text-muted"><span aria-hidden>—</span><span className="sr-only">Not included</span></span>
                       ) : (
                         <span className="opacity-80">{value}</span>
                       )}
@@ -96,12 +101,12 @@ export default async function PricingPage() {
         <SectionHeading eyebrow="Questions" title="THE THINGS PEOPLE ASK." />
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
           {FAQ.map((entry) => (
-            <details key={entry.q} className="group rounded-card border border-ink-900/10 bg-bone-100 p-6">
+            <details key={entry.q} className="light-surface group rounded-card border border-ink-900/10 bg-bone-100 p-6">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold">
                 {entry.q}
-                <span aria-hidden className="text-lg opacity-40 transition-transform group-open:rotate-45">+</span>
+                <span aria-hidden className="text-lg text-muted transition-transform group-open:rotate-45">+</span>
               </summary>
-              <p className="mt-4 text-sm leading-relaxed opacity-70">{entry.a}</p>
+              <p className="mt-4 text-sm leading-relaxed text-muted">{entry.a}</p>
             </details>
           ))}
         </div>

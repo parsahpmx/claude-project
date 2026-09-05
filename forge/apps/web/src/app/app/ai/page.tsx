@@ -2,6 +2,8 @@ import { AppSection, PageHeader } from '@/components/app/page-header';
 import { AiChat } from '@/components/app/ai-chat';
 import { apiFetch } from '@/lib/api';
 
+export const metadata = { title: 'FORGE AI' };
+
 export const dynamic = 'force-dynamic';
 
 export default async function AiPage({

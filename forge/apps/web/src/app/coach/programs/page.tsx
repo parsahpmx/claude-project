@@ -3,6 +3,8 @@ import { ProgramBuilder } from '@/components/app/program-builder';
 import { apiPublic } from '@/lib/api';
 import type { Program } from '@/lib/types';
 
+export const metadata = { title: 'Program builder' };
+
 export const dynamic = 'force-dynamic';
 
 export default async function CoachProgramsPage() {

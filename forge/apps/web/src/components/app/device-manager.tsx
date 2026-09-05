@@ -42,7 +42,7 @@ export function DeviceManager({ devices }: { devices: Device[] }) {
     <Card padded={false}>
       <div className="border-b border-ink-900/10 p-6">
         <p className="eyebrow">Connected devices</p>
-        <p className="mt-2 text-sm leading-relaxed opacity-65">
+        <p className="mt-2 text-sm leading-relaxed text-muted">
           Each connection lists exactly what FORGE reads. Disconnecting drops the permissions and the sync
           marker together — we do not keep a stale record of access we no longer have.
         </p>
@@ -57,7 +57,7 @@ export function DeviceManager({ devices }: { devices: Device[] }) {
                 <div>
                   <p className="font-medium">{PROVIDER_LABEL[device.provider] ?? device.provider}</p>
                   {device.lastSyncedAt && (
-                    <p className="mt-0.5 text-xs opacity-45">
+                    <p className="mt-0.5 text-xs text-muted">
                       Last sync {formatDateLabel(device.lastSyncedAt.slice(0, 10))}
                     </p>
                   )}
@@ -83,7 +83,7 @@ export function DeviceManager({ devices }: { devices: Device[] }) {
 
               {connected && (
                 <div className="mt-4">
-                  <p className="text-[0.625rem] uppercase tracking-[0.12em] opacity-45">Data permissions</p>
+                  <p className="text-[0.625rem] uppercase tracking-[0.12em] text-muted">Data permissions</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {PERMISSIONS.map((permission) => (
                       <Chip

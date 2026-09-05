@@ -88,13 +88,13 @@ export function MessageThread({
                     <p
                       className={clsx(
                         'rounded-card px-5 py-3.5 text-sm leading-relaxed',
-                        mine ? 'rounded-tr-sm bg-ink-900 text-bone-100' : 'rounded-tl-sm bg-ink-900/[0.05]',
+                        mine ? 'dark-surface rounded-tr-sm bg-ink-900 text-bone-100' : 'rounded-tl-sm bg-ink-900/[0.05]',
                       )}
                     >
                       {message.body}
                     </p>
                   )}
-                  <p className={clsx('mt-1.5 text-[0.6875rem] opacity-40', mine ? 'text-right' : '')}>
+                  <p className={clsx('mt-1.5 text-[0.6875rem] text-muted', mine ? 'text-right' : '')}>
                     <TimeAgo iso={message.createdAt} />
                     {mine && message.readAt && ' · Read'}
                   </p>
@@ -117,10 +117,10 @@ export function MessageThread({
         </form>
       </Card>
 
-      <aside className="space-y-6">
+      <aside aria-label="Conversation tools" className="space-y-6">
         <Card>
           <p className="eyebrow mb-4">Send a form check</p>
-          <p className="text-sm leading-relaxed opacity-70">
+          <p className="text-sm leading-relaxed text-muted">
             Film one working set from the side. {coachName} adds notes pinned to the exact second where the
             position changes.
           </p>
@@ -129,7 +129,7 @@ export function MessageThread({
               Send Form Check
             </Button>
           </div>
-          <p className="mt-3 text-xs opacity-45">
+          <p className="mt-3 text-xs text-muted">
             In this prototype the clip is simulated; the timestamped review flow is real.
           </p>
         </Card>
@@ -142,7 +142,7 @@ export function MessageThread({
                 <button
                   type="button"
                   disabled
-                  className="w-full rounded-[8px] border border-ink-900/10 px-4 py-3 text-left opacity-40"
+                  className="w-full rounded-[8px] border border-ink-900/10 px-4 py-3 text-left text-muted"
                 >
                   {label}
                 </button>
@@ -164,14 +164,14 @@ function FormCheck({ message, coachName }: { message: Message; coachName: string
   );
 
   return (
-    <div className="w-[min(420px,80vw)] overflow-hidden rounded-card border border-ink-900/12 bg-bone-100">
+    <div className="light-surface w-[min(420px,80vw)] overflow-hidden rounded-card border border-ink-900/12 bg-bone-100">
       <div className="grain relative aspect-video" style={{ background: backdrop.background }}>
         <div className="absolute inset-0 grid place-items-center">
           <span aria-hidden className="grid h-12 w-12 place-items-center rounded-full bg-bone-100/95 text-ink-900">▶</span>
         </div>
         {active && (
           <p className="absolute inset-x-3 bottom-3 rounded-[8px] bg-ink-900/90 p-3 text-xs leading-relaxed text-bone-100">
-            <span className="mr-2 font-mono opacity-60">{formatSeconds(active.timestampSeconds)}</span>
+            <span className="mr-2 font-mono text-muted">{formatSeconds(active.timestampSeconds)}</span>
             {active.body}
           </p>
         )}
@@ -193,7 +193,7 @@ function FormCheck({ message, coachName }: { message: Message; coachName: string
           onChange={(event) => setTime(Number(event.target.value))}
           className="mt-4 w-full accent-[#E8462B]"
         />
-        <div className="flex justify-between text-[0.625rem] tabular-nums opacity-45">
+        <div className="flex justify-between text-[0.625rem] tabular-nums text-muted">
           <span>{formatSeconds(time)}</span>
           <span>{formatSeconds(duration)}</span>
         </div>
@@ -209,8 +209,8 @@ function FormCheck({ message, coachName }: { message: Message; coachName: string
                     onClick={() => setTime(comment.timestampSeconds)}
                     className="flex w-full gap-3 rounded-[6px] px-2 py-2 text-left text-xs transition-colors hover:bg-ink-900/[0.04]"
                   >
-                    <span className="shrink-0 font-mono text-ember">{formatSeconds(comment.timestampSeconds)}</span>
-                    <span className="opacity-75">{comment.body}</span>
+                    <span className="shrink-0 font-mono text-accent">{formatSeconds(comment.timestampSeconds)}</span>
+                    <span className="text-muted">{comment.body}</span>
                   </button>
                 </li>
               ))}
@@ -235,10 +235,10 @@ function VoiceNote({ message, mine }: { message: Message; mine: boolean }) {
     <div
       className={clsx(
         'flex items-center gap-3 rounded-card px-4 py-3',
-        mine ? 'rounded-tr-sm bg-ink-900 text-bone-100' : 'rounded-tl-sm bg-ink-900/[0.05]',
+        mine ? 'dark-surface rounded-tr-sm bg-ink-900 text-bone-100' : 'rounded-tl-sm bg-ink-900/[0.05]',
       )}
     >
-      <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ember text-bone-100">▶</span>
+      <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ember-600 text-bone-100">▶</span>
       <span aria-hidden className="flex h-8 flex-1 items-center gap-[2px]">
         {bars.map((height, index) => (
           <span
@@ -248,7 +248,7 @@ function VoiceNote({ message, mine }: { message: Message; mine: boolean }) {
           />
         ))}
       </span>
-      <span className="shrink-0 text-xs tabular-nums opacity-60">{formatSeconds(duration)}</span>
+      <span className="shrink-0 text-xs tabular-nums text-muted">{formatSeconds(duration)}</span>
       <span className="sr-only">Voice note, {duration} seconds</span>
     </div>
   );

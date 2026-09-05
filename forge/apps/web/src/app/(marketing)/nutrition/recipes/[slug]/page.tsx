@@ -12,6 +12,16 @@ interface RecipeDetail {
   ingredients: { name: string; quantity: number; unit: string; section: string }[];
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  try {
+    const { recipe } = await apiPublic<RecipeDetail>(`/v1/catalog/recipes/${slug}`);
+    return { title: recipe.name, description: recipe.summary };
+  } catch {
+    return { title: 'Recipe' };
+  }
+}
+
 export default async function RecipePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
@@ -30,7 +40,7 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
     <>
       <Section tone="light" size="md">
         <div className="pt-20">
-          <Link href="/nutrition" className="text-xs uppercase tracking-[0.14em] opacity-55 hover:opacity-100">
+          <Link href="/nutrition" className="text-xs uppercase tracking-[0.14em] text-muted hover:opacity-100">
             ← Nutrition
           </Link>
 
@@ -47,16 +57,16 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
               </div>
 
               <dl className="mt-9 grid grid-cols-2 gap-6 sm:grid-cols-4">
-                <Stat label="Calories" value={recipe.calories} hint="per serving" />
-                <Stat label="Protein" value={`${recipe.proteinGrams}g`} />
-                <Stat label="Carbs" value={`${recipe.carbGrams}g`} />
-                <Stat label="Fat" value={`${recipe.fatGrams}g`} />
+                <Stat inList label="Calories" value={recipe.calories} hint="per serving" />
+                <Stat inList label="Protein" value={`${recipe.proteinGrams}g`} />
+                <Stat inList label="Carbs" value={`${recipe.carbGrams}g`} />
+                <Stat inList label="Fat" value={`${recipe.fatGrams}g`} />
               </dl>
 
               <dl className="mt-8 grid grid-cols-3 gap-6 border-t border-ink-900/10 pt-6">
-                <Stat label="Prep" value={formatMinutes(recipe.prepMinutes)} />
-                <Stat label="Cook" value={recipe.cookMinutes > 0 ? formatMinutes(recipe.cookMinutes) : 'None'} />
-                <Stat label="Serves" value={recipe.servings} />
+                <Stat inList label="Prep" value={formatMinutes(recipe.prepMinutes)} />
+                <Stat inList label="Cook" value={recipe.cookMinutes > 0 ? formatMinutes(recipe.cookMinutes) : 'None'} />
+                <Stat inList label="Serves" value={recipe.servings} />
               </dl>
 
               <div className="mt-9 flex flex-wrap gap-3">
@@ -72,12 +82,12 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
         <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
           <Card>
             <p className="eyebrow mb-5">Ingredients</p>
-            <p className="mb-4 text-xs opacity-50">For {recipe.servings} serving{recipe.servings === 1 ? '' : 's'}</p>
+            <p className="mb-4 text-xs text-muted">For {recipe.servings} serving{recipe.servings === 1 ? '' : 's'}</p>
             <ul className="space-y-3">
               {ingredients.map((ingredient) => (
                 <li key={`${ingredient.name}-${ingredient.unit}`} className="flex justify-between gap-4 border-b border-ink-900/8 pb-3 text-sm last:border-0">
                   <span>{ingredient.name}</span>
-                  <span className="shrink-0 tabular-nums opacity-60">
+                  <span className="shrink-0 tabular-nums text-muted">
                     {trim(ingredient.quantity)} {ingredient.unit}
                   </span>
                 </li>
@@ -90,7 +100,7 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
             <ol className="space-y-6">
               {recipe.instructions.map((step, index) => (
                 <li key={index} className="flex gap-5">
-                  <span aria-hidden className="display shrink-0 text-2xl leading-none text-ember">
+                  <span aria-hidden className="display shrink-0 text-2xl leading-none text-accent">
                     {String(index + 1).padStart(2, '0')}
                   </span>
                   <p className="pt-1 leading-relaxed opacity-85">{step}</p>
@@ -98,9 +108,9 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
               ))}
             </ol>
 
-            <div className="mt-10 rounded-card border border-ink-900/10 bg-bone-100 p-6">
+            <div className="light-surface mt-10 rounded-card border border-ink-900/10 bg-bone-100 p-6">
               <p className="eyebrow mb-2">Difficulty</p>
-              <p className="text-sm capitalize opacity-75">
+              <p className="text-sm capitalize text-muted">
                 {recipe.difficulty} · {formatMinutes(totalMinutes)} total
               </p>
             </div>

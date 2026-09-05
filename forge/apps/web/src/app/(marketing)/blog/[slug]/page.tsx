@@ -7,6 +7,16 @@ import type { Article } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  try {
+    const { article } = await apiPublic<{ article: Article }>(`/v1/catalog/articles/${slug}`);
+    return { title: article.title, description: article.excerpt };
+  } catch {
+    return { title: 'Article' };
+  }
+}
+
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
@@ -30,7 +40,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           <div className="mt-6"><Chip tone="inverse">{article.category}</Chip></div>
           <h1 className="display mt-6 text-display-md text-balance">{article.title}</h1>
           <p className="mt-6 text-lg leading-relaxed text-bone-200/70">{article.excerpt}</p>
-          <p className="mt-8 text-sm text-bone-200/50">
+          <p className="mt-8 text-sm text-muted">
             {article.authorName} · {article.authorRole} · {article.readMinutes} min read ·{' '}
             {formatDateLabel(article.publishedOn)}
           </p>
@@ -51,9 +61,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             ))}
           </article>
 
-          <div className="mx-auto mt-16 max-w-prose rounded-card border border-ink-900/10 bg-bone-100 p-8 text-center">
+          <div className="light-surface mx-auto mt-16 max-w-prose rounded-card border border-ink-900/10 bg-bone-100 p-8 text-center">
             <p className="display text-display-sm">PUT IT INTO PRACTICE.</p>
-            <p className="mt-3 text-sm opacity-65">
+            <p className="mt-3 text-sm text-muted">
               The assessment turns this into a plan in about two minutes.
             </p>
             <div className="mt-6 flex justify-center">

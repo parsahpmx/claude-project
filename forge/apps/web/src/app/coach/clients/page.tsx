@@ -6,6 +6,8 @@ import { EmptyState } from '@/components/ui/feedback';
 import { apiFetch } from '@/lib/api';
 import { formatDateLabel } from '@/lib/format';
 
+export const metadata = { title: 'Clients' };
+
 export const dynamic = 'force-dynamic';
 
 interface ClientRow {
@@ -47,7 +49,7 @@ export default async function CoachClientsPage() {
                     <div className="flex items-center gap-4">
                       <span
                         aria-hidden
-                        className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-ink-900 text-sm font-semibold text-bone-100"
+                        className="dark-surface grid h-12 w-12 shrink-0 place-items-center rounded-full bg-ink-900 text-sm font-semibold text-bone-100"
                       >
                         {client.member.firstName.charAt(0)}{client.member.lastName.charAt(0)}
                       </span>
@@ -55,7 +57,7 @@ export default async function CoachClientsPage() {
                         <p className="font-semibold">
                           {client.member.firstName} {client.member.lastName}
                         </p>
-                        <p className="mt-0.5 truncate text-xs opacity-50">
+                        <p className="mt-0.5 truncate text-xs text-muted">
                           {client.profile ? client.profile.primaryGoal.replace(/-/g, ' ') : 'No profile'} ·
                           client since {formatDateLabel(client.startedOn)}
                         </p>
@@ -82,18 +84,18 @@ export default async function CoachClientsPage() {
                             {client.latestCheckIn.score}
                           </span>
                           <div>
-                            <p className="text-xs capitalize opacity-70">
+                            <p className="text-xs capitalize text-muted">
                               {client.latestCheckIn.band.replace(/-/g, ' ')}
                             </p>
                             {client.needsResponse && (
-                              <p className="text-[0.625rem] uppercase tracking-[0.1em] text-ember">
+                              <p className="text-[0.625rem] uppercase tracking-[0.1em] text-accent">
                                 Awaiting reply
                               </p>
                             )}
                           </div>
                         </div>
                       ) : (
-                        <p className="text-xs opacity-45">No check-in yet</p>
+                        <p className="text-xs text-muted">No check-in yet</p>
                       )}
 
                       <div className="flex flex-wrap gap-1.5">
@@ -116,8 +118,8 @@ export default async function CoachClientsPage() {
 }
 
 function bandTone(band: string): string {
-  if (band === 'thriving') return 'bg-signal-good/15 text-signal-good';
-  if (band === 'on-track') return 'bg-ember/12 text-ember-600';
-  if (band === 'strained') return 'bg-signal-warn/15 text-signal-warn';
-  return 'bg-signal-bad/12 text-signal-bad';
+  if (band === 'thriving') return 'bg-signal-good/15 text-status-good';
+  if (band === 'on-track') return 'accent-tint bg-ember/12 text-chip-accent';
+  if (band === 'strained') return 'bg-signal-warn/15 text-status-warn';
+  return 'bg-signal-bad/12 text-status-bad';
 }

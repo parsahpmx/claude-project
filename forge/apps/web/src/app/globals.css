@@ -14,6 +14,59 @@
     --font-display: 'Archivo Black', 'Arial Black', 'Helvetica Neue', sans-serif;
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --shell-gutter: clamp(1.25rem, 4vw, 4rem);
+
+    /* Surface palette, bone ground. Read by .text-muted, .eyebrow, .text-accent,
+       the status classes, .rule and .hairline — see the components layer for why
+       these are variables rather than descendant rules. Every value here clears
+       4.5:1 as text on bone-100, bone-200 and bone-300. */
+    --muted: theme('colors.smoke.500');
+    --accent: theme('colors.ember.600');
+    --accent-on-tint: theme('colors.ember.700');
+    --status-good: theme('colors.signal.good-ink');
+    --status-warn: theme('colors.signal.warn-ink');
+    --status-bad: theme('colors.signal.bad-ink');
+    --status-info: theme('colors.signal.info-ink');
+    --rule: rgb(11 11 12 / 0.1);
+    --hairline: rgb(11 11 12 / 0.1);
+  }
+
+  /* Ink ground. The same roles, re-pointed at values that clear 4.5:1 on
+     ink-900, ink-800 and ink-700. */
+  .dark-surface {
+    /* A surface owns its default text colour too. Explicit `text-*` utilities
+       still win — they land in the utilities layer, after this one. */
+    color: theme('colors.bone.200');
+    --muted: theme('colors.smoke.400');
+    --accent: theme('colors.ember.500');
+    --accent-on-tint: theme('colors.ember.400');
+    --status-good: theme('colors.signal.good-on-ink');
+    --status-warn: theme('colors.signal.warn-on-ink');
+    --status-bad: theme('colors.signal.bad-on-ink');
+    --status-info: theme('colors.signal.info-on-ink');
+    --rule: rgb(245 242 237 / 0.15);
+    --hairline: rgb(245 242 237 / 0.1);
+  }
+
+  /* A panel tinted with the accent hue. Accent text on it loses about a quarter
+     point of contrast against the same text on the plain ground, which is the
+     difference between 4.48 and passing, so the subtree takes the deeper step. */
+  .accent-tint {
+    --accent: var(--accent-on-tint);
+  }
+
+  /* A light card inside a dark section, which this product does on the home
+     page and the plan. Restores the bone values for its own subtree. */
+  .light-surface {
+    color: theme('colors.ink.900');
+    --muted: theme('colors.smoke.500');
+    --accent: theme('colors.ember.600');
+    --accent-on-tint: theme('colors.ember.700');
+    --status-good: theme('colors.signal.good-ink');
+    --status-warn: theme('colors.signal.warn-ink');
+    --status-bad: theme('colors.signal.bad-ink');
+    --status-info: theme('colors.signal.info-ink');
+    --rule: rgb(11 11 12 / 0.1);
+    --hairline: rgb(11 11 12 / 0.1);
   }
 
   * {
@@ -77,20 +130,60 @@
     overflow-wrap: break-word;
   }
 
+  /*
+   * Surface-aware colour.
+   *
+   * Every one of these reads a custom property rather than hard-coding a value,
+   * because a custom property inherits from the NEAREST ancestor that sets it.
+   * Descendant rules cannot express that: `.dark-surface .text-muted` and
+   * `.light-surface .text-muted` have identical specificity, so whichever is
+   * written last wins globally — and a light card inside a dark section, or a
+   * dark card inside a light one, gets the wrong value. Both nestings occur in
+   * this product, so the variables are the mechanism, not a flourish.
+   *
+   * The bone-ground values are the defaults; `.dark-surface` overrides them and
+   * `.light-surface` puts them back.
+   */
   .eyebrow {
-    @apply text-eyebrow uppercase tracking-[0.18em] text-smoke-500;
+    @apply text-eyebrow uppercase tracking-[0.18em];
+    color: var(--muted);
   }
 
-  .dark-surface .eyebrow {
-    @apply text-smoke-400;
+  /* Secondary text. This exists because `opacity-50` on body copy looks like a
+     hierarchy but measures as a contrast failure — 40% opacity over a bone
+     ground lands near 1.7:1. A muted colour is a colour, not a transparency, so
+     it stays readable wherever it is placed. */
+  .text-muted {
+    color: var(--muted);
   }
+
+  /* The accent as text. ember-500 is the brand red and stays the graphic
+     colour, but it reaches only 3.76:1 against bone — fine for a chart stroke,
+     a failure under 11px copy. ember-600 clears 4.5:1 on the bone family; on
+     ink the brand red already clears it, so dark surfaces keep the brighter
+     value. The chip goes one step deeper again, because its ground is tinted
+     with the same hue and that costs a quarter of a point of contrast. */
+  .text-accent {
+    color: var(--accent);
+  }
+
+  .text-chip-accent {
+    color: var(--accent-on-tint);
+  }
+
+  /* Status text. The bright signal hues are for dots, bars, borders and chart
+     strokes, which owe 3:1. Under a word — especially a 10px badge label on a
+     tint of its own hue — they measure between 2.2:1 and 3.9:1, so text takes
+     the darkened step on light grounds and the bright value back on ink.
+     Status is never colour alone: every badge also carries a glyph and a word. */
+  .text-status-good { color: var(--status-good); }
+  .text-status-warn { color: var(--status-warn); }
+  .text-status-bad { color: var(--status-bad); }
+  .text-status-info { color: var(--status-info); }
 
   .rule {
-    @apply h-px w-full bg-ink-900/10;
-  }
-
-  .dark-surface .rule {
-    @apply bg-bone-200/15;
+    @apply h-px w-full;
+    background: var(--rule);
   }
 
   /* The grain overlay is what stops large flat areas reading as "unfinished
@@ -106,11 +199,8 @@
   }
 
   .hairline {
-    @apply border border-ink-900/10;
-  }
-
-  .dark-surface .hairline {
-    @apply border-bone-200/10;
+    @apply border;
+    border-color: var(--hairline);
   }
 }
 

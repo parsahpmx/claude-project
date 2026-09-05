@@ -6,6 +6,8 @@ import { CheckInForm } from '@/components/app/check-in-form';
 import { apiFetch } from '@/lib/api';
 import { formatDateLabel, formatRating, relativeTime, formatDateTime } from '@/lib/format';
 
+export const metadata = { title: 'My coach' };
+
 export const dynamic = 'force-dynamic';
 
 interface CoachResponse {
@@ -74,16 +76,16 @@ export default async function MemberCoachPage() {
             <Media imageKey={coach.imageKey} ratio="4/3" alt={`${coach.firstName} ${coach.lastName}`} />
             <div className="mt-5">
               <h2 className="display text-xl leading-none">{coach.firstName} {coach.lastName}</h2>
-              <p className="mt-2 text-sm opacity-60">{coach.headline}</p>
+              <p className="mt-2 text-sm text-muted">{coach.headline}</p>
               <p className="mt-3 text-xs">
-                <span aria-hidden className="text-ember">★</span> {formatRating(coach.ratingTenths)}
-                {data.startedOn && <span className="opacity-50"> · Coaching you since {formatDateLabel(data.startedOn)}</span>}
+                <span aria-hidden className="text-accent">★</span> {formatRating(coach.ratingTenths)}
+                {data.startedOn && <span className="text-muted"> · Coaching you since {formatDateLabel(data.startedOn)}</span>}
               </p>
               <div className="mt-4 flex flex-wrap gap-1.5">
                 {coach.specialties.map((s) => <Chip key={s} size="sm">{s.replace(/-/g, ' ')}</Chip>)}
               </div>
               <div className="mt-5">
-                <Link href={`/coaching/${coach.slug}`} className="text-xs font-semibold uppercase tracking-[0.08em] text-ember">
+                <Link href={`/coaching/${coach.slug}`} className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
                   Full profile →
                 </Link>
               </div>
@@ -112,8 +114,8 @@ export default async function MemberCoachPage() {
             <ul className="space-y-2 text-sm">
               {coach.certifications.map((certification) => (
                 <li key={certification} className="flex gap-2.5">
-                  <span aria-hidden className="text-ember">✓</span>
-                  <span className="opacity-75">{certification}</span>
+                  <span aria-hidden className="text-accent">✓</span>
+                  <span className="text-muted">{certification}</span>
                 </li>
               ))}
             </ul>
@@ -126,7 +128,7 @@ export default async function MemberCoachPage() {
             <Card>
               <p className="eyebrow mb-2">Weekly check-in</p>
               <h2 className="display text-display-sm">HOW WAS YOUR WEEK?</h2>
-              <p className="mt-3 text-sm leading-relaxed opacity-65">
+              <p className="mt-3 text-sm leading-relaxed text-muted">
                 Nine questions. {coach.firstName} reads all nine and replies in writing — usually within a
                 working day.
               </p>
@@ -141,21 +143,21 @@ export default async function MemberCoachPage() {
                   <div>
                     <p className="eyebrow">This week&rsquo;s check-in</p>
                     <p className="display mt-2 text-display-sm">{latest.score}</p>
-                    <p className="mt-1 text-sm capitalize opacity-60">{latest.band.replace(/-/g, ' ')}</p>
+                    <p className="mt-1 text-sm capitalize text-muted">{latest.band.replace(/-/g, ' ')}</p>
                   </div>
                   <Status status={latest.respondedAt ? 'completed' : 'pending'} />
                 </div>
 
                 {latest.coachResponse ? (
-                  <div className="mt-6 rounded-card border border-ember/20 bg-ember/[0.05] p-5">
-                    <p className="eyebrow mb-2 text-ember-600">{coach.firstName} replied</p>
+                  <div className="accent-tint mt-6 rounded-card border border-ember/20 bg-ember/[0.05] p-5">
+                    <p className="eyebrow mb-2 text-accent">{coach.firstName} replied</p>
                     <p className="text-sm leading-relaxed opacity-85">{latest.coachResponse}</p>
                     {latest.respondedAt && (
-                      <p className="mt-3 text-xs opacity-45">{relativeTime(latest.respondedAt)}</p>
+                      <p className="mt-3 text-xs text-muted">{relativeTime(latest.respondedAt)}</p>
                     )}
                   </div>
                 ) : (
-                  <p className="mt-6 text-sm opacity-60">
+                  <p className="mt-6 text-sm text-muted">
                     Submitted — {coach.firstName} usually replies within a working day.
                   </p>
                 )}
@@ -181,7 +183,7 @@ export default async function MemberCoachPage() {
                         </span>
                         <div>
                           <p className="font-medium">Week of {formatDateLabel(entry.weekStart)}</p>
-                          <p className="mt-0.5 text-xs capitalize opacity-50">{entry.band.replace(/-/g, ' ')}</p>
+                          <p className="mt-0.5 text-xs capitalize text-muted">{entry.band.replace(/-/g, ' ')}</p>
                         </div>
                       </div>
                       {entry.flags.length > 0 && (
@@ -227,17 +229,17 @@ function Score({ label, value, inverted }: { label: string; value: number; inver
   const good = inverted ? value <= 2 : value >= 4;
   return (
     <div>
-      <dt className="text-[0.625rem] uppercase tracking-[0.12em] opacity-45">{label}</dt>
-      <dd className={`mt-1 text-sm font-semibold tabular-nums ${good ? 'text-signal-good' : ''}`}>
-        {value}<span className="font-normal opacity-40">/5</span>
+      <dt className="text-[0.625rem] uppercase tracking-[0.12em] text-muted">{label}</dt>
+      <dd className={`mt-1 text-sm font-semibold tabular-nums ${good ? 'text-status-good' : ''}`}>
+        {value}<span className="font-normal text-muted">/5</span>
       </dd>
     </div>
   );
 }
 
 function bandTone(band: string): string {
-  if (band === 'thriving') return 'bg-signal-good/15 text-signal-good';
-  if (band === 'on-track') return 'bg-ember/12 text-ember-600';
-  if (band === 'strained') return 'bg-signal-warn/15 text-signal-warn';
-  return 'bg-signal-bad/12 text-signal-bad';
+  if (band === 'thriving') return 'bg-signal-good/15 text-status-good';
+  if (band === 'on-track') return 'accent-tint bg-ember/12 text-chip-accent';
+  if (band === 'strained') return 'bg-signal-warn/15 text-status-warn';
+  return 'bg-signal-bad/12 text-status-bad';
 }

@@ -59,7 +59,7 @@ export default async function NutritionPage() {
               ].map(([slot, meal, kcal]) => (
                 <li key={slot} className="flex items-center justify-between gap-4 border-b border-bone-200/10 pb-3 last:border-0">
                   <div>
-                    <p className="text-[0.625rem] uppercase tracking-[0.12em] text-bone-200/45">{slot}</p>
+                    <p className="text-[0.625rem] uppercase tracking-[0.12em] text-muted">{slot}</p>
                     <p className="mt-0.5 text-bone-100">{meal}</p>
                   </div>
                   <span className="shrink-0 text-xs tabular-nums text-bone-200/55">{kcal}</span>
@@ -84,13 +84,13 @@ export default async function NutritionPage() {
             ['04', 'Macro split', 'Protein by bodyweight and goal, fat floored for hormonal health, carbs fill the rest.'],
           ].map(([step, title, body]) => (
             <Card key={step}>
-              <p className="display text-3xl leading-none text-ember">{step}</p>
+              <p className="display text-3xl leading-none text-accent">{step}</p>
               <h3 className="mt-4 font-semibold">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed opacity-65">{body}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>
             </Card>
           ))}
         </div>
-        <p className="mt-8 max-w-prose text-sm leading-relaxed opacity-60">
+        <p className="mt-8 max-w-prose text-sm leading-relaxed text-muted">
           The floor is not a detail. An unbounded deficit is the one place a fitness product can do real harm,
           so it is enforced in the domain layer where every client — web, mobile and coach — hits the same rule.
         </p>
@@ -115,7 +115,7 @@ export default async function NutritionPage() {
           <div>
             <p className="eyebrow mb-5">Shopping list</p>
             <h2 className="display text-display-md text-balance">YOUR WEEK, AGGREGATED BY AISLE.</h2>
-            <p className="mt-6 max-w-prose leading-relaxed opacity-70">
+            <p className="mt-6 max-w-prose leading-relaxed text-muted">
               Plan the week and FORGE merges every ingredient across every recipe into one list, sorted the way
               a shop is laid out. Lines only merge when the units match — 200g of tomatoes and 2 tomatoes stay
               separate, because an ugly list is recoverable and a wrong one sends you home short.
@@ -129,10 +129,10 @@ export default async function NutritionPage() {
             <div className="border-b border-ink-900/10 p-6">
               <div className="flex items-center justify-between">
                 <p className="eyebrow">This week</p>
-                <span className="text-xs opacity-50">28 items · 5 sections</span>
+                <span className="text-xs text-muted">28 items · 5 sections</span>
               </div>
             </div>
-            <div className="max-h-[440px] overflow-y-auto">
+            <div className="max-h-[440px] overflow-y-auto" tabIndex={0} role="region" aria-label="Shopping list">
               {SECTIONS.map((section) => (
                 <div key={section.name} className="border-b border-ink-900/8 p-6 last:border-0">
                   <p className="eyebrow mb-4">{section.name}</p>
@@ -142,12 +142,12 @@ export default async function NutritionPage() {
                         <span
                           aria-hidden
                           className={`grid h-5 w-5 shrink-0 place-items-center rounded-[4px] border text-[0.625rem] ${
-                            index === 0 ? 'border-ember bg-ember text-bone-100' : 'border-ink-900/25'
+                            index === 0 ? 'border-ember bg-ember-600 text-bone-100' : 'border-ink-900/25'
                           }`}
                         >
                           {index === 0 ? '✓' : ''}
                         </span>
-                        <span className={index === 0 ? 'opacity-40 line-through' : 'opacity-80'}>{item}</span>
+                        <span className={index === 0 ? 'text-muted line-through' : 'opacity-80'}>{item}</span>
                       </li>
                     ))}
                   </ul>
@@ -171,7 +171,7 @@ export default async function NutritionPage() {
             <ul className="mt-8 space-y-3">
               {['Swap meal', 'Save to favourites', 'Add to shopping list', 'Log meal'].map((action) => (
                 <li key={action} className="flex gap-3 text-sm">
-                  <span aria-hidden className="text-ember">→</span>
+                  <span aria-hidden className="text-accent">→</span>
                   <span className="text-bone-200/75">{action}</span>
                 </li>
               ))}

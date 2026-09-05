@@ -13,9 +13,9 @@ interface CalendarEvent {
 }
 
 const KIND_TONE: Record<string, string> = {
-  workout: 'border-ember/35 bg-ember/[0.09] text-ember-600',
-  recovery: 'border-signal-info/30 bg-signal-info/[0.08] text-signal-info',
-  'coach-session': 'border-signal-good/30 bg-signal-good/[0.08] text-signal-good',
+  workout: 'accent-tint border-ember/35 bg-ember/[0.09] text-chip-accent',
+  recovery: 'border-signal-info/30 bg-signal-info/[0.08] text-status-info',
+  'coach-session': 'border-signal-good/30 bg-signal-good/[0.08] text-status-good',
   meal: 'border-ink-900/12 bg-ink-900/[0.04]',
 };
 
@@ -84,11 +84,11 @@ export function CalendarView({
           active={view}
           onChange={(value) => setView(value as 'month' | 'week' | 'day')}
         />
-        <p className="text-xs opacity-50">Drag a session onto another day to reschedule it.</p>
+        <p className="text-xs text-muted">Drag a session onto another day to reschedule it.</p>
       </div>
 
       {error && (
-        <p role="alert" className="mt-4 text-sm text-signal-bad">
+        <p role="alert" className="mt-4 text-sm text-status-bad">
           <span aria-hidden>!</span> {error}
         </p>
       )}
@@ -162,11 +162,11 @@ function DayColumn({
       }}
       className={clsx(
         'rounded-card border p-3 transition-colors',
-        over ? 'border-ember bg-ember/[0.06]' : 'border-ink-900/10 bg-bone-100',
+        over ? 'accent-tint border-ember bg-ember/[0.06]' : 'light-surface border-ink-900/10 bg-bone-100',
         expanded ? 'min-h-[220px]' : 'min-h-[120px]',
       )}
     >
-      <p className={clsx('text-xs font-semibold', isToday ? 'text-ember' : 'opacity-55')}>
+      <p className={clsx('text-xs font-semibold', isToday ? 'text-accent' : 'text-muted')}>
         {formatDateLabel(date)}
       </p>
 
@@ -180,17 +180,21 @@ function DayColumn({
               className={clsx(
                 'cursor-grab rounded-[8px] border p-2.5 text-xs transition-opacity active:cursor-grabbing',
                 KIND_TONE[event.kind] ?? KIND_TONE.meal,
+                // A pending drag is transient, so opacity is honest there.
                 pendingId === event.id && 'opacity-50',
-                event.status === 'completed' && 'opacity-55',
+                // Completion is not: it persists, and dimming the whole card
+                // took its text under AA. The ✓ and the word "Done" below carry
+                // the state; the ground just recedes.
+                event.status === 'completed' && 'border-dashed',
               )}
             >
               <p className="font-medium leading-snug">{event.title}</p>
-              <p className="mt-1 tabular-nums opacity-70">
+              <p className="mt-1 tabular-nums text-muted">
                 {String(Math.floor(event.startMinutes / 60)).padStart(2, '0')}:
                 {String(event.startMinutes % 60).padStart(2, '0')} · {event.durationMinutes}m
               </p>
               {event.status === 'completed' && (
-                <span className="mt-1.5 inline-block text-[0.625rem] uppercase tracking-[0.1em]">
+                <span className="mt-1.5 inline-block text-[0.625rem] uppercase tracking-[0.1em] text-muted">
                   <span aria-hidden>✓</span> Done
                 </span>
               )}

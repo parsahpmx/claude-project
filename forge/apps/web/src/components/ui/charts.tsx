@@ -55,10 +55,10 @@ export function ProgressRing({
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="display text-lg tabular-nums leading-none">{clamped}</span>
-          {sublabel && <span className="mt-0.5 text-[0.5625rem] uppercase tracking-[0.12em] opacity-55">{sublabel}</span>}
+          {sublabel && <span className="mt-0.5 text-[0.5625rem] uppercase tracking-[0.12em] text-muted">{sublabel}</span>}
         </div>
       </div>
-      {label && <span className="text-[0.6875rem] uppercase tracking-[0.1em] opacity-65">{label}</span>}
+      {label && <span className="text-[0.6875rem] uppercase tracking-[0.1em] text-muted">{label}</span>}
     </div>
   );
 }
@@ -86,7 +86,7 @@ export function ProgressBar({
     <div>
       {(label || valueLabel) && (
         <div className="mb-2 flex items-baseline justify-between gap-3">
-          {label && <span className="text-xs font-medium opacity-70">{label}</span>}
+          {label && <span className="text-xs font-medium text-muted">{label}</span>}
           {valueLabel && <span className="text-xs font-semibold tabular-nums">{valueLabel}</span>}
         </div>
       )}
@@ -129,7 +129,7 @@ export function LineChart({
 }) {
   if (points.length < 2) {
     return (
-      <div className="flex h-40 items-center justify-center rounded-card border border-dashed border-current/15 text-xs opacity-55">
+      <div className="flex h-40 items-center justify-center rounded-card border border-dashed border-current/15 text-xs text-muted">
         Not enough data yet for {label.toLowerCase()}
       </div>
     );
@@ -187,7 +187,7 @@ export function LineChart({
           className={clsx('animate-sweep-in origin-left', tone === 'accent' ? 'stroke-ember' : 'stroke-smoke-500')}
         />
       </svg>
-      <figcaption className="mt-2 flex justify-between text-[0.6875rem] tabular-nums opacity-55">
+      <figcaption className="mt-2 flex justify-between text-[0.6875rem] tabular-nums text-muted">
         <span>{format(first.value)}</span>
         <span className="font-semibold opacity-90">{format(last.value)}</span>
       </figcaption>
@@ -208,7 +208,7 @@ export function BarChart({
 }) {
   if (points.length === 0) {
     return (
-      <div className="flex h-36 items-center justify-center rounded-card border border-dashed border-current/15 text-xs opacity-55">
+      <div className="flex h-36 items-center justify-center rounded-card border border-dashed border-current/15 text-xs text-muted">
         No {label.toLowerCase()} recorded yet
       </div>
     );
@@ -223,7 +223,7 @@ export function BarChart({
             <div
               className={clsx(
                 'w-full rounded-t-[3px] transition-all duration-500 ease-forge',
-                point.value === 0 ? 'bg-current/8' : 'bg-ember/75 group-hover/bar:bg-ember',
+                point.value === 0 ? 'bg-current/8' : 'accent-tint bg-ember/75 group-hover/bar:bg-ember',
               )}
               style={{ height: `${Math.max(2, (point.value / max) * 100)}%` }}
             />
@@ -231,7 +231,7 @@ export function BarChart({
           </div>
         ))}
       </div>
-      <figcaption className="mt-2 flex justify-between text-[0.6875rem] opacity-55">
+      <figcaption className="mt-2 flex justify-between text-[0.6875rem] text-muted">
         <span>{points[0]!.date.slice(5)}</span>
         <span>Peak {format(max)}</span>
         <span>{points[points.length - 1]!.date.slice(5)}</span>
@@ -249,12 +249,13 @@ export function Heatmap({
 }) {
   // Five steps, each with a distinct lightness as well as a distinct opacity,
   // so the ramp survives greyscale.
-  const shades = ['bg-current/[0.06]', 'bg-ember/25', 'bg-ember/45', 'bg-ember/70', 'bg-ember'];
+  const shades = ['bg-current/[0.06]', 'accent-tint bg-ember/25', 'accent-tint bg-ember/45', 'accent-tint bg-ember/70', 'bg-ember'];
 
   return (
     <figure>
       <div
         className="scroll-x scrollbar-none"
+        tabIndex={0}
         role="img"
         aria-label={`${label}. ${cells.filter((c) => c.count > 0).length} active days of ${cells.length}.`}
       >
@@ -268,7 +269,7 @@ export function Heatmap({
           ))}
         </div>
       </div>
-      <figcaption className="mt-3 flex items-center gap-2 text-[0.6875rem] opacity-55">
+      <figcaption className="mt-3 flex items-center gap-2 text-[0.6875rem] text-muted">
         <span>Less</span>
         {shades.map((shade, index) => (
           <span key={index} className={clsx('h-2.5 w-2.5 rounded-[2px]', shade)} />
@@ -288,7 +289,7 @@ export function DonutChart({
 }) {
   if (segments.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center rounded-card border border-dashed border-current/15 text-xs opacity-55">
+      <div className="flex h-40 items-center justify-center rounded-card border border-dashed border-current/15 text-xs text-muted">
         No {label.toLowerCase()} yet
       </div>
     );
@@ -342,7 +343,7 @@ export function DonutChart({
 }
 
 export function Sparkline({ values, tone = 'accent' }: { values: number[]; tone?: 'accent' | 'neutral' }) {
-  if (values.length < 2) return <span className="text-xs opacity-40">—</span>;
+  if (values.length < 2) return <span className="text-xs text-muted">—</span>;
   const width = 72;
   const height = 22;
   const min = Math.min(...values);

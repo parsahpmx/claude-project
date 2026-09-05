@@ -4,6 +4,8 @@ import { EmptyState } from '@/components/ui/feedback';
 import { ButtonLink } from '@/components/ui/primitives';
 import { apiFetch } from '@/lib/api';
 
+export const metadata = { title: 'Messages' };
+
 export const dynamic = 'force-dynamic';
 
 interface ThreadList {

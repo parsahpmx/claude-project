@@ -13,6 +13,16 @@ interface ProductDetail {
   compatiblePrograms: Program[];
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  try {
+    const { product } = await apiPublic<ProductDetail>(`/v1/catalog/products/${slug}`);
+    return { title: product.name, description: product.summary };
+  } catch {
+    return { title: 'Equipment' };
+  }
+}
+
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
@@ -30,7 +40,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     <>
       <Section tone="light" size="md">
         <div className="pt-20">
-          <Link href="/equipment" className="text-xs uppercase tracking-[0.14em] opacity-55 hover:opacity-100">
+          <Link href="/equipment" className="text-xs uppercase tracking-[0.14em] text-muted hover:opacity-100">
             ← Equipment
           </Link>
 
@@ -50,10 +60,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
               <div className="mt-4 flex items-center gap-3 text-sm">
                 <span className="flex items-center gap-1">
-                  <span aria-hidden className="text-ember">★</span>
+                  <span aria-hidden className="text-accent">★</span>
                   <span className="font-semibold">{formatRating(product.ratingTenths)}</span>
                 </span>
-                <span className="opacity-50">{formatNumber(product.reviewCount)} reviews</span>
+                <span className="text-muted">{formatNumber(product.reviewCount)} reviews</span>
               </div>
 
               <p className="mt-6 text-lg leading-relaxed opacity-80">{product.summary}</p>
@@ -61,11 +71,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <div className="mt-8 flex flex-wrap items-baseline gap-4">
                 <span className="display text-display-sm">{formatCents(product.priceCents)}</span>
                 {product.compareAtCents && (
-                  <span className="text-lg line-through opacity-40">{formatCents(product.compareAtCents)}</span>
+                  <span className="text-lg line-through text-muted">{formatCents(product.compareAtCents)}</span>
                 )}
               </div>
               {product.financingMonths > 0 && (
-                <p className="mt-2 text-sm opacity-60">
+                <p className="mt-2 text-sm text-muted">
                   or {formatCents(Math.round(product.priceCents / product.financingMonths))} a month for{' '}
                   {product.financingMonths} months, interest free
                 </p>
@@ -77,8 +87,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
 
               <Card padded={false}>
-                <div className="mt-8 rounded-card border border-ember/25 bg-ember/[0.06] p-5">
-                  <p className="eyebrow text-ember-600">Works with</p>
+                <div className="accent-tint mt-8 rounded-card border border-ember/25 bg-ember/[0.06] p-5">
+                  <p className="eyebrow text-accent">Works with</p>
                   <p className="mt-2 font-semibold">
                     {compatiblePrograms.length} FORGE programme{compatiblePrograms.length === 1 ? '' : 's'}
                   </p>
@@ -96,15 +106,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
               <dl className="mt-8 space-y-3 border-t border-ink-900/10 pt-6 text-sm">
                 <div className="flex justify-between gap-4">
-                  <dt className="opacity-55">Warranty</dt>
+                  <dt className="text-muted">Warranty</dt>
                   <dd className="text-right">{product.warranty}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="opacity-55">Shipping</dt>
+                  <dt className="text-muted">Shipping</dt>
                   <dd className="text-right">{product.shipping}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="opacity-55">Availability</dt>
+                  <dt className="text-muted">Availability</dt>
                   <dd className="text-right">{product.inStock ? 'In stock' : 'Out of stock'}</dd>
                 </div>
               </dl>
@@ -124,7 +134,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <dl className="space-y-3 text-sm">
               {Object.entries(product.specs).map(([key, value]) => (
                 <div key={key} className="flex justify-between gap-4 border-b border-ink-900/8 pb-3 last:border-0">
-                  <dt className="opacity-55">{key}</dt>
+                  <dt className="text-muted">{key}</dt>
                   <dd className="text-right font-medium">{value}</dd>
                 </div>
               ))}

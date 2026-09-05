@@ -5,6 +5,8 @@ import { EmptyState } from '@/components/ui/feedback';
 import { apiFetch } from '@/lib/api';
 import { relativeTime } from '@/lib/format';
 
+export const metadata = { title: 'Notifications' };
+
 export const dynamic = 'force-dynamic';
 
 export default async function NotificationsPage() {
@@ -22,7 +24,7 @@ export default async function NotificationsPage() {
           <Card padded={false}>
             <ul className="divide-y divide-ink-900/8">
               {notifications.map((notification) => (
-                <li key={notification.id} className={notification.readAt ? 'opacity-60' : ''}>
+                <li key={notification.id}>
                   <Link href={notification.href ?? '/app'} className="block p-5 transition-colors hover:bg-ink-900/[0.02]">
                     <div className="flex items-start gap-4">
                       <span
@@ -30,9 +32,9 @@ export default async function NotificationsPage() {
                         className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${notification.readAt ? 'bg-ink-900/15' : 'bg-ember'}`}
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium">{notification.title}</p>
-                        <p className="mt-1 text-sm opacity-65">{notification.body}</p>
-                        <p className="mt-2 text-xs opacity-40">{relativeTime(notification.createdAt)}</p>
+                        <p className={notification.readAt ? 'font-normal' : 'font-semibold'}>{notification.title}</p>
+                        <p className="mt-1 text-sm text-muted">{notification.body}</p>
+                        <p className="mt-2 text-xs text-muted">{relativeTime(notification.createdAt)}</p>
                       </div>
                     </div>
                   </Link>

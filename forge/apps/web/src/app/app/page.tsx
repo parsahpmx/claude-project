@@ -7,6 +7,8 @@ import { apiFetch } from '@/lib/api';
 import { formatMinutes, formatSleep, formatNumber } from '@/lib/format';
 import type { PlanDay, Readiness } from '@/lib/types';
 
+export const metadata = { title: 'Dashboard' };
+
 export const dynamic = 'force-dynamic';
 
 interface Dashboard {
@@ -52,7 +54,7 @@ export default async function DashboardPage() {
             {data.greeting}, {data.member.firstName}.
           </h1>
           {data.plan && (
-            <p className="mt-3 text-sm opacity-65">
+            <p className="mt-3 text-sm text-muted">
               {data.plan.programName} · Week {weekNumber(data.plan.startDate, data.date)} of{' '}
               {data.plan.totalWeeks}
             </p>
@@ -69,7 +71,7 @@ export default async function DashboardPage() {
             />
             <div className="max-w-[220px]">
               <p className="text-sm font-semibold">{data.readiness.headline}</p>
-              <p className="mt-1.5 text-xs leading-relaxed opacity-65">{data.readiness.guidance}</p>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted">{data.readiness.guidance}</p>
             </div>
           </div>
         </Card>
@@ -108,7 +110,7 @@ export default async function DashboardPage() {
 
               <div className="border-t border-bone-200/10 p-6 sm:px-8">
                 <p className="eyebrow mb-5">Your day</p>
-                <ol className="scroll-x scrollbar-none flex gap-4 pb-1">
+                <ol className="scroll-x scrollbar-none flex gap-4 pb-1" tabIndex={0} aria-label="This week at a glance">
                   {data.timeline.map((entry) => (
                     <li key={`${entry.time}-${entry.label}`} className="min-w-[124px] flex-1">
                       <div className="relative">
@@ -146,7 +148,7 @@ export default async function DashboardPage() {
           <Card>
             <div className="flex items-baseline justify-between gap-4">
               <p className="eyebrow">This week</p>
-              <p className="text-xs opacity-55">
+              <p className="text-xs text-muted">
                 <span className="font-semibold text-ink-900">{data.week.completed}</span> of{' '}
                 {data.week.scheduled} sessions
               </p>
@@ -161,18 +163,18 @@ export default async function DashboardPage() {
                       href={rest ? '/app/plan' : `/workout/${day.id}`}
                       className="group block text-center"
                     >
-                      <span className="block text-[0.625rem] uppercase tracking-[0.1em] opacity-45">
+                      <span className="block text-[0.625rem] uppercase tracking-[0.1em] text-muted">
                         {WEEKDAYS[index]}
                       </span>
                       <span
                         className={`mt-2 grid aspect-square place-items-center rounded-[8px] border text-xs transition-all duration-200 group-hover:-translate-y-0.5 ${
                           day.status === 'completed'
-                            ? 'border-signal-good/40 bg-signal-good/12 text-signal-good'
+                            ? 'border-signal-good/40 bg-signal-good/12 text-status-good'
                             : day.status === 'skipped'
-                              ? 'border-signal-bad/35 bg-signal-bad/10 text-signal-bad'
+                              ? 'border-signal-bad/35 bg-signal-bad/10 text-status-bad'
                               : rest
-                                ? 'border-ink-900/10 bg-ink-900/[0.02] text-smoke-400'
-                                : 'border-ink-900/15 bg-bone-100'
+                                ? 'border-current/15 bg-current/[0.03] text-muted'
+                                : 'light-surface border-ink-900/15 bg-bone-100'
                         }`}
                       >
                         <span aria-hidden>
@@ -237,11 +239,11 @@ export default async function DashboardPage() {
             <Card>
               <div className="flex items-baseline justify-between gap-4">
                 <p className="eyebrow">Nutrition today</p>
-                <Link href="/app/nutrition" className="text-xs font-semibold text-ember">Open →</Link>
+                <Link href="/app/nutrition" className="text-xs font-semibold text-accent">Open →</Link>
               </div>
               <p className="display mt-3 text-display-sm tabular-nums">
                 {formatNumber(data.nutrition.consumedCalories)}
-                <span className="text-base font-normal opacity-45"> / {formatNumber(data.nutrition.targets.calories)} kcal</span>
+                <span className="text-base font-normal text-muted"> / {formatNumber(data.nutrition.targets.calories)} kcal</span>
               </p>
               <div className="mt-6 space-y-4">
                 <ProgressBar
@@ -277,17 +279,17 @@ export default async function DashboardPage() {
                 <p className="display text-2xl leading-none tabular-nums">
                   {data.load.ratio > 0 ? data.load.ratio.toFixed(2) : '—'}
                 </p>
-                <p className="mt-1 text-[0.6875rem] uppercase tracking-[0.1em] opacity-45">Acute : chronic</p>
+                <p className="mt-1 text-[0.6875rem] uppercase tracking-[0.1em] text-muted">Acute : chronic</p>
               </div>
               <Chip tone={loadTone(data.load.zone)}>{data.load.zone.replace(/-/g, ' ')}</Chip>
             </div>
-            <p className="mt-4 text-xs leading-relaxed opacity-65">{data.load.message}</p>
+            <p className="mt-4 text-xs leading-relaxed text-muted">{data.load.message}</p>
           </Card>
 
           <Card>
             <p className="eyebrow mb-4">Readiness inputs</p>
             {data.readiness.components.length === 0 ? (
-              <p className="text-sm opacity-60">
+              <p className="text-sm text-muted">
                 Connect a wearable or log how you slept to see the breakdown.
               </p>
             ) : (
@@ -296,9 +298,9 @@ export default async function DashboardPage() {
                   <li key={component.key}>
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="text-sm">{component.label}</span>
-                      <span className="text-xs tabular-nums opacity-55">{Math.round(component.score)}</span>
+                      <span className="text-xs tabular-nums text-muted">{Math.round(component.score)}</span>
                     </div>
-                    <p className="mt-1 text-[0.6875rem] opacity-50">{component.detail}</p>
+                    <p className="mt-1 text-[0.6875rem] text-muted">{component.detail}</p>
                     <div className="mt-2">
                       <ProgressBar value={component.score} tone={component.score >= 70 ? 'good' : 'warn'} />
                     </div>
@@ -353,9 +355,9 @@ function MetricCard({
       <p className="eyebrow">{label}</p>
       <p className="display mt-2 text-2xl leading-none tabular-nums">
         {value}
-        {unit && <span className="ml-1 text-sm font-normal opacity-45">{unit}</span>}
+        {unit && <span className="ml-1 text-sm font-normal text-muted">{unit}</span>}
       </p>
-      {hint && <p className="mt-1.5 text-xs opacity-50">{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs text-muted">{hint}</p>}
       {typeof progress === 'number' && (
         <div className="mt-4"><ProgressBar value={progress} tone={progress >= 80 ? 'good' : 'accent'} /></div>
       )}

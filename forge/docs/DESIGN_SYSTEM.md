@@ -29,9 +29,34 @@ product does not look like a dashboard template.
 | `bone-100` | `#FBFAF8` | Card surface |
 | `bone-200` | `#F5F2ED` | Page ground |
 | `bone-300` | `#E7E2DA` | Section tint |
-| `smoke-500` | `#6E6E77` | Secondary text |
-| `ember-500` | `#E8462B` | The single accent |
-| `signal-*` | good/warn/bad/info | Status — never the only carrier of meaning |
+| `smoke-500` | `#5C5C64` | Secondary text on bone |
+| `smoke-400` | `#9C9CA4` | Secondary text on ink |
+| `ember-500` | `#E8462B` | The accent, as a graphic: chart strokes, rules, marks |
+| `ember-600` | `#C4351E` | The accent under or behind small text |
+| `ember-700` | `#A32A15` | The accent on a ground tinted with its own hue |
+| `signal-*` | good/warn/bad/info | Status marks — never the only carrier of meaning |
+| `signal-*-ink` | darkened | Status **text** on bone |
+| `signal-*-on-ink` | lightened | Status **text** on ink |
+
+The accent has three steps because contrast, not taste, splits it: `ember-500`
+is the brand red and clears the 3:1 a graphic owes, but only 3.76:1 against
+bone, which fails under an 11px label. Each step up buys back the difference,
+and `ember-700` covers the case where the ground is tinted with the same hue.
+The same logic gives status colours a bone-ground and an ink-ground text
+variant. See ACCESSIBILITY.md for the measurements.
+
+**Secondary text is a colour, never an opacity.** `opacity-50` on body copy
+reads as hierarchy and measures as a failure — worse when it stacks on text
+that is already muted, which bottomed out at 1.72:1 here. Use `.text-muted`.
+
+**Surfaces declare themselves.** Any element that sets a solid ground carries
+`light-surface` or `dark-surface`. Those classes re-point the CSS custom
+properties behind `.text-muted`, `.eyebrow`, `.text-accent`, the status classes,
+`.rule` and `.hairline`, so a light card inside a dark section — which this
+product does — gets bone-ground values for its own subtree. Custom properties
+inherit from the nearest ancestor that sets them; descendant selectors cannot
+express "nearest wins" at equal specificity. `accent-tint` marks a panel tinted
+with the accent hue and shifts accent text one step deeper.
 
 **Type.** A display face for headlines and a modern sans for everything else.
 Sizes are `clamp()`-based so a headline scales from 390px to 1440px without a
@@ -72,6 +97,14 @@ Empty, loading, error and success are first-class components rather than
 afterthoughts. A screen that has only ever been seen with good data is a screen
 that has not been designed, so every list in the product has an `EmptyState`
 with a real sentence and a real next action.
+
+They are wired into the router, not only displayed on this page. The member and
+coach segments each have a `loading.tsx` built from `Skeleton` in the shape of
+the real content, and an `error.tsx` built from `ErrorState` that offers a retry
+and a way back — a failed API call reaches the product's own error screen rather
+than Next's default, and the underlying message is logged rather than shown,
+since it comes from the API and may name internals. `not-found.tsx` answers the
+same question every other screen answers: what should I do next.
 
 ### Charts
 

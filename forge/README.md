@@ -23,9 +23,20 @@ and the domain engines that decide what a member should train today and why.
 
 **158 automated tests pass** (86 domain, 19 database, 53 API integration), four
 packages typecheck under `strict` with `noUncheckedIndexedAccess`, ESLint is
-clean, and the production build succeeds. Every screen has been rendered in a
-real browser and checked for console errors, hydration mismatches and
-horizontal overflow at 390px and 1280px.
+clean, and the production build succeeds with no warnings.
+
+Every screen is also verified in a real browser rather than only by status code.
+The sweep drives all 43 routes signed out, as a member and as a coach, at 390px
+and 1280px, against the production build, and checks four things: console and
+page errors, failed network requests, horizontal overflow (measured by scrolling
+the document, not by reading element boxes — a box inside an `overflow-x: auto`
+container is not page overflow), and the full WCAG 2.1 AA rule set via axe-core.
+All four come back clean.
+
+That last one is worth stating plainly because it did not start clean. The first
+axe run found 166 failing contrast nodes across 42 routes behind a design that
+had been eyeballed and documented as accessible. See `docs/ACCESSIBILITY.md` for
+the three rules that came out of fixing them.
 
 ## Quick start
 

@@ -2,6 +2,8 @@ import { AppSection, PageHeader } from '@/components/app/page-header';
 import { CalendarView } from '@/components/app/calendar-view';
 import { apiFetch } from '@/lib/api';
 
+export const metadata = { title: 'Calendar' };
+
 export const dynamic = 'force-dynamic';
 
 interface CalendarResponse {

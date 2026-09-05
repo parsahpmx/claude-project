@@ -136,9 +136,9 @@ export function ProgramBuilder({
   return (
     <div className="grid gap-6 xl:grid-cols-[260px_1fr_300px]">
       {/* ------------------------------------------------- exercise library */}
-      <aside className="space-y-4">
+      <aside aria-label="Templates" className="space-y-4">
         <Card>
-          <p className="eyebrow mb-4">Start from a template</p>
+          <h2 className="eyebrow mb-4">Start from a template</h2>
           <Select
             label="FORGE programme"
             options={[{ value: '', label: 'Blank week' }, ...templates.map((t) => ({ value: t.slug, label: t.name }))]}
@@ -158,7 +158,7 @@ export function ProgramBuilder({
             />
           </div>
 
-          <ul className="max-h-[420px] overflow-y-auto border-t border-ink-900/10">
+          <ul className="max-h-[420px] overflow-y-auto border-t border-ink-900/10" tabIndex={0} aria-label="Movement library">
             {filtered.map((exercise) => (
               <li key={exercise.id}>
                 <div
@@ -168,7 +168,7 @@ export function ProgramBuilder({
                   className="cursor-grab border-b border-ink-900/6 px-5 py-3 text-sm transition-colors hover:bg-ink-900/[0.03] active:cursor-grabbing"
                 >
                   <p className="font-medium">{exercise.name}</p>
-                  <p className="mt-0.5 text-[0.6875rem] capitalize opacity-45">
+                  <p className="mt-0.5 text-[0.6875rem] capitalize text-muted">
                     {exercise.pattern.replace(/-/g, ' ')}
                     {exercise.compound ? ' · compound' : ''}
                   </p>
@@ -182,7 +182,7 @@ export function ProgramBuilder({
       {/* ------------------------------------------------------- the week */}
       <div>
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm opacity-60">
+          <p className="text-sm text-muted">
             <span className="font-semibold text-ink-900">{totalEntries}</span> exercises across the week
           </p>
           <div className="flex gap-2">
@@ -214,9 +214,9 @@ export function ProgramBuilder({
       </div>
 
       {/* -------------------------------------------------- prescription */}
-      <aside>
+      <aside aria-label="Prescription">
         <Card>
-          <p className="eyebrow mb-5">Prescription</p>
+          <h2 className="eyebrow mb-5">Prescription</h2>
           {!active || !selected ? (
             <EmptyState
               icon="▦"
@@ -227,7 +227,7 @@ export function ProgramBuilder({
             <div className="space-y-5">
               <div>
                 <p className="font-semibold">{active.name}</p>
-                <p className="mt-0.5 text-xs opacity-50">{selected.day}</p>
+                <p className="mt-0.5 text-xs text-muted">{selected.day}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -290,7 +290,7 @@ export function ProgramBuilder({
 
               <div className="rounded-[8px] border border-ink-900/10 bg-ink-900/[0.02] p-4 text-xs">
                 <p className="font-semibold">Client sees</p>
-                <p className="mt-1.5 opacity-70">
+                <p className="mt-1.5 text-muted">
                   {active.sets} × {active.reps} @ {formatLoad(active.loadGrams)} · RPE {active.rpe} · tempo{' '}
                   {active.tempo} · {active.restSeconds}s rest
                 </p>
@@ -334,16 +334,16 @@ function DayColumn({
       }}
       className={clsx(
         'min-h-[180px] rounded-card border p-3 transition-colors',
-        over ? 'border-ember bg-ember/[0.06]' : 'border-ink-900/10 bg-bone-100',
+        over ? 'accent-tint border-ember bg-ember/[0.06]' : 'light-surface border-ink-900/10 bg-bone-100',
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.1em] opacity-60">{day.slice(0, 3)}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">{day.slice(0, 3)}</p>
         {entries.length > 0 && <Chip size="sm">{entries.length}</Chip>}
       </div>
 
       {entries.length === 0 ? (
-        <p className="mt-6 text-center text-[0.6875rem] opacity-35">Drop movements here</p>
+        <p className="mt-6 text-center text-[0.6875rem] text-muted">Drop movements here</p>
       ) : (
         <ol className="mt-3 space-y-2">
           {entries.map((entry, index) => (
@@ -351,7 +351,7 @@ function DayColumn({
               <div
                 className={clsx(
                   'rounded-[8px] border p-2.5 text-xs transition-colors',
-                  selectedKey === entry.key ? 'border-ember bg-ember/[0.07]' : 'border-ink-900/10',
+                  selectedKey === entry.key ? 'accent-tint border-ember bg-ember/[0.07]' : 'border-ink-900/10',
                 )}
               >
                 <button type="button" onClick={() => onSelect(entry.key)} className="w-full text-left">
@@ -360,14 +360,14 @@ function DayColumn({
                       {index + 1}. {entry.name}
                     </span>
                   </span>
-                  <span className="mt-1 block tabular-nums opacity-55">
+                  <span className="mt-1 block tabular-nums text-muted">
                     {entry.sets} × {entry.reps} · RPE {entry.rpe}
                   </span>
                 </button>
                 <button
                   type="button"
                   onClick={() => onRemove(entry.key)}
-                  className="mt-2 text-[0.625rem] uppercase tracking-[0.1em] text-signal-bad opacity-70 hover:opacity-100"
+                  className="mt-2 text-[0.625rem] uppercase tracking-[0.1em] text-status-bad opacity-70 hover:opacity-100"
                 >
                   Remove
                 </button>

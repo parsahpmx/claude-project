@@ -85,10 +85,10 @@ export function AssessmentPreview() {
   const answered = Object.values(answers).filter((v) => v.length > 0).length;
 
   return (
-    <div className="rounded-card border border-ink-900/10 bg-bone-100 p-6 shadow-card sm:p-8">
+    <div className="light-surface rounded-card border border-ink-900/10 bg-bone-100 p-6 shadow-card sm:p-8">
       <div className="flex items-center justify-between gap-4">
         <p className="eyebrow">Build my plan</p>
-        <p className="text-xs tabular-nums opacity-50">{answered} / {STEPS.length}</p>
+        <p className="text-xs tabular-nums text-muted">{answered} / {STEPS.length}</p>
       </div>
 
       <div className="mt-6 space-y-7">
@@ -110,7 +110,7 @@ export function AssessmentPreview() {
                       className={clsx(
                         'min-h-[44px] rounded-pill border px-4 text-xs font-medium transition-all duration-200 ease-forge',
                         active
-                          ? 'border-ember bg-ember text-bone-100 shadow-card'
+                          ? 'border-ember bg-ember-600 text-bone-100 shadow-card'
                           : 'border-ink-900/15 hover:border-ink-900/40 hover:bg-ink-900/[0.03]',
                       )}
                     >
@@ -126,11 +126,11 @@ export function AssessmentPreview() {
 
       <Link
         href={`/assessment${query.toString() ? `?${query.toString()}` : ''}`}
-        className="mt-8 flex min-h-[56px] w-full items-center justify-center rounded-[10px] bg-ink-900 px-8 text-sm font-semibold uppercase tracking-[0.08em] text-bone-100 shadow-card transition-all duration-200 hover:bg-ink-700 hover:shadow-lift active:translate-y-px"
+        className="dark-surface mt-8 flex min-h-[56px] w-full items-center justify-center rounded-[10px] bg-ink-900 px-8 text-sm font-semibold uppercase tracking-[0.08em] text-bone-100 shadow-card transition-all duration-200 hover:bg-ink-700 hover:shadow-lift active:translate-y-px"
       >
         Build My Plan
       </Link>
-      <p className="mt-3 text-center text-xs opacity-50">
+      <p className="mt-3 text-center text-xs text-muted">
         Ten questions, about two minutes. No card needed to see your plan.
       </p>
     </div>

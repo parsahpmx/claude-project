@@ -58,7 +58,7 @@ export default async function RecoveryPage() {
                     <span className="text-sm text-bone-100">{label}</span>
                     <span className="text-xs tabular-nums text-bone-200/60">{score}</span>
                   </div>
-                  <p className="mt-1 text-xs text-bone-200/45">{detail}</p>
+                  <p className="mt-1 text-xs text-muted">{detail}</p>
                   <div className="mt-2 h-1 overflow-hidden rounded-pill bg-bone-200/10">
                     <div className="h-full rounded-pill bg-ember" style={{ width: `${score as number}%` }} />
                   </div>
@@ -86,7 +86,7 @@ export default async function RecoveryPage() {
           ].map(([title, body]) => (
             <Card key={title}>
               <p className="font-semibold">{title}</p>
-              <p className="mt-2 text-sm leading-relaxed opacity-65">{body}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>
             </Card>
           ))}
         </div>
@@ -106,12 +106,12 @@ export default async function RecoveryPage() {
               <div className="flex items-center gap-2">
                 <p className="eyebrow">{session.category}</p>
                 <span aria-hidden className="h-1 w-1 rounded-full bg-current opacity-30" />
-                <p className="text-[0.6875rem] opacity-55">{formatMinutes(session.minutes)}</p>
+                <p className="text-[0.6875rem] text-muted">{formatMinutes(session.minutes)}</p>
               </div>
               <h3 className="mt-2 font-semibold leading-snug">{session.name}</h3>
-              <p className="mt-2 text-sm leading-relaxed opacity-65">{session.description}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{session.description}</p>
               {session.hasCaptions && (
-                <p className="mt-4 text-[0.6875rem] uppercase tracking-[0.1em] opacity-45">
+                <p className="mt-4 text-[0.6875rem] uppercase tracking-[0.1em] text-muted">
                   <span aria-hidden>CC</span> Captions available
                 </p>
               )}

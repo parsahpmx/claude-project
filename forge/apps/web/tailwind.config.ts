@@ -28,16 +28,26 @@ export default {
           300: '#E7E2DA',
           400: '#D2CCC2',
         },
+        // Secondary text, not decoration. Every value here clears 4.5:1 against
+        // the ground it is used on — smoke-500 on the bone family, smoke-400 on
+        // the ink family — so secondary copy is never merely dimmer, it stays
+        // readable. Opacity is not an accessible substitute for these.
         smoke: {
-          400: '#8A8A93',
-          500: '#6E6E77',
-          600: '#54545C',
+          400: '#9C9CA4',
+          500: '#5C5C64',
+          600: '#47474E',
         },
+        // One accent, three jobs. 500 is the brand red and is used for graphics,
+        // display type and focus rings, where 3:1 is the bar. 600 is the only
+        // one allowed under small text — as a surface it clears 4.5:1 with
+        // bone-100 on top, and as text it clears 4.5:1 on the bone family.
+        // 400 is the dark-surface variant, since 600 goes muddy on ink.
         ember: {
           DEFAULT: '#E8462B',
           400: '#FF6A4D',
           500: '#E8462B',
           600: '#C4351E',
+          700: '#A32A15',
         },
         // Status colours are never the only signal — every state also carries
         // an icon or a word. See docs/ACCESSIBILITY.md.
@@ -46,6 +56,21 @@ export default {
           warn: '#D99A2B',
           bad: '#D9453B',
           info: '#4A82C4',
+          // The same four hues darkened until they clear 4.5:1 as text on both
+          // bone-100 and their own tinted badge grounds. The bright values above
+          // stay for dots, bars and chart fills, which only owe 3:1.
+          'good-ink': '#2A7449',
+          'warn-ink': '#7D5813',
+          'bad-ink': '#A32F27',
+          'info-ink': '#33598A',
+          // And lightened for text on ink. A badge tints its own ground with its
+          // own hue, which costs about a quarter point: signal-bad reaches only
+          // 4.07:1 on a bad-tinted ink-800. These clear 4.5:1 on ink-800,
+          // ink-900 and both tints.
+          'good-on-ink': '#4FBF7D',
+          'warn-on-ink': '#E5AC45',
+          'bad-on-ink': '#E8635A',
+          'info-on-ink': '#6199D6',
         },
       },
       fontFamily: {

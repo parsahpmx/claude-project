@@ -12,7 +12,7 @@ export default function SignInPage() {
 
   return (
     <div className="dark-surface grid min-h-dvh bg-ink-900 text-bone-200 lg:grid-cols-2">
-      <div className="flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16">
+      <main className="flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16">
         <Link href="/" className="display text-xl tracking-[0.08em] text-bone-100">FORGE</Link>
 
         <div className="mx-auto w-full max-w-sm py-16">
@@ -29,8 +29,8 @@ export default function SignInPage() {
           </p>
         </div>
 
-        <p className="text-xs text-bone-200/35">© 2026 FORGE</p>
-      </div>
+        <p className="text-xs text-muted">© 2026 FORGE</p>
+      </main>
 
       <div aria-hidden className="grain relative hidden lg:block" style={{ background: backdrop.background }}>
         <div className="absolute inset-0 bg-gradient-to-t from-ink-900/80 to-transparent" />

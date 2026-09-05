@@ -3,6 +3,8 @@ import { Card, Chip } from '@/components/ui/primitives';
 import { CommunityFeed } from '@/components/app/community-feed';
 import { apiFetch, apiPublic } from '@/lib/api';
 
+export const metadata = { title: 'Community' };
+
 export const dynamic = 'force-dynamic';
 
 interface Post {
@@ -39,7 +41,7 @@ export default async function CommunityPage() {
                 <li key={group.slug} className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{group.name}</p>
-                    <p className="truncate text-xs opacity-50">{group.description}</p>
+                    <p className="truncate text-xs text-muted">{group.description}</p>
                   </div>
                   <Chip size="sm">{Math.round(group.memberCount / 1000)}k</Chip>
                 </li>
@@ -56,8 +58,8 @@ export default async function CommunityPage() {
                 'Beginner questions get answered, not corrected.',
                 'Coaches identify themselves as coaches.',
               ].map((rule) => (
-                <li key={rule} className="flex gap-2.5 opacity-70">
-                  <span aria-hidden className="text-ember">·</span>
+                <li key={rule} className="flex gap-2.5 text-muted">
+                  <span aria-hidden className="text-accent">·</span>
                   {rule}
                 </li>
               ))}

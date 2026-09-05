@@ -5,6 +5,8 @@ import { EmptyState } from '@/components/ui/feedback';
 import { apiFetch } from '@/lib/api';
 import { formatCents } from '@/lib/format';
 
+export const metadata = { title: 'Analytics' };
+
 export const dynamic = 'force-dynamic';
 
 interface Analytics {
@@ -55,7 +57,7 @@ export default async function CoachAnalyticsPage() {
             format={(v) => `${Math.round(v)}%`}
             height={180}
           />
-          <p className="mt-5 text-xs leading-relaxed opacity-60">
+          <p className="mt-5 text-xs leading-relaxed text-muted">
             Adherence below 70% for two weeks running is the strongest predictor of a client leaving. It is
             almost never a motivation problem — it is a plan that stopped fitting their week.
           </p>
@@ -74,7 +76,7 @@ export default async function CoachAnalyticsPage() {
       <div className="mt-6">
         <Card>
           <p className="eyebrow mb-5">Weekly breakdown</p>
-          <div className="scroll-x">
+          <div className="scroll-x" tabIndex={0}>
             <table className="w-full min-w-[520px] text-sm">
               <caption className="sr-only">Adherence and sessions completed by week</caption>
               <thead>
@@ -90,7 +92,7 @@ export default async function CoachAnalyticsPage() {
                     <th scope="row" className="py-3 text-left font-normal opacity-75">{week.weekStart}</th>
                     <td className="py-3 text-right tabular-nums">{week.sessions}</td>
                     <td className="py-3 text-right tabular-nums">
-                      <span className={week.adherencePercent >= 80 ? 'text-signal-good' : week.adherencePercent >= 60 ? '' : 'text-signal-warn'}>
+                      <span className={week.adherencePercent >= 80 ? 'text-status-good' : week.adherencePercent >= 60 ? '' : 'text-status-warn'}>
                         {week.adherencePercent}%
                       </span>
                     </td>

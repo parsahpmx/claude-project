@@ -5,6 +5,8 @@ import { EquipmentPicker } from '@/components/app/equipment-picker';
 import { apiFetch, apiPublic } from '@/lib/api';
 import type { MemberProfile, Program } from '@/lib/types';
 
+export const metadata = { title: 'My equipment' };
+
 export const dynamic = 'force-dynamic';
 
 /** "Full gym" implies the individual items, exactly as the domain expands it. */
@@ -47,7 +49,7 @@ export default async function MemberEquipmentPage() {
             <p className="eyebrow mb-3">Unlocked</p>
             <p className="display text-display-sm text-bone-100">
               {unlocked.length}
-              <span className="text-lg font-normal opacity-45"> of {catalogue.programs.length}</span>
+              <span className="text-lg font-normal text-muted"> of {catalogue.programs.length}</span>
             </p>
             <p className="mt-2 text-sm text-bone-200/60">programmes you can run right now</p>
 
@@ -61,7 +63,7 @@ export default async function MemberEquipmentPage() {
                     className="flex items-center justify-between gap-3 text-sm text-bone-200/80 transition-colors hover:text-bone-100"
                   >
                     <span className="truncate">{program.name}</span>
-                    <span aria-hidden className="shrink-0 text-signal-good">✓</span>
+                    <span aria-hidden className="shrink-0 text-status-good">✓</span>
                   </Link>
                 </li>
               ))}
@@ -88,7 +90,7 @@ export default async function MemberEquipmentPage() {
                   );
                 })}
               </ul>
-              <p className="mt-5 text-xs leading-relaxed opacity-55">
+              <p className="mt-5 text-xs leading-relaxed text-muted">
                 Every product in the store lists exactly which programmes it unlocks, so you can check before
                 you buy rather than after.
               </p>

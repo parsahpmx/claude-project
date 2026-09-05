@@ -3,6 +3,8 @@ import { AppSection, PageHeader } from '@/components/app/page-header';
 import { StartProgramNotice } from '@/components/app/start-program-notice';
 import { Card, ButtonLink } from '@/components/ui/primitives';
 
+export const metadata = { title: 'Get started' };
+
 export const dynamic = 'force-dynamic';
 
 /**
@@ -41,7 +43,7 @@ export default async function OnboardingPage({
               ['It adapts', 'Every logged set changes what comes next. By week three the plan is yours, not a template.'],
             ].map(([title, body], index) => (
               <li key={title} className="flex gap-4">
-                <span aria-hidden className="display text-lg leading-none text-ember">0{index + 1}</span>
+                <span aria-hidden className="display text-lg leading-none text-accent">0{index + 1}</span>
                 <div>
                   <p className="font-medium text-bone-100">{title}</p>
                   <p className="mt-1 text-sm text-bone-200/60">{body}</p>

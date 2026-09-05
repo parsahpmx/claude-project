@@ -6,6 +6,8 @@ import { CheckInResponse } from '@/components/app/check-in-response';
 import { apiFetch } from '@/lib/api';
 import { formatDateLabel, relativeTime } from '@/lib/format';
 
+export const metadata = { title: 'Check-ins' };
+
 export const dynamic = 'force-dynamic';
 
 interface CheckInRow {
@@ -58,7 +60,7 @@ export default async function CoachCheckInsPage() {
                         >
                           {row.member.firstName} {row.member.lastName}
                         </Link>
-                        <p className="mt-0.5 text-xs opacity-50">
+                        <p className="mt-0.5 text-xs text-muted">
                           Week of {formatDateLabel(row.checkIn.weekStart)} · {relativeTime(row.checkIn.submittedAt)}
                         </p>
                       </div>
@@ -67,7 +69,7 @@ export default async function CoachCheckInsPage() {
                   </div>
 
                   <div className="grid gap-px bg-ink-900/8 lg:grid-cols-[1.3fr_1fr]">
-                    <div className="bg-bone-100 p-6">
+                    <div className="light-surface bg-bone-100 p-6">
                       <p className="font-medium">{row.scoring.headline}</p>
 
                       <dl className="mt-5 grid grid-cols-3 gap-4 sm:grid-cols-5">
@@ -94,17 +96,17 @@ export default async function CoachCheckInsPage() {
                       </div>
                     </div>
 
-                    <div className="bg-bone-100 p-6">
+                    <div className="light-surface bg-bone-100 p-6">
                       <p className="eyebrow mb-4">Open with</p>
                       {row.scoring.coachPrompts.length === 0 ? (
-                        <p className="text-sm opacity-60">
+                        <p className="text-sm text-muted">
                           Nothing flagged. A short acknowledgement and one thing to focus on is enough.
                         </p>
                       ) : (
                         <ol className="space-y-3">
                           {row.scoring.coachPrompts.map((prompt, index) => (
                             <li key={prompt} className="flex gap-3 text-sm">
-                              <span aria-hidden className="shrink-0 tabular-nums text-ember">
+                              <span aria-hidden className="shrink-0 tabular-nums text-accent">
                                 {index + 1}.
                               </span>
                               <span className="opacity-80">{prompt}</span>
@@ -138,17 +140,17 @@ function Score({ label, value, inverted }: { label: string; value: number; inver
   const bad = inverted ? value >= 4 : value <= 2;
   return (
     <div>
-      <dt className="text-[0.625rem] uppercase tracking-[0.12em] opacity-45">{label}</dt>
-      <dd className={`mt-1 text-sm font-semibold tabular-nums ${bad ? 'text-signal-warn' : ''}`}>
-        {value}<span className="font-normal opacity-40">/5</span>
+      <dt className="text-[0.625rem] uppercase tracking-[0.12em] text-muted">{label}</dt>
+      <dd className={`mt-1 text-sm font-semibold tabular-nums ${bad ? 'text-status-warn' : ''}`}>
+        {value}<span className="font-normal text-muted">/5</span>
       </dd>
     </div>
   );
 }
 
 function bandTone(band: string): string {
-  if (band === 'thriving') return 'bg-signal-good/15 text-signal-good';
-  if (band === 'on-track') return 'bg-ember/12 text-ember-600';
-  if (band === 'strained') return 'bg-signal-warn/15 text-signal-warn';
-  return 'bg-signal-bad/12 text-signal-bad';
+  if (band === 'thriving') return 'bg-signal-good/15 text-status-good';
+  if (band === 'on-track') return 'accent-tint bg-ember/12 text-chip-accent';
+  if (band === 'strained') return 'bg-signal-warn/15 text-status-warn';
+  return 'bg-signal-bad/12 text-status-bad';
 }

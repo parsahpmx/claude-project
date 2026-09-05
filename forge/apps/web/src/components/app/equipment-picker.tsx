@@ -76,7 +76,7 @@ export function EquipmentPicker({ owned }: { owned: string[] }) {
                 className={clsx(
                   'flex cursor-pointer items-start gap-3 rounded-card border p-4 transition-all duration-200',
                   active
-                    ? 'border-ember bg-ember/[0.06]'
+                    ? 'accent-tint border-ember bg-ember/[0.06]'
                     : implied
                       ? 'border-signal-good/25 bg-signal-good/[0.04]'
                       : 'border-ink-900/12 hover:border-ink-900/35',
@@ -93,9 +93,9 @@ export function EquipmentPicker({ owned }: { owned: string[] }) {
                   className={clsx(
                     'mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-[4px] border text-[0.625rem]',
                     active
-                      ? 'border-ember bg-ember text-bone-100'
+                      ? 'border-ember bg-ember-600 text-bone-100'
                       : implied
-                        ? 'border-signal-good/40 text-signal-good'
+                        ? 'border-signal-good/40 text-status-good'
                         : 'border-ink-900/25',
                   )}
                 >
@@ -103,7 +103,7 @@ export function EquipmentPicker({ owned }: { owned: string[] }) {
                 </span>
                 <span>
                   <span className="block text-sm font-medium">{item.label}</span>
-                  <span className="mt-0.5 block text-xs opacity-55">
+                  <span className="mt-0.5 block text-xs text-muted">
                     {implied ? 'Included by Full Gym' : item.note}
                   </span>
                 </span>

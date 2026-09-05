@@ -6,6 +6,8 @@ import { EmptyState } from '@/components/ui/feedback';
 import { apiFetchOptional } from '@/lib/api';
 import { formatCents, relativeTime, formatDateTime } from '@/lib/format';
 
+export const metadata = { title: 'Coach overview' };
+
 export const dynamic = 'force-dynamic';
 
 interface Overview {
@@ -73,7 +75,7 @@ export default async function CoachOverviewPage() {
                     {formatCents(data.workload.activeClients * data.coach.monthlyPriceCents)}
                   </p>
                 </div>
-                <Link href="/coach/payments" className="text-xs font-semibold uppercase tracking-[0.08em] text-ember">
+                <Link href="/coach/payments" className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
                   Payments →
                 </Link>
               </div>
@@ -84,7 +86,7 @@ export default async function CoachOverviewPage() {
         <Card padded={false}>
           <div className="flex items-center justify-between gap-4 border-b border-ink-900/10 p-5">
             <p className="eyebrow">Needs attention</p>
-            <Link href="/coach/check-ins" className="text-xs font-semibold uppercase tracking-[0.08em] text-ember">
+            <Link href="/coach/check-ins" className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
               All check-ins →
             </Link>
           </div>
@@ -109,13 +111,13 @@ export default async function CoachOverviewPage() {
                       <div className="flex items-center gap-4">
                         <span
                           aria-hidden
-                          className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
+                          className="dark-surface grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
                         >
                           {entry.member.firstName.charAt(0)}{entry.member.lastName.charAt(0)}
                         </span>
                         <div>
                           <p className="font-medium">{entry.member.firstName} {entry.member.lastName}</p>
-                          <p className="mt-0.5 text-xs opacity-50">
+                          <p className="mt-0.5 text-xs text-muted">
                             Score {entry.checkIn.score} · {relativeTime(entry.checkIn.submittedAt)}
                           </p>
                         </div>
@@ -158,18 +160,18 @@ export default async function CoachOverviewPage() {
                     <p className="font-medium">
                       {entry.member.firstName} {entry.member.lastName}
                     </p>
-                    <p className="mt-0.5 text-xs capitalize opacity-50">
+                    <p className="mt-0.5 text-xs capitalize text-muted">
                       {entry.booking.kind.replace(/-/g, ' ')} · {entry.booking.durationMinutes} min
                     </p>
                     {entry.booking.agenda && (
-                      <p className="mt-2 max-w-prose text-xs opacity-65">{entry.booking.agenda}</p>
+                      <p className="mt-2 max-w-prose text-xs text-muted">{entry.booking.agenda}</p>
                     )}
                   </div>
                   <div className="text-right">
                     <p className="text-sm tabular-nums">
                       {formatDateTime(entry.booking.startsAt)}
                     </p>
-                    <Link href="/coach/calendar" className="mt-1 inline-block text-xs font-semibold uppercase tracking-[0.08em] text-ember">
+                    <Link href="/coach/calendar" className="mt-1 inline-block text-xs font-semibold uppercase tracking-[0.08em] text-accent">
                       Join call →
                     </Link>
                   </div>

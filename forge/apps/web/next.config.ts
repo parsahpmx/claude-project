@@ -1,6 +1,13 @@
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 import type { NextConfig } from 'next';
 
 const API_ORIGIN = process.env.FORGE_API_ORIGIN ?? 'http://localhost:4000';
+
+// FORGE lives in a subdirectory of a larger repository, so Next sees two
+// lockfiles and guesses at the workspace root. Naming it removes the guess —
+// and the build warning that came with it.
+const WORKSPACE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 
 /**
  * The browser and the server both talk to the API at a same-origin `/api`
@@ -11,6 +18,7 @@ const API_ORIGIN = process.env.FORGE_API_ORIGIN ?? 'http://localhost:4000';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  outputFileTracingRoot: WORKSPACE_ROOT,
   async rewrites() {
     return [{ source: '/api/:path*', destination: `${API_ORIGIN}/:path*` }];
   },

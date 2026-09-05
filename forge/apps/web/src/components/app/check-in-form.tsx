@@ -81,7 +81,7 @@ export function CheckInForm({ weekStart }: { weekStart: string }) {
                 className={clsx(
                   'min-h-[48px] flex-1 rounded-[8px] border text-sm font-semibold tabular-nums transition-all duration-200',
                   scores[scale.key] === value
-                    ? 'border-ember bg-ember text-bone-100'
+                    ? 'border-ember bg-ember-600 text-bone-100'
                     : 'border-ink-900/15 hover:border-ink-900/40',
                 )}
               >
@@ -89,7 +89,7 @@ export function CheckInForm({ weekStart }: { weekStart: string }) {
               </button>
             ))}
           </div>
-          <div className="mt-1.5 flex justify-between text-[0.625rem] opacity-45">
+          <div className="mt-1.5 flex justify-between text-[0.625rem] text-muted">
             <span>{scale.low}</span>
             <span>{scale.high}</span>
           </div>

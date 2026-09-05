@@ -143,7 +143,7 @@ export function CommunityFeed({
                 <div className="flex items-start gap-4">
                   <span
                     aria-hidden
-                    className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
+                    className="dark-surface grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
                   >
                     {post.author.firstName.charAt(0)}{post.author.lastName.charAt(0)}
                   </span>
@@ -157,11 +157,11 @@ export function CommunityFeed({
                       {post.group && (
                         <>
                           <span aria-hidden className="opacity-30">·</span>
-                          <span className="opacity-55">{post.group.name}</span>
+                          <span className="text-muted">{post.group.name}</span>
                         </>
                       )}
                       <span aria-hidden className="opacity-30">·</span>
-                      <span className="text-xs opacity-45"><TimeAgo iso={post.createdAt} /></span>
+                      <span className="text-xs text-muted"><TimeAgo iso={post.createdAt} /></span>
                     </div>
 
                     {post.kind === 'personal-record' && <div className="mt-3"><Badge>Personal record</Badge></div>}
@@ -176,14 +176,14 @@ export function CommunityFeed({
                         aria-pressed={post.likedByViewer}
                         className={clsx(
                           'flex min-h-[36px] items-center gap-1.5 rounded-pill px-3 transition-colors',
-                          post.likedByViewer ? 'text-ember' : 'opacity-55 hover:opacity-100',
+                          post.likedByViewer ? 'text-accent' : 'text-muted hover:text-ink-900',
                         )}
                       >
                         <span aria-hidden>{post.likedByViewer ? '♥' : '♡'}</span>
                         {post.likeCount}
                         <span className="sr-only">likes</span>
                       </button>
-                      <span className="flex items-center gap-1.5 opacity-55">
+                      <span className="flex items-center gap-1.5 text-muted">
                         <span aria-hidden>💬</span> {post.commentCount}
                       </span>
                       <button
@@ -192,7 +192,7 @@ export function CommunityFeed({
                         aria-pressed={post.savedByViewer}
                         className={clsx(
                           'flex min-h-[36px] items-center gap-1.5 rounded-pill px-3 transition-colors',
-                          post.savedByViewer ? 'text-ember' : 'opacity-55 hover:opacity-100',
+                          post.savedByViewer ? 'text-accent' : 'text-muted hover:text-ink-900',
                         )}
                       >
                         <span aria-hidden>{post.savedByViewer ? '★' : '☆'}</span>
@@ -213,6 +213,6 @@ export function CommunityFeed({
 function chipClass(active: boolean): string {
   return clsx(
     'min-h-[40px] rounded-pill border px-4 text-xs font-medium transition-all duration-200',
-    active ? 'border-ink-900 bg-ink-900 text-bone-100' : 'border-ink-900/15 hover:border-ink-900/40',
+    active ? 'dark-surface border-ink-900 bg-ink-900 text-bone-100' : 'border-ink-900/15 hover:border-ink-900/40',
   );
 }

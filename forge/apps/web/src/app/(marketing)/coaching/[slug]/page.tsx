@@ -28,6 +28,20 @@ interface CoachDetail {
 /** Availability is illustrative in the prototype; bookings are real. */
 const SLOTS = ['Mon 07:00', 'Mon 18:00', 'Tue 12:30', 'Wed 07:00', 'Thu 18:00', 'Thu 19:30', 'Fri 08:00', 'Sat 09:00'];
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  try {
+    const { coach } = await apiPublic<CoachDetail>(`/v1/catalog/coaches/${slug}`);
+    return {
+      title: `${coach.firstName} ${coach.lastName}`,
+      description: coach.headline,
+    };
+  } catch {
+    // The page renders the 404; metadata must not throw a second time.
+    return { title: 'Coach' };
+  }
+}
+
 export default async function CoachProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
@@ -61,7 +75,7 @@ export default async function CoachProfilePage({ params }: { params: Promise<{ s
               <p className="mt-4 text-lg text-bone-200/75">{coach.headline}</p>
 
               <div className="mt-7 flex flex-wrap items-center gap-x-8 gap-y-4">
-                <Stat label="Rating" value={<span><span aria-hidden className="text-ember">★</span> {formatRating(coach.ratingTenths)}</span>} hint={`${coach.reviewCount} reviews`} tone="dark" />
+                <Stat label="Rating" value={<span><span aria-hidden className="text-accent">★</span> {formatRating(coach.ratingTenths)}</span>} hint={`${coach.reviewCount} reviews`} tone="dark" />
                 <Stat label="Clients" value={coach.clientCount} hint="coached to date" tone="dark" />
                 <Stat label="Experience" value={`${coach.yearsExperience}y`} hint="coaching" tone="dark" />
                 <Stat
@@ -108,8 +122,8 @@ export default async function CoachProfilePage({ params }: { params: Promise<{ s
               <p className="eyebrow mb-4">Certifications</p>
               <ul className="grid gap-3 sm:grid-cols-2">
                 {coach.certifications.map((certification) => (
-                  <li key={certification} className="flex items-center gap-3 rounded-[8px] border border-ink-900/10 bg-bone-100 px-4 py-3 text-sm">
-                    <span aria-hidden className="text-ember">✓</span>
+                  <li key={certification} className="light-surface flex items-center gap-3 rounded-[8px] border border-ink-900/10 bg-bone-100 px-4 py-3 text-sm">
+                    <span aria-hidden className="text-accent">✓</span>
                     {certification}
                   </li>
                 ))}
@@ -144,7 +158,7 @@ export default async function CoachProfilePage({ params }: { params: Promise<{ s
               <div className="mt-6">
                 <ButtonLink href={`/signup?coach=${coach.slug}`} block size="lg">Book Session</ButtonLink>
               </div>
-              <p className="mt-3 text-center text-xs opacity-50">Cancel or change coach at any time.</p>
+              <p className="mt-3 text-center text-xs text-muted">Cancel or change coach at any time.</p>
             </Card>
 
             <Card>
@@ -156,8 +170,8 @@ export default async function CoachProfilePage({ params }: { params: Promise<{ s
                       key={slot}
                       className={`rounded-[6px] border px-3 py-2.5 text-center text-xs ${
                         index < coach.availableSlotsThisWeek
-                          ? 'border-signal-good/30 bg-signal-good/10 text-signal-good'
-                          : 'border-ink-900/10 text-smoke-400 line-through'
+                          ? 'border-signal-good/30 bg-signal-good/10 text-status-good'
+                          : 'border-ink-900/10 text-muted line-through'
                       }`}
                     >
                       {slot}
@@ -165,7 +179,7 @@ export default async function CoachProfilePage({ params }: { params: Promise<{ s
                   ))}
                 </div>
               ) : (
-                <p className="text-sm opacity-65">
+                <p className="text-sm text-muted">
                   Fully booked this week. Join the waitlist and you will be offered the next opening —
                   typically within a fortnight.
                 </p>
@@ -189,12 +203,12 @@ export default async function CoachProfilePage({ params }: { params: Promise<{ s
                 <ul className="mt-4 space-y-2">
                   {story.outcomes.map((outcome) => (
                     <li key={outcome} className="flex gap-3 text-sm">
-                      <span aria-hidden className="text-ember">→</span>
-                      <span className="opacity-75">{outcome}</span>
+                      <span aria-hidden className="text-accent">→</span>
+                      <span className="text-muted">{outcome}</span>
                     </li>
                   ))}
                 </ul>
-                <p className="mt-4 text-xs opacity-50">{story.consistency}</p>
+                <p className="mt-4 text-xs text-muted">{story.consistency}</p>
               </Card>
             ))}
           </div>
@@ -207,12 +221,12 @@ export default async function CoachProfilePage({ params }: { params: Promise<{ s
           <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {reviews.map((review, index) => (
               <Card key={index}>
-                <p aria-label={`${review.rating} out of 5`} className="text-ember">
+                <p aria-label={`${review.rating} out of 5`} className="text-accent">
                   {'★'.repeat(review.rating)}
                   <span className="opacity-25">{'★'.repeat(5 - review.rating)}</span>
                 </p>
                 <p className="mt-4 text-sm leading-relaxed opacity-80">&ldquo;{review.body}&rdquo;</p>
-                <p className="mt-5 text-xs opacity-50">{review.firstName}</p>
+                <p className="mt-5 text-xs text-muted">{review.firstName}</p>
               </Card>
             ))}
           </div>
@@ -235,10 +249,10 @@ function PriceRow({
   label, price, note, highlight,
 }: { label: string; price: string; note: string; highlight?: boolean }) {
   return (
-    <li className={`flex items-start justify-between gap-4 rounded-[8px] px-4 py-3.5 ${highlight ? 'bg-ember/[0.07] ring-1 ring-ember/20' : 'bg-ink-900/[0.03]'}`}>
+    <li className={`flex items-start justify-between gap-4 rounded-[8px] px-4 py-3.5 ${highlight ? 'accent-tint bg-ember/[0.07] ring-1 ring-ember/20' : 'bg-ink-900/[0.03]'}`}>
       <div>
         <p className="text-sm font-medium">{label}</p>
-        <p className="mt-0.5 text-xs opacity-55">{note}</p>
+        <p className="mt-0.5 text-xs text-muted">{note}</p>
       </div>
       <p className="shrink-0 font-semibold tabular-nums">{price}</p>
     </li>

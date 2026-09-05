@@ -39,6 +39,20 @@ const FAQ = [
   },
 ];
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  try {
+    const { program } = await apiPublic<ProgramDetail>(`/v1/catalog/programs/${slug}`);
+    return {
+      title: program.name,
+      description: `${program.tagline} ${program.weeks} weeks, ${program.sessionsPerWeek} sessions a week.`,
+    };
+  } catch {
+    // The page itself renders the 404; metadata must not throw a second time.
+    return { title: 'Programme' };
+  }
+}
+
 export default async function ProgramDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
@@ -98,7 +112,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
               <ul className="space-y-4">
                 {program.outcomes.map((outcome) => (
                   <li key={outcome} className="flex gap-4 border-b border-ink-900/8 pb-4 text-base">
-                    <span aria-hidden className="mt-1 text-ember">→</span>
+                    <span aria-hidden className="mt-1 text-accent">→</span>
                     <span className="opacity-80">{outcome}</span>
                   </li>
                 ))}
@@ -110,8 +124,8 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
               <ul className="space-y-3">
                 {program.whoItIsFor.map((line) => (
                   <li key={line} className="flex gap-3 text-sm">
-                    <span aria-hidden className="text-ember">✓</span>
-                    <span className="opacity-75">{line}</span>
+                    <span aria-hidden className="text-accent">✓</span>
+                    <span className="text-muted">{line}</span>
                   </li>
                 ))}
               </ul>
@@ -122,14 +136,14 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
             <Card>
               <p className="eyebrow mb-5">At a glance</p>
               <dl className="grid grid-cols-2 gap-5">
-                <Stat label="Duration" value={`${program.weeks}w`} />
-                <Stat label="Per week" value={program.sessionsPerWeek} />
-                <Stat label="Session" value={formatMinutes(program.sessionMinutes)} />
-                <Stat label="Members" value={`${Math.round(program.memberCount / 1000)}k`} />
+                <Stat inList label="Duration" value={`${program.weeks}w`} />
+                <Stat inList label="Per week" value={program.sessionsPerWeek} />
+                <Stat inList label="Session" value={formatMinutes(program.sessionMinutes)} />
+                <Stat inList label="Members" value={`${Math.round(program.memberCount / 1000)}k`} />
               </dl>
               <div className="rule my-6" />
               <p className="eyebrow mb-3">Progression model</p>
-              <p className="text-sm capitalize opacity-75">{program.progression.replace(/-/g, ' ')}</p>
+              <p className="text-sm capitalize text-muted">{program.progression.replace(/-/g, ' ')}</p>
             </Card>
 
             <Card>
@@ -139,7 +153,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                   <li key={item}><Chip>{item.replace(/-/g, ' ')}</Chip></li>
                 ))}
               </ul>
-              <p className="mt-4 text-xs leading-relaxed opacity-55">
+              <p className="mt-4 text-xs leading-relaxed text-muted">
                 Missing something? Most movements have substitutes — FORGE checks your setup before the first
                 session and tells you exactly what it swapped.
               </p>
@@ -154,9 +168,9 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                   </div>
                   <div>
                     <p className="display text-lg leading-none">{coach.firstName} {coach.lastName}</p>
-                    <p className="mt-1.5 text-xs opacity-60">{coach.headline}</p>
+                    <p className="mt-1.5 text-xs text-muted">{coach.headline}</p>
                     <p className="mt-2 text-xs">
-                      <span aria-hidden className="text-ember">★</span> {formatRating(coach.ratingTenths)} ·{' '}
+                      <span aria-hidden className="text-accent">★</span> {formatRating(coach.ratingTenths)} ·{' '}
                       {coach.yearsExperience} years
                     </p>
                   </div>
@@ -182,11 +196,11 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                   {session.kind}
                 </Chip>
               </div>
-              <p className="mt-3 text-xs opacity-60">{session.focus} · {formatMinutes(session.minutes)}</p>
+              <p className="mt-3 text-xs text-muted">{session.focus} · {formatMinutes(session.minutes)}</p>
               <ul className="mt-4 flex flex-wrap gap-1.5">
                 {session.patterns.map((pattern) => (
                   <li key={pattern}>
-                    <span className="rounded-[4px] bg-ink-900/[0.05] px-2 py-1 text-[0.625rem] uppercase tracking-[0.08em] opacity-70">
+                    <span className="rounded-[4px] bg-ink-900/[0.05] px-2 py-1 text-[0.625rem] uppercase tracking-[0.08em] text-muted">
                       {pattern.replace(/-/g, ' ')}
                     </span>
                   </li>
@@ -204,12 +218,12 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
           <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {reviews.map((review, index) => (
               <Card key={index}>
-                <p aria-label={`${review.rating} out of 5`} className="text-ember">
+                <p aria-label={`${review.rating} out of 5`} className="text-accent">
                   {'★'.repeat(review.rating)}
                   <span className="opacity-25">{'★'.repeat(5 - review.rating)}</span>
                 </p>
                 <p className="mt-4 text-sm leading-relaxed opacity-80">&ldquo;{review.body}&rdquo;</p>
-                <p className="mt-5 text-xs opacity-50">{review.firstName}</p>
+                <p className="mt-5 text-xs text-muted">{review.firstName}</p>
               </Card>
             ))}
           </div>
@@ -221,12 +235,12 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
         <SectionHeading eyebrow="Questions" title="BEFORE YOU START." />
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
           {FAQ.map((entry) => (
-            <details key={entry.q} className="group rounded-card border border-ink-900/10 bg-bone-100 p-6">
+            <details key={entry.q} className="light-surface group rounded-card border border-ink-900/10 bg-bone-100 p-6">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold">
                 {entry.q}
-                <span aria-hidden className="text-lg opacity-40 transition-transform group-open:rotate-45">+</span>
+                <span aria-hidden className="text-lg text-muted transition-transform group-open:rotate-45">+</span>
               </summary>
-              <p className="mt-4 text-sm leading-relaxed opacity-70">{entry.a}</p>
+              <p className="mt-4 text-sm leading-relaxed text-muted">{entry.a}</p>
             </details>
           ))}
         </div>

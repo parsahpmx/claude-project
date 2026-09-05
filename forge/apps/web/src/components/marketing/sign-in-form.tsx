@@ -60,7 +60,7 @@ export function SignInForm() {
     <div className="space-y-6">
       {error && <ErrorState title="Sign in failed" body={error} />}
 
-      <form onSubmit={submit} noValidate className="space-y-5 [&_input]:border-bone-200/20 [&_input]:bg-ink-800 [&_input]:text-bone-100 [&_label]:text-bone-200/70">
+      <form onSubmit={submit} noValidate className="dark-surface space-y-5 [&_input]:border-bone-200/20 [&_input]:bg-ink-800 [&_input]:text-bone-100 [&_label]:text-bone-200/70">
         <TextInput
           label="Email"
           type="email"
@@ -84,7 +84,7 @@ export function SignInForm() {
         </Button>
       </form>
 
-      <div className="rounded-card border border-bone-200/12 bg-ink-800 p-5">
+      <div className="dark-surface rounded-card border border-bone-200/12 bg-ink-800 p-5">
         <p className="eyebrow mb-3">Demo accounts</p>
         <div className="flex flex-wrap gap-2">
           {DEMO_ACCOUNTS.map((account) => (
@@ -98,7 +98,7 @@ export function SignInForm() {
             </button>
           ))}
         </div>
-        <p className="mt-3 text-[0.6875rem] text-bone-200/45">
+        <p className="mt-3 text-[0.6875rem] text-muted">
           Password for both: <code className="font-mono">{DEMO_PASSWORD}</code>
         </p>
       </div>

@@ -63,7 +63,7 @@ export function ProgramFilters({
 
   return (
     <div className="grid gap-10 lg:grid-cols-[280px_1fr] lg:gap-14">
-      <aside className="lg:sticky lg:top-28 lg:self-start">
+      <aside aria-label="Programme filters" className="lg:sticky lg:top-28 lg:self-start">
         <div className="space-y-7">
           <SearchInput
             value={search}
@@ -102,11 +102,14 @@ export function ProgramFilters({
 
       <div>
         <div className="mb-8 flex items-baseline justify-between gap-4">
-          <p className="text-sm opacity-60">
+          {/* The result count is the heading for this region: it names what
+              follows and lets a screen reader jump from the page title straight
+              to the results, which also puts the card titles at the right depth. */}
+          <h2 className="text-sm font-normal text-muted" aria-live="polite">
             <span className="font-semibold text-ink-900">{results.length}</span> programme
             {results.length === 1 ? '' : 's'}
             {activeCount > 0 && ' matching your filters'}
-          </p>
+          </h2>
         </div>
 
         {results.length === 0 ? (

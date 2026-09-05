@@ -6,6 +6,8 @@ import { JoinChallengeButton } from '@/components/app/join-challenge';
 import { apiFetch } from '@/lib/api';
 import { formatNumber } from '@/lib/format';
 
+export const metadata = { title: 'Challenges' };
+
 export const dynamic = 'force-dynamic';
 
 interface ChallengeBoard {
@@ -41,11 +43,11 @@ export default async function ChallengesPage() {
         {challenges.map((board) => (
           <Card key={board.challenge.slug} padded={false}>
             <div className="grid gap-px bg-ink-900/8 lg:grid-cols-[1.4fr_1fr]">
-              <div className="bg-bone-100 p-6 sm:p-8">
+              <div className="light-surface bg-bone-100 p-6 sm:p-8">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <h2 className="display text-display-sm">{board.challenge.name}</h2>
-                    <p className="mt-2 text-sm opacity-65">{board.challenge.tagline}</p>
+                    <p className="mt-2 text-sm text-muted">{board.challenge.tagline}</p>
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <Badge earned={board.progress?.percent === 100}>{board.challenge.badge}</Badge>
@@ -58,7 +60,7 @@ export default async function ChallengesPage() {
                     <div className="flex items-baseline justify-between gap-4">
                       <p className="display text-2xl tabular-nums">
                         {formatNumber(board.progress.value)}
-                        <span className="text-base font-normal opacity-40"> / {formatNumber(board.progress.target)}</span>
+                        <span className="text-base font-normal text-muted"> / {formatNumber(board.progress.target)}</span>
                       </p>
                       <Chip tone={board.progress.onTrack ? 'good' : 'warn'} size="sm">
                         {board.progress.onTrack ? 'On track' : 'Behind pace'}
@@ -71,8 +73,8 @@ export default async function ChallengesPage() {
                         tone={board.progress.onTrack ? 'good' : 'warn'}
                       />
                     </div>
-                    <p className="mt-4 text-sm leading-relaxed opacity-70">{board.progress.message}</p>
-                    <p className="mt-2 text-xs opacity-45">
+                    <p className="mt-4 text-sm leading-relaxed text-muted">{board.progress.message}</p>
+                    <p className="mt-2 text-xs text-muted">
                       {board.progress.daysRemaining} days remaining
                       {board.myRank ? ` · currently ranked #${board.myRank}` : ''}
                     </p>
@@ -81,8 +83,8 @@ export default async function ChallengesPage() {
                   <div className="mt-7">
                     <ul className="space-y-2">
                       {board.challenge.rules.map((rule) => (
-                        <li key={rule} className="flex gap-2.5 text-sm opacity-70">
-                          <span aria-hidden className="text-ember">·</span>
+                        <li key={rule} className="flex gap-2.5 text-sm text-muted">
+                          <span aria-hidden className="text-accent">·</span>
                           {rule}
                         </li>
                       ))}
@@ -92,16 +94,16 @@ export default async function ChallengesPage() {
 
                 <div className="mt-7 flex flex-wrap items-center gap-4">
                   <JoinChallengeButton slug={board.challenge.slug} joined={board.joined} />
-                  <span className="text-xs opacity-50">
+                  <span className="text-xs text-muted">
                     {formatNumber(board.participants)} members taking part
                   </span>
                 </div>
               </div>
 
-              <div className="bg-bone-100 p-6 sm:p-8">
+              <div className="light-surface bg-bone-100 p-6 sm:p-8">
                 <p className="eyebrow mb-5">Leaderboard</p>
                 {board.leaderboard.length === 0 ? (
-                  <p className="text-sm opacity-55">No public entries yet.</p>
+                  <p className="text-sm text-muted">No public entries yet.</p>
                 ) : (
                   <ol className="space-y-3">
                     {board.leaderboard.map((row) => (
@@ -109,19 +111,19 @@ export default async function ChallengesPage() {
                         <span
                           aria-hidden
                           className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold tabular-nums ${
-                            row.rank <= 3 ? 'bg-ember/12 text-ember-600' : 'bg-ink-900/[0.05] opacity-60'
+                            row.rank <= 3 ? 'accent-tint bg-ember/12 text-chip-accent' : 'bg-ink-900/[0.05] opacity-60'
                           }`}
                         >
                           {row.rank}
                         </span>
                         <span className="min-w-0 flex-1 truncate text-sm">
                           {row.displayName}
-                          {row.isFriend && <span className="ml-2 text-[0.625rem] uppercase tracking-[0.1em] text-ember">Following</span>}
+                          {row.isFriend && <span className="ml-2 text-[0.625rem] uppercase tracking-[0.1em] text-accent">Following</span>}
                         </span>
-                        <span className="shrink-0 text-sm tabular-nums opacity-70">
+                        <span className="shrink-0 text-sm tabular-nums text-muted">
                           {formatNumber(row.value)}
                         </span>
-                        {row.completed && <span aria-hidden className="text-signal-good">✓</span>}
+                        {row.completed && <span aria-hidden className="text-status-good">✓</span>}
                       </li>
                     ))}
                   </ol>

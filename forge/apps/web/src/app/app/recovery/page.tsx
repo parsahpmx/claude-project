@@ -5,6 +5,8 @@ import { LogRecoveryButton } from '@/components/app/log-recovery';
 import { apiFetch } from '@/lib/api';
 import { formatMinutes, formatDateLabel } from '@/lib/format';
 
+export const metadata = { title: 'Recovery' };
+
 export const dynamic = 'force-dynamic';
 
 interface RecoveryResponse {
@@ -53,13 +55,13 @@ export default async function RecoveryPage() {
           <p className="display text-2xl tabular-nums text-bone-100">
             {formatMinutes(recovery.minutesThisWeek)}
           </p>
-          <p className="mt-1 text-xs text-bone-200/50">of recovery work logged</p>
+          <p className="mt-1 text-xs text-muted">of recovery work logged</p>
         </Card>
 
         <Card>
           <p className="eyebrow mb-5">What is driving your score</p>
           {dashboard.readiness.components.length === 0 ? (
-            <p className="text-sm opacity-60">
+            <p className="text-sm text-muted">
               Connect a wearable or log a morning check-in to see the breakdown.
             </p>
           ) : (
@@ -68,9 +70,9 @@ export default async function RecoveryPage() {
                 <li key={component.key}>
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="font-medium">{component.label}</span>
-                    <span className="text-sm tabular-nums opacity-60">{Math.round(component.score)}</span>
+                    <span className="text-sm tabular-nums text-muted">{Math.round(component.score)}</span>
                   </div>
-                  <p className="mt-1 text-xs opacity-50">{component.detail}</p>
+                  <p className="mt-1 text-xs text-muted">{component.detail}</p>
                   <div className="mt-2 h-1 overflow-hidden rounded-pill bg-ink-900/10">
                     <div
                       className={`h-full rounded-pill ${component.score >= 70 ? 'bg-signal-good' : 'bg-signal-warn'}`}
@@ -100,14 +102,14 @@ export default async function RecoveryPage() {
                 <div className="flex items-center gap-2">
                   <p className="eyebrow">{session.category}</p>
                   <span aria-hidden className="h-1 w-1 rounded-full bg-current opacity-30" />
-                  <p className="text-[0.6875rem] opacity-55">{formatMinutes(session.minutes)}</p>
+                  <p className="text-[0.6875rem] text-muted">{formatMinutes(session.minutes)}</p>
                 </div>
                 <h3 className="mt-2 font-semibold leading-snug">{session.name}</h3>
-                <p className="mt-2 text-sm leading-relaxed opacity-65">{session.description}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted">{session.description}</p>
                 <div className="mt-5 flex items-center justify-between gap-3">
                   <LogRecoveryButton slug={session.slug} minutes={session.minutes} />
                   {session.hasCaptions && (
-                    <span className="text-[0.625rem] uppercase tracking-[0.1em] opacity-40">
+                    <span className="text-[0.625rem] uppercase tracking-[0.1em] text-muted">
                       <span aria-hidden>CC</span> Captions
                     </span>
                   )}
@@ -127,12 +129,12 @@ export default async function RecoveryPage() {
                 <li key={entry.log.id} className="flex items-center justify-between gap-4 p-5">
                   <div>
                     <p className="font-medium">{entry.session?.name ?? 'Recovery session'}</p>
-                    <p className="mt-0.5 text-xs opacity-50">
+                    <p className="mt-0.5 text-xs text-muted">
                       {formatDateLabel(entry.log.date)}
                       {entry.session && ` · ${entry.session.category}`}
                     </p>
                   </div>
-                  <span className="text-sm tabular-nums opacity-60">{formatMinutes(entry.log.minutes)}</span>
+                  <span className="text-sm tabular-nums text-muted">{formatMinutes(entry.log.minutes)}</span>
                 </li>
               ))}
             </ul>

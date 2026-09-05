@@ -51,7 +51,7 @@ export function MarketingHeader() {
     >
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-[6px] focus:bg-ember focus:px-4 focus:py-2 focus:text-sm focus:text-bone-100"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-[6px] focus:bg-ember-600-600 focus:px-4 focus:py-2 focus:text-sm focus:text-bone-100"
       >
         Skip to content
       </a>
@@ -99,7 +99,7 @@ export function MarketingHeader() {
           </Link>
           <Link
             href="/assessment"
-            className="hidden min-h-[44px] items-center rounded-[8px] bg-ember px-5 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-bone-100 transition-all hover:bg-ember-600 sm:inline-flex"
+            className="hidden min-h-[44px] items-center rounded-[8px] bg-ember-600 px-5 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-bone-100 transition-all hover:bg-ember-700 sm:inline-flex"
           >
             Start Free Trial
           </Link>
@@ -133,7 +133,7 @@ export function MarketingHeader() {
               <Link href="/signin" className="flex min-h-[48px] items-center justify-center rounded-[8px] border border-bone-200/20 text-sm text-bone-100">
                 Sign In
               </Link>
-              <Link href="/assessment" className="flex min-h-[48px] items-center justify-center rounded-[8px] bg-ember text-xs font-semibold uppercase tracking-[0.1em] text-bone-100">
+              <Link href="/assessment" className="flex min-h-[48px] items-center justify-center rounded-[8px] bg-ember-600 text-xs font-semibold uppercase tracking-[0.1em] text-bone-100">
                 Start Free Trial
               </Link>
             </li>

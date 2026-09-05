@@ -47,10 +47,10 @@ export default async function EquipmentPage() {
             <a
               key={entry.goal}
               href={`#shop`}
-              className="group rounded-card border border-ink-900/12 bg-bone-100 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lift"
+              className="light-surface group rounded-card border border-ink-900/12 bg-bone-100 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lift"
             >
               <p className="display text-lg leading-tight">{entry.label}</p>
-              <p className="mt-3 text-xs uppercase tracking-[0.1em] text-ember">
+              <p className="mt-3 text-xs uppercase tracking-[0.1em] text-accent">
                 {products.filter((p) => p.goals.includes(entry.goal)).length} products →
               </p>
             </a>

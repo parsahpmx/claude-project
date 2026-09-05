@@ -4,6 +4,8 @@ import { StartProgramNotice } from '@/components/app/start-program-notice';
 import { apiPublic } from '@/lib/api';
 import type { Program } from '@/lib/types';
 
+export const metadata = { title: 'Programmes' };
+
 export const dynamic = 'force-dynamic';
 
 export default async function AppProgramsPage() {

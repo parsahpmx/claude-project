@@ -101,12 +101,12 @@ export function AppShell({
   };
 
   return (
-    <div className="min-h-dvh bg-bone-200">
+    <div className="light-surface min-h-dvh bg-bone-200">
       {/* -------------------------------------------------- desktop sidebar */}
-      <aside className="dark-surface fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col border-r border-bone-200/10 bg-ink-900 text-bone-200 lg:flex">
+      <aside aria-label="Sidebar" className="dark-surface fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col border-r border-bone-200/10 bg-ink-900 text-bone-200 lg:flex">
         <div className="flex h-[72px] items-center px-6">
           <Link href="/" className="display text-xl tracking-[0.08em] text-bone-100">FORGE</Link>
-          {role === 'coach' && <span className="ml-2 text-[0.625rem] uppercase tracking-[0.14em] text-ember">Coach</span>}
+          {role === 'coach' && <span className="ml-2 text-[0.625rem] uppercase tracking-[0.14em] text-accent">Coach</span>}
         </div>
 
         <nav aria-label="Application" className="flex-1 overflow-y-auto px-3 py-4">
@@ -135,13 +135,13 @@ export function AppShell({
           <div className="flex items-center gap-3">
             <span
               aria-hidden
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ember text-xs font-semibold text-bone-100"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ember-600 text-xs font-semibold text-bone-100"
             >
               {user.firstName.charAt(0)}{user.lastName.charAt(0)}
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm text-bone-100">{user.firstName} {user.lastName}</p>
-              <p className="truncate text-[0.6875rem] text-bone-200/45">{user.email}</p>
+              <p className="truncate text-[0.6875rem] text-muted">{user.email}</p>
             </div>
           </div>
           <button
@@ -231,7 +231,7 @@ export function AppShell({
                   aria-current={active ? 'page' : undefined}
                   className={clsx(
                     'flex min-h-[60px] flex-col items-center justify-center gap-1 text-[0.625rem]',
-                    active ? 'text-bone-100' : 'text-bone-200/45',
+                    active ? 'text-bone-100' : 'text-muted',
                   )}
                 >
                   <span aria-hidden className="text-base">{item.glyph}</span>
@@ -245,12 +245,14 @@ export function AppShell({
       </nav>
 
       {primaryAction && (
-        <Link
-          href={primaryAction.href}
-          className="fixed bottom-[86px] right-4 z-40 flex min-h-[52px] items-center rounded-pill bg-ember px-6 text-xs font-semibold uppercase tracking-[0.1em] text-bone-100 shadow-lift lg:hidden"
-        >
-          {primaryAction.label}
-        </Link>
+        <nav aria-label="Primary action" className="lg:hidden">
+          <Link
+            href={primaryAction.href}
+            className="fixed bottom-[86px] right-4 z-40 flex min-h-[52px] items-center rounded-pill bg-ember-600 px-6 text-xs font-semibold uppercase tracking-[0.1em] text-bone-100 shadow-lift"
+          >
+            {primaryAction.label}
+          </Link>
+        </nav>
       )}
     </div>
   );
@@ -266,12 +268,12 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
         active ? 'bg-bone-200/[0.08] text-bone-100' : 'text-bone-200/60 hover:bg-bone-200/[0.04] hover:text-bone-100',
       )}
     >
-      <span aria-hidden className={clsx('w-4 text-center text-xs', active ? 'text-ember' : 'opacity-50')}>
+      <span aria-hidden className={clsx('w-4 text-center text-xs', active ? 'text-accent' : 'opacity-50')}>
         {item.glyph}
       </span>
       <span className="flex-1">{item.label}</span>
       {typeof item.badge === 'number' && item.badge > 0 && (
-        <span className="rounded-pill bg-ember px-1.5 py-0.5 text-[0.625rem] font-semibold tabular-nums text-bone-100">
+        <span className="rounded-pill bg-ember-600 px-1.5 py-0.5 text-[0.625rem] font-semibold tabular-nums text-bone-100">
           {item.badge}
         </span>
       )}

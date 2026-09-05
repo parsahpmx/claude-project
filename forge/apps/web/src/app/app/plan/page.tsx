@@ -8,6 +8,8 @@ import { apiFetch } from '@/lib/api';
 import { formatDateLabel, formatMinutes } from '@/lib/format';
 import type { Phase, Plan, PlanDay, PlanWeek } from '@/lib/types';
 
+export const metadata = { title: 'My plan' };
+
 export const dynamic = 'force-dynamic';
 
 interface PlanResponse {
@@ -88,13 +90,13 @@ export default async function PlanPage() {
                 <p className={`display mt-2 text-xl leading-none ${active ? 'text-bone-100' : ''}`}>
                   {PHASE_LABEL[phase.key]}
                 </p>
-                <p className="mt-2 text-xs opacity-55">
+                <p className="mt-2 text-xs text-muted">
                   Weeks {phase.weekStart}–{phase.weekEnd}
                 </p>
                 <ul className="mt-4 space-y-1.5">
                   {phase.focus.map((item) => (
-                    <li key={item} className="flex gap-2 text-xs opacity-70">
-                      <span aria-hidden className="text-ember">·</span>
+                    <li key={item} className="flex gap-2 text-xs text-muted">
+                      <span aria-hidden className="text-accent">·</span>
                       {item}
                     </li>
                   ))}
@@ -109,7 +111,7 @@ export default async function PlanPage() {
       {/* ------------------------------------------------------ timeline */}
       <div className="mt-12">
         <p className="eyebrow mb-4">The twelve weeks</p>
-        <ol className="scroll-x scrollbar-none flex gap-2 pb-2">
+        <ol className="scroll-x scrollbar-none flex gap-2 pb-2" tabIndex={0}>
           {weeks.map((week) => {
             const done = week.days.filter((d) => d.status === 'completed').length;
             const total = week.days.filter((d) => d.kind !== 'rest').length;
@@ -122,13 +124,13 @@ export default async function PlanPage() {
                       current ? 'bg-ember' : done === total && total > 0 ? 'bg-signal-good' : 'bg-ink-900/12'
                     }`}
                   />
-                  <p className={`mt-2 text-xs font-semibold ${current ? 'text-ember' : 'opacity-60'}`}>
+                  <p className={`mt-2 text-xs font-semibold ${current ? 'text-accent' : 'opacity-60'}`}>
                     W{week.weekNumber}
                   </p>
-                  <p className="mt-0.5 text-[0.625rem] uppercase tracking-[0.1em] opacity-40">
+                  <p className="mt-0.5 text-[0.625rem] uppercase tracking-[0.1em] text-muted">
                     {week.deload ? 'Deload' : PHASE_LABEL[week.phase]}
                   </p>
-                  <p className="mt-1 text-[0.625rem] tabular-nums opacity-45">{done}/{total}</p>
+                  <p className="mt-1 text-[0.625rem] tabular-nums text-muted">{done}/{total}</p>
                 </a>
               </li>
             );
@@ -161,7 +163,7 @@ function WeekCard({ week, current }: { week: PlanWeek; current: boolean }) {
               {week.deload && <Chip tone="warn" size="sm">Deload</Chip>}
               {week.coachCheckIn && <Chip size="sm">Coach check-in</Chip>}
             </div>
-            <p className="mt-2 text-xs opacity-55">
+            <p className="mt-2 text-xs text-muted">
               {formatDateLabel(week.startDate)} – {formatDateLabel(week.endDate)}
             </p>
           </div>
@@ -172,19 +174,19 @@ function WeekCard({ week, current }: { week: PlanWeek; current: boolean }) {
         </div>
 
         <div className="grid gap-px bg-current/10 sm:grid-cols-2">
-          <div className={`p-6 ${current ? 'bg-ink-800' : 'bg-bone-100'}`}>
+          <div className={`p-6 ${current ? 'dark-surface bg-ink-800' : 'light-surface bg-bone-100'}`}>
             <p className="eyebrow mb-2">Nutrition goal</p>
-            <p className="text-sm opacity-75">{week.nutritionGoal}</p>
+            <p className="text-sm text-muted">{week.nutritionGoal}</p>
           </div>
-          <div className={`p-6 ${current ? 'bg-ink-800' : 'bg-bone-100'}`}>
+          <div className={`p-6 ${current ? 'dark-surface bg-ink-800' : 'light-surface bg-bone-100'}`}>
             <p className="eyebrow mb-2">Recovery target</p>
-            <p className="text-sm opacity-75">{week.recoveryTarget}</p>
+            <p className="text-sm text-muted">{week.recoveryTarget}</p>
           </div>
         </div>
 
         {week.milestone && (
-          <div className="border-t border-current/10 bg-ember/[0.07] p-5">
-            <p className="eyebrow mb-1 text-ember-600">Milestone</p>
+          <div className="accent-tint border-t border-current/10 bg-ember/[0.07] p-5">
+            <p className="eyebrow mb-1 text-accent">Milestone</p>
             <p className="text-sm font-medium">{week.milestone}</p>
           </div>
         )}
@@ -209,9 +211,9 @@ function DayRow({ day, dark }: { day: PlanDay; dark: boolean }) {
           aria-hidden
           className={`grid h-10 w-10 shrink-0 place-items-center rounded-[8px] border text-xs ${
             day.status === 'completed'
-              ? 'border-signal-good/40 bg-signal-good/12 text-signal-good'
+              ? 'border-signal-good/40 bg-signal-good/12 text-status-good'
               : day.status === 'skipped'
-                ? 'border-signal-bad/35 bg-signal-bad/10 text-signal-bad'
+                ? 'border-signal-bad/35 bg-signal-bad/10 text-status-bad'
                 : 'border-current/15'
           }`}
         >
@@ -219,8 +221,8 @@ function DayRow({ day, dark }: { day: PlanDay; dark: boolean }) {
         </span>
 
         <div className="min-w-0">
-          <p className={`font-medium ${rest ? 'opacity-50' : ''}`}>{day.title}</p>
-          <p className="mt-0.5 text-xs opacity-50">
+          <p className={`font-medium ${rest ? 'text-muted' : ''}`}>{day.title}</p>
+          <p className="mt-0.5 text-xs text-muted">
             {formatDateLabel(day.date)}
             {!rest && ` · ${day.focus} · ${formatMinutes(day.minutes)}`}
             {day.rescheduledFrom && ` · moved from ${formatDateLabel(day.rescheduledFrom)}`}
@@ -238,7 +240,7 @@ function DayRow({ day, dark }: { day: PlanDay; dark: boolean }) {
               <Link
                 href={`/workout/${day.id}`}
                 className={`min-h-[40px] rounded-[8px] px-4 text-xs font-semibold uppercase leading-[38px] tracking-[0.08em] ${
-                  dark ? 'bg-ember text-bone-100' : 'bg-ink-900 text-bone-100'
+                  dark ? 'bg-ember-600 text-bone-100' : 'dark-surface bg-ink-900 text-bone-100'
                 }`}
               >
                 Start

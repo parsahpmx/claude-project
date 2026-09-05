@@ -96,7 +96,7 @@ export function WorkoutDiscovery() {
 
   return (
     <div className="grid gap-10 lg:grid-cols-[280px_1fr] lg:gap-14">
-      <aside className="space-y-7 lg:sticky lg:top-28 lg:self-start">
+      <aside aria-label="Workout filters" className="space-y-7 lg:sticky lg:top-28 lg:self-start">
         <SearchInput value={search} onChange={setSearch} label="Search workouts" placeholder="Search workouts" />
         <FilterChips
           label="Workout format"
@@ -148,10 +148,11 @@ export function WorkoutDiscovery() {
       </aside>
 
       <div>
-        <p className="mb-8 text-sm opacity-60">
+        {/* Heading for the results region, as on the programme library. */}
+        <h2 className="mb-8 text-sm font-normal text-muted" aria-live="polite">
           <span className="font-semibold text-ink-900">{results.length}</span> workout
           {results.length === 1 ? '' : 's'}
-        </p>
+        </h2>
 
         {results.length === 0 ? (
           <EmptyState

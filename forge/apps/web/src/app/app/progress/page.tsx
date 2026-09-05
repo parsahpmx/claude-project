@@ -5,6 +5,8 @@ import { EmptyState } from '@/components/ui/feedback';
 import { apiFetch } from '@/lib/api';
 import { formatLoad, formatNumber, formatVolume, formatDateLabel } from '@/lib/format';
 
+export const metadata = { title: 'Progress' };
+
 export const dynamic = 'force-dynamic';
 
 interface ProgressResponse {
@@ -50,7 +52,7 @@ export default async function ProgressPage() {
             key={label}
             href={`#${label.toLowerCase()}`}
             className={`min-h-[40px] rounded-pill border px-4 text-xs font-medium leading-[38px] transition-colors ${
-              index === 0 ? 'border-ink-900 bg-ink-900 text-bone-100' : 'border-ink-900/15 hover:border-ink-900/40'
+              index === 0 ? 'dark-surface border-ink-900 bg-ink-900 text-bone-100' : 'border-ink-900/15 hover:border-ink-900/40'
             }`}
           >
             {label}
@@ -84,7 +86,7 @@ export default async function ProgressPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <h3 className="font-semibold">{trend.name}</h3>
-                    <p className="mt-1 text-xs opacity-55">Estimated one-rep max</p>
+                    <p className="mt-1 text-xs text-muted">Estimated one-rep max</p>
                   </div>
                   <Chip tone={trend.changeGrams >= 0 ? 'good' : 'warn'} size="sm">
                     {trend.changeGrams >= 0 ? '+' : ''}{trend.changePercent}%
@@ -92,7 +94,7 @@ export default async function ProgressPage() {
                 </div>
 
                 <p className="display mt-4 text-2xl tabular-nums">
-                  {formatLoad(trend.startGrams)} <span className="opacity-30">→</span> {formatLoad(trend.currentGrams)}
+                  {formatLoad(trend.startGrams)} <span className="text-muted">→</span> {formatLoad(trend.currentGrams)}
                 </p>
 
                 <div className="mt-5">
@@ -120,10 +122,10 @@ export default async function ProgressPage() {
               {data.personalRecords.slice(0, 12).map((record) => (
                 <li key={record.id} className="flex flex-wrap items-center justify-between gap-4 p-5">
                   <div className="flex items-center gap-4">
-                    <span aria-hidden className="grid h-10 w-10 place-items-center rounded-full bg-ember/12 text-ember">★</span>
+                    <span aria-hidden className="accent-tint grid h-10 w-10 place-items-center rounded-full bg-ember/12 text-accent">★</span>
                     <div>
                       <p className="font-medium">{record.exerciseName}</p>
-                      <p className="mt-0.5 text-xs opacity-50">
+                      <p className="mt-0.5 text-xs text-muted">
                         {record.kind === 'load' ? 'Heaviest load' : 'Estimated 1RM'} · {record.reps} reps ·{' '}
                         {formatDateLabel(record.achievedOn)}
                       </p>
@@ -132,7 +134,7 @@ export default async function ProgressPage() {
                   <p className="text-right">
                     <span className="display text-lg tabular-nums">{formatLoad(record.valueGrams)}</span>
                     {record.previousValueGrams > 0 && (
-                      <span className="block text-xs opacity-45">was {formatLoad(record.previousValueGrams)}</span>
+                      <span className="block text-xs text-muted">was {formatLoad(record.previousValueGrams)}</span>
                     )}
                   </p>
                 </li>
@@ -185,7 +187,7 @@ export default async function ProgressPage() {
                   comparison={data.bodyweight.raw}
                   format={(v) => `${v.toFixed(1)} kg`}
                 />
-                <p className="mt-4 text-xs leading-relaxed opacity-55">
+                <p className="mt-4 text-xs leading-relaxed text-muted">
                   The solid line is a four-week moving average; the dotted line is your raw measurements.
                   Bodyweight moves a kilo or two a day on water alone, so the average is the honest one.
                 </p>
@@ -201,19 +203,19 @@ export default async function ProgressPage() {
           <Card>
             <h2 className="eyebrow mb-5">Cardio markers</h2>
             <dl className="space-y-6">
-              <Stat
+              <Stat inList
                 label="Resting heart rate"
                 value={data.cardio.restingHeartRate ? `${data.cardio.restingHeartRate}` : '—'}
                 hint="bpm, most recent"
               />
-              <Stat label="Estimated max HR" value={`${data.cardio.maxHeartRate}`} hint="Age-predicted (Tanaka)" />
-              <Stat
+              <Stat inList label="Estimated max HR" value={`${data.cardio.maxHeartRate}`} hint="Age-predicted (Tanaka)" />
+              <Stat inList
                 label="VO₂ max estimate"
                 value={data.cardio.vo2MaxEstimate ? `${data.cardio.vo2MaxEstimate}` : '—'}
                 hint="ml/kg/min, from resting HR"
               />
             </dl>
-            <p className="mt-6 text-xs leading-relaxed opacity-50">
+            <p className="mt-6 text-xs leading-relaxed text-muted">
               Both are estimates from heart rate, not laboratory measurements. Track the direction, not the
               absolute number.
             </p>

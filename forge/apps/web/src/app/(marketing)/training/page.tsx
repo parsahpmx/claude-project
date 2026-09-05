@@ -43,7 +43,7 @@ export default function TrainingPage() {
             <div key={title}>
               <div className="mb-4 h-px w-12 bg-ember" />
               <h3 className="font-semibold">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed opacity-65">{body}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>
             </div>
           ))}
         </div>

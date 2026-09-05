@@ -31,13 +31,13 @@ export function Field({
     <div className="space-y-2">
       <label htmlFor={htmlFor} className="block text-xs font-semibold uppercase tracking-[0.1em] opacity-70">
         {label}
-        {required && <span aria-hidden className="ml-1 text-ember">*</span>}
+        {required && <span aria-hidden className="ml-1 text-accent">*</span>}
         {required && <span className="sr-only"> (required)</span>}
       </label>
       {children}
-      {hint && !error && <p className="text-xs opacity-55">{hint}</p>}
+      {hint && !error && <p className="text-xs text-muted">{hint}</p>}
       {error && (
-        <p role="alert" className="flex items-center gap-1.5 text-xs text-signal-bad">
+        <p role="alert" className="flex items-center gap-1.5 text-xs text-status-bad">
           <span aria-hidden>!</span>
           {error}
         </p>
@@ -47,7 +47,7 @@ export function Field({
 }
 
 const CONTROL =
-  'w-full min-h-[48px] rounded-[8px] border bg-bone-100 px-4 text-sm text-ink-900 ' +
+  'light-surface w-full min-h-[48px] rounded-[8px] border bg-bone-100 px-4 text-sm text-ink-900 ' +
   'placeholder:text-smoke-400 transition-colors duration-200 ' +
   'border-ink-900/15 hover:border-ink-900/30 focus:border-ember';
 
@@ -116,6 +116,7 @@ export function ChoiceCard({
   checked,
   onChange,
   multi = false,
+  tone = 'light',
 }: {
   name: string;
   value: string;
@@ -124,15 +125,25 @@ export function ChoiceCard({
   checked: boolean;
   onChange: (value: string) => void;
   multi?: boolean;
+  /**
+   * The ground this card sits on. Callers used to re-skin the label from
+   * outside with `[&_label]:bg-ink-800`, which changed the colour but not the
+   * surface marker — so the muted description kept its bone-ground value and
+   * measured 2.8:1 on ink. A tone the component owns keeps the two in step.
+   */
+  tone?: 'light' | 'dark';
 }) {
+  const dark = tone === 'dark';
   return (
     <label
       className={clsx(
         'group relative flex cursor-pointer flex-col gap-1.5 rounded-card border p-5 transition-all duration-200 ease-forge',
         'hover:-translate-y-0.5 hover:shadow-card',
-        checked
-          ? 'border-ember bg-ember/[0.06] shadow-card'
-          : 'border-ink-900/12 bg-bone-100 hover:border-ink-900/30',
+        checked && 'accent-tint border-ember bg-ember/[0.06] shadow-card',
+        checked && dark && 'dark-surface',
+        checked && !dark && 'light-surface',
+        !checked && dark && 'dark-surface border-bone-200/15 bg-ink-800 text-bone-200 hover:border-bone-200/35',
+        !checked && !dark && 'light-surface border-ink-900/12 bg-bone-100 hover:border-ink-900/30',
       )}
     >
       <input
@@ -150,13 +161,13 @@ export function ChoiceCard({
           className={clsx(
             'mt-0.5 grid h-5 w-5 shrink-0 place-items-center border text-[0.625rem] transition-colors',
             multi ? 'rounded-[4px]' : 'rounded-full',
-            checked ? 'border-ember bg-ember text-bone-100' : 'border-ink-900/25',
+            checked ? 'border-ember bg-ember-600 text-bone-100' : 'border-ink-900/25',
           )}
         >
           {checked ? '✓' : ''}
         </span>
       </span>
-      {description && <span className="text-xs leading-relaxed opacity-60">{description}</span>}
+      {description && <span className="text-xs leading-relaxed text-muted">{description}</span>}
     </label>
   );
 }
@@ -174,7 +185,7 @@ export function Toggle({
     <div
       role="group"
       aria-label={`${labels[0]} or ${labels[1]}`}
-      className="inline-flex rounded-pill border border-ink-900/12 bg-bone-100 p-1"
+      className="light-surface inline-flex rounded-pill border border-ink-900/12 bg-bone-100 p-1"
     >
       {labels.map((label, index) => {
         const active = index === 1 ? checked : !checked;
@@ -186,7 +197,7 @@ export function Toggle({
             onClick={() => onChange(index === 1)}
             className={clsx(
               'min-h-[40px] rounded-pill px-5 text-xs font-semibold uppercase tracking-[0.1em] transition-all duration-200',
-              active ? 'bg-ink-900 text-bone-100 shadow-card' : 'text-smoke-500 hover:text-ink-900',
+              active ? 'dark-surface bg-ink-900 text-bone-100 shadow-card' : 'text-muted hover:text-ink-900',
             )}
           >
             {label}
@@ -216,11 +227,11 @@ export function Checkbox({
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded-[4px] border-ink-900/25 text-ember accent-[#E8462B]"
+        className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded-[4px] border-ink-900/25 text-accent accent-[#E8462B]"
       />
       <label htmlFor={id} className="cursor-pointer text-sm leading-relaxed">
         {label}
-        {description && <span className="block text-xs opacity-55">{description}</span>}
+        {description && <span className="block text-xs text-muted">{description}</span>}
       </label>
     </div>
   );
@@ -262,8 +273,8 @@ export function FilterChips({
               className={clsx(
                 'min-h-[40px] rounded-pill border px-4 text-xs font-medium transition-all duration-200 ease-forge',
                 active
-                  ? 'border-ink-900 bg-ink-900 text-bone-100'
-                  : 'border-ink-900/15 bg-bone-100 text-ink-700 hover:border-ink-900/40',
+                  ? 'dark-surface border-ink-900 bg-ink-900 text-bone-100'
+                  : 'light-surface border-ink-900/15 bg-bone-100 text-ink-700 hover:border-ink-900/40',
               )}
             >
               {option.label}
@@ -297,7 +308,7 @@ export function SearchInput({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="min-h-[56px] w-full rounded-pill border border-ink-900/15 bg-bone-100 pl-12 pr-5 text-base transition-colors hover:border-ink-900/30 focus:border-ember"
+        className="light-surface min-h-[56px] w-full rounded-pill border border-ink-900/15 bg-bone-100 pl-12 pr-5 text-base transition-colors hover:border-ink-900/30 focus:border-ember"
       />
     </div>
   );
@@ -324,7 +335,7 @@ export function Tabs({
             onClick={() => onChange(tab.value)}
             className={clsx(
               'relative min-h-[44px] whitespace-nowrap px-4 text-xs font-semibold uppercase tracking-[0.1em] transition-colors',
-              selected ? 'text-ink-900' : 'text-smoke-500 hover:text-ink-700',
+              selected ? 'text-ink-900' : 'text-muted hover:text-ink-700',
             )}
           >
             {tab.label}

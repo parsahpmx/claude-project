@@ -55,7 +55,7 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
 
   return (
     <AppSection>
-      <Link href="/coach/clients" className="text-xs uppercase tracking-[0.14em] opacity-55 hover:opacity-100">
+      <Link href="/coach/clients" className="text-xs uppercase tracking-[0.14em] text-muted hover:opacity-100">
         ← All clients
       </Link>
 
@@ -107,7 +107,7 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
                         </span>
                         <div>
                           <p className="font-medium">Week of {formatDateLabel(entry.weekStart)}</p>
-                          <p className="mt-0.5 text-xs opacity-50">
+                          <p className="mt-0.5 text-xs text-muted">
                             {relativeTime(entry.submittedAt)} · {entry.band.replace(/-/g, ' ')}
                           </p>
                         </div>
@@ -169,13 +169,13 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
                 <li key={workout.id} className="flex flex-wrap items-center justify-between gap-4 p-5">
                   <div>
                     <p className="font-medium">{workout.title}</p>
-                    <p className="mt-0.5 text-xs opacity-50">
+                    <p className="mt-0.5 text-xs text-muted">
                       {formatDateLabel(workout.date)} · {Math.round(workout.durationSeconds / 60)} min ·{' '}
                       {workout.kind}
                     </p>
                   </div>
                   <div className="flex items-center gap-5 text-sm tabular-nums">
-                    <span className="opacity-70">{formatVolume(workout.volumeGrams)}</span>
+                    <span className="text-muted">{formatVolume(workout.volumeGrams)}</span>
                     {workout.averageRpe && (
                       <Chip size="sm" tone={workout.averageRpe >= 9 ? 'warn' : 'neutral'}>
                         RPE {workout.averageRpe}
@@ -201,7 +201,7 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
                 <Row label="Weight" value={profile.weightKg ? `${profile.weightKg} kg` : '—'} />
               </dl>
             ) : (
-              <p className="text-sm opacity-60">No profile on file.</p>
+              <p className="text-sm text-muted">No profile on file.</p>
             )}
             {profile && (
               <>
@@ -219,17 +219,17 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
           <Card>
             <p className="eyebrow mb-5">Working loads</p>
             {data.workingLoads.length === 0 ? (
-              <p className="text-sm opacity-60">No logged loads yet.</p>
+              <p className="text-sm text-muted">No logged loads yet.</p>
             ) : (
               <ul className="space-y-2.5">
                 {data.workingLoads.slice(0, 10).map((entry) => (
                   <li key={entry.id} className="flex items-center justify-between gap-3 text-sm">
-                    <span className="min-w-0 truncate capitalize opacity-75">
+                    <span className="min-w-0 truncate capitalize text-muted">
                       {entry.exerciseId.replace(/-/g, ' ')}
                     </span>
                     <span className="shrink-0 tabular-nums">
                       {formatLoad(entry.workingLoadGrams)}
-                      <span className="ml-2 text-xs opacity-45">best {formatLoad(entry.bestLoadGrams)}</span>
+                      <span className="ml-2 text-xs text-muted">best {formatLoad(entry.bestLoadGrams)}</span>
                     </span>
                   </li>
                 ))}
@@ -239,7 +239,7 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
 
           <Card>
             <p className="eyebrow mb-5">Coach notes</p>
-            <p className="mb-4 text-xs leading-relaxed opacity-55">
+            <p className="mb-4 text-xs leading-relaxed text-muted">
               Private notes are never shown to the member. Shared notes appear in their Coach tab.
             </p>
             {data.notes.length > 0 && (
@@ -250,7 +250,7 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
                       <Chip size="sm" tone={note.visibility === 'shared' ? 'accent' : 'neutral'}>
                         {note.visibility}
                       </Chip>
-                      <span className="text-xs opacity-40">{relativeTime(note.createdAt)}</span>
+                      <span className="text-xs text-muted">{relativeTime(note.createdAt)}</span>
                     </div>
                     <p className="mt-2 text-sm leading-relaxed opacity-80">{note.body}</p>
                   </li>
@@ -268,7 +268,7 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-4">
-      <dt className="opacity-50">{label}</dt>
+      <dt className="text-muted">{label}</dt>
       <dd className="text-right capitalize">{value}</dd>
     </div>
   );
@@ -279,17 +279,17 @@ function Score({ label, value, inverted }: { label: string; value: number; inver
   const bad = inverted ? value >= 4 : value <= 2;
   return (
     <div>
-      <dt className="text-[0.625rem] uppercase tracking-[0.12em] opacity-45">{label}</dt>
-      <dd className={`mt-1 text-sm font-semibold tabular-nums ${good ? 'text-signal-good' : bad ? 'text-signal-warn' : ''}`}>
-        {value}<span className="font-normal opacity-40">/5</span>
+      <dt className="text-[0.625rem] uppercase tracking-[0.12em] text-muted">{label}</dt>
+      <dd className={`mt-1 text-sm font-semibold tabular-nums ${good ? 'text-status-good' : bad ? 'text-status-warn' : ''}`}>
+        {value}<span className="font-normal text-muted">/5</span>
       </dd>
     </div>
   );
 }
 
 function bandTone(band: string): string {
-  if (band === 'thriving') return 'bg-signal-good/15 text-signal-good';
-  if (band === 'on-track') return 'bg-ember/12 text-ember-600';
-  if (band === 'strained') return 'bg-signal-warn/15 text-signal-warn';
-  return 'bg-signal-bad/12 text-signal-bad';
+  if (band === 'thriving') return 'bg-signal-good/15 text-status-good';
+  if (band === 'on-track') return 'accent-tint bg-ember/12 text-chip-accent';
+  if (band === 'strained') return 'bg-signal-warn/15 text-status-warn';
+  return 'bg-signal-bad/12 text-status-bad';
 }
