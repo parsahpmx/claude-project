@@ -15,6 +15,8 @@ import {
   addDays,
   startOfWeek,
   SPORT_LABEL,
+  GOAL_LABEL,
+  formatGoalValue,
 } from '@/lib/format';
 
 export const metadata = { title: 'Home' };
@@ -203,10 +205,11 @@ export default async function HomePage() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {goals.slice(0, 3).map((goal) => (
               <Card key={goal.id}>
-                <p className="text-card-title text-bone-100">{goalLabel(goal.kind)}</p>
+                <p className="text-card-title text-bone-100">
+                  {GOAL_LABEL[goal.kind] ?? goal.kind}
+                </p>
                 <p className="mt-2 text-metric-l tabular-nums text-bone-100">
-                  {goal.target}
-                  <span className="ml-1 text-secondary font-normal muted">{goal.unit}</span>
+                  {formatGoalValue(goal.kind, goal.target, units)}
                 </p>
               </Card>
             ))}
@@ -242,17 +245,4 @@ function greeting(): string {
 function formatWeekday(iso: string): string {
   const names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   return names[new Date(`${iso}T00:00:00.000Z`).getUTCDay()] ?? '';
-}
-
-function goalLabel(kind: string): string {
-  return (
-    {
-      weekly_sessions: 'Sessions each week',
-      weekly_minutes: 'Minutes each week',
-      weekly_distance: 'Distance each week',
-      strength_sessions: 'Strength sessions',
-      program_completion: 'Finish the programme',
-      race: 'Race goal',
-    }[kind] ?? kind
-  );
 }

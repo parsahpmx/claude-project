@@ -86,6 +86,36 @@ export function formatLoadG(grams: number, units: 'metric' | 'imperial' = 'metri
   return Number.isInteger(kg) ? `${kg} kg` : `${kg.toFixed(1)} kg`;
 }
 
+/**
+ * A goal's target and progress, formatted for its kind.
+ *
+ * The goal row carries a free-text `unit` column, but rendering that column
+ * directly prints storage units at the reader ("40000m" for a 40 km target) and
+ * disagrees with every other figure in the app. The kind already says what the
+ * number means, so format from the kind and ignore the column.
+ *
+ * This lives here rather than in a page because both Home and Goals show the
+ * same goal, and when only one of them formatted, they disagreed.
+ */
+export function formatGoalValue(
+  kind: string,
+  value: number,
+  units: 'metric' | 'imperial' = 'metric',
+): string {
+  if (kind === 'weekly_distance') return formatDistance(value, units);
+  if (kind === 'weekly_minutes') return formatDuration(value * 60);
+  return formatNumber(value);
+}
+
+export const GOAL_LABEL: Record<string, string> = {
+  weekly_sessions: 'Sessions each week',
+  weekly_minutes: 'Minutes each week',
+  weekly_distance: 'Distance each week',
+  strength_sessions: 'Strength sessions each week',
+  program_completion: 'Finish the programme',
+  race: 'Race goal',
+};
+
 export const SPORT_LABEL: Record<string, string> = {
   run: 'Run',
   walk: 'Walk',

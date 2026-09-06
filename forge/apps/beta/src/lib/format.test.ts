@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatGoalValue,
   formatNumber,
   formatDistance,
   formatDuration,
@@ -125,5 +126,26 @@ describe('elevation', () => {
   it('formats metres and feet', () => {
     expect(formatElevation(1234)).toBe('1,234 m');
     expect(formatElevation(1000, 'imperial')).toBe('3,281 ft');
+  });
+});
+
+describe('goal values', () => {
+  // The bug this guards: Home printed `goal.target` raw next to the free-text
+  // `unit` column ("40000m") while Goals formatted the same row as "40.0 km".
+  it('formats a distance goal as a distance, not as stored metres', () => {
+    expect(formatGoalValue('weekly_distance', 40_000)).toBe('40.0 km');
+    expect(formatGoalValue('weekly_distance', 40_000, 'imperial')).toBe('24.9 mi');
+  });
+
+  it('formats a minutes goal as a duration', () => {
+    expect(formatGoalValue('weekly_minutes', 90)).toBe('1:30:00');
+  });
+
+  it('formats a count goal as a plain number', () => {
+    expect(formatGoalValue('weekly_sessions', 4)).toBe('4');
+  });
+
+  it('does not invent a unit for an unknown kind', () => {
+    expect(formatGoalValue('something_new', 12)).toBe('12');
   });
 });

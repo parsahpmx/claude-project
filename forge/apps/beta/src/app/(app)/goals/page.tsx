@@ -1,6 +1,6 @@
 import { Card, EmptyState, Badge } from '@/components/ui/primitives';
 import { getActiveGoals, getMyActivities, getSessionProfile } from '@/lib/queries';
-import { formatDistance, formatDuration, isoDate, startOfWeek } from '@/lib/format';
+import { formatGoalValue, GOAL_LABEL, isoDate, startOfWeek } from '@/lib/format';
 import { DISTANCE_SPORTS } from '@forge/contracts';
 
 export const metadata = { title: 'Goals' };
@@ -40,12 +40,6 @@ export default async function GoalsPage() {
     }
   };
 
-  const display = (kind: string, value: number): string => {
-    if (kind === 'weekly_distance') return formatDistance(value, units);
-    if (kind === 'weekly_minutes') return formatDuration(value * 60);
-    return String(value);
-  };
-
   return (
     <div className="space-y-7">
       <header>
@@ -77,9 +71,9 @@ export default async function GoalsPage() {
                   </div>
 
                   <p className="mt-4 text-metric-l tabular-nums text-bone-100">
-                    {display(goal.kind, done)}
+                    {formatGoalValue(goal.kind, done, units)}
                     <span className="ml-1.5 text-secondary font-normal muted">
-                      of {display(goal.kind, goal.target)}
+                      of {formatGoalValue(goal.kind, goal.target, units)}
                     </span>
                   </p>
 
@@ -107,12 +101,3 @@ export default async function GoalsPage() {
     </div>
   );
 }
-
-const GOAL_LABEL: Record<string, string> = {
-  weekly_sessions: 'Sessions each week',
-  weekly_minutes: 'Minutes each week',
-  weekly_distance: 'Distance each week',
-  strength_sessions: 'Strength sessions each week',
-  program_completion: 'Finish the programme',
-  race: 'Race goal',
-};
