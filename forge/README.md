@@ -38,6 +38,29 @@ axe run found 166 failing contrast nodes across 42 routes behind a design that
 had been eyeballed and documented as accessible. See `docs/ACCESSIBILITY.md` for
 the three rules that came out of fixing them.
 
+## Two applications
+
+| Path | What | Backend | Status |
+| --- | --- | --- | --- |
+| `apps/beta` | **FORGE Web Beta** — the Supabase-first web product | Supabase | In development |
+| `apps/web` | FORGE V1 — marketing site and member app | `apps/api` | Working |
+
+The beta is the direction. V1 was not deleted: it works, it is tested, and
+discarding working software to tidy a diagram is a bad trade.
+
+Beta docs: `docs/WEB_ARCHITECTURE.md`, `docs/SUPABASE_WEB_ARCHITECTURE.md`,
+`docs/WEB_PRIVACY.md`, `docs/WEB_MAPS.md`, `docs/WEB_BETA_COST_MODEL.md`,
+`docs/WEB_BETA_GO_NO_GO.md`.
+
+```bash
+cd forge && pnpm install
+cp apps/beta/.env.example apps/beta/.env.local
+pnpm --filter @forge/beta dev      # http://localhost:3100
+```
+
+Test athletes: `athlete.a@forge.test` / `athlete.b@forge.test`, both
+`ForgeBeta!2026`.
+
 ## Quick start
 
 Requires Node 22+ and pnpm 10+. **No database server and no Docker.**
