@@ -13,14 +13,37 @@ export const metadata = { title: 'Nutrition' };
 export const dynamic = 'force-dynamic';
 
 interface MacroProgress {
-  consumed: number; target: number; remaining: number; percent: number; over: boolean;
+  consumed: number;
+  target: number;
+  remaining: number;
+  percent: number;
+  over: boolean;
 }
 
 interface NutritionDay {
   date: string;
-  targets: { calories: number; proteinGrams: number; carbGrams: number; fatGrams: number; fibreGrams: number; waterMl: number } | null;
-  mealTargets: { slot: string; label: string; calories: number; proteinGrams: number; carbGrams: number; fatGrams: number }[];
-  macros: { calories: MacroProgress; protein: MacroProgress; carbs: MacroProgress; fat: MacroProgress } | null;
+  targets: {
+    calories: number;
+    proteinGrams: number;
+    carbGrams: number;
+    fatGrams: number;
+    fibreGrams: number;
+    waterMl: number;
+  } | null;
+  mealTargets: {
+    slot: string;
+    label: string;
+    calories: number;
+    proteinGrams: number;
+    carbGrams: number;
+    fatGrams: number;
+  }[];
+  macros: {
+    calories: MacroProgress;
+    protein: MacroProgress;
+    carbs: MacroProgress;
+    fat: MacroProgress;
+  } | null;
   meals: {
     slot: string;
     planned: { id: string; status: string; recipe: Recipe } | null;
@@ -30,7 +53,15 @@ interface NutritionDay {
 
 interface ShoppingResponse {
   weekStart: string;
-  items: { id: string; name: string; quantity: number; unit: string; section: string; recipeCount: number; checked: boolean }[];
+  items: {
+    id: string;
+    name: string;
+    quantity: number;
+    unit: string;
+    section: string;
+    recipeCount: number;
+    checked: boolean;
+  }[];
 }
 
 export default async function NutritionPage() {
@@ -63,21 +94,29 @@ export default async function NutritionPage() {
         eyebrow="Nutrition"
         title="TODAY'S NUTRITION"
         lead={`${formatNumber(targets.calories)} kcal · ${targets.proteinGrams}g protein · ${targets.carbGrams}g carbs · ${targets.fatGrams}g fat`}
-        action={<ButtonLink href="/nutrition" variant="ghost">Browse Recipes</ButtonLink>}
+        action={
+          <ButtonLink href="/nutrition" variant="ghost">
+            Browse Recipes
+          </ButtonLink>
+        }
       />
 
       <nav aria-label="Nutrition sections" className="mt-6 flex flex-wrap gap-2">
-        {['My Plan', 'Meals', 'Recipes', 'Shopping List', 'Macros', 'Favourites'].map((label, index) => (
-          <a
-            key={label}
-            href={`#${label.toLowerCase().replace(/\s/g, '-')}`}
-            className={`min-h-[40px] rounded-pill border px-4 text-xs font-medium leading-[38px] transition-colors ${
-              index === 0 ? 'dark-surface border-ink-900 bg-ink-900 text-bone-100' : 'border-ink-900/15 hover:border-ink-900/40'
-            }`}
-          >
-            {label}
-          </a>
-        ))}
+        {['My Plan', 'Meals', 'Recipes', 'Shopping List', 'Macros', 'Favourites'].map(
+          (label, index) => (
+            <a
+              key={label}
+              href={`#${label.toLowerCase().replace(/\s/g, '-')}`}
+              className={`min-h-[40px] rounded-pill border px-4 text-xs font-medium leading-[38px] transition-colors ${
+                index === 0
+                  ? 'dark-surface border-ink-900 bg-ink-900 text-bone-100'
+                  : 'border-ink-900/15 hover:border-ink-900/40'
+              }`}
+            >
+              {label}
+            </a>
+          ),
+        )}
       </nav>
 
       {/* --------------------------------------------------------- macros */}
@@ -88,7 +127,10 @@ export default async function NutritionPage() {
               <p className="eyebrow">Consumed today</p>
               <p className="display mt-2 text-display-md tabular-nums text-bone-100">
                 {formatNumber(macros.calories.consumed)}
-                <span className="text-lg font-normal text-muted"> / {formatNumber(targets.calories)}</span>
+                <span className="text-lg font-normal text-muted">
+                  {' '}
+                  / {formatNumber(targets.calories)}
+                </span>
               </p>
               <p className="mt-2 text-sm text-bone-200/55">
                 {macros.calories.remaining > 0
@@ -98,9 +140,24 @@ export default async function NutritionPage() {
             </div>
 
             <div className="flex flex-wrap gap-8">
-              <ProgressRing value={macros.protein.percent} label="Protein" sublabel={`${targets.proteinGrams}g`} tone="accent" />
-              <ProgressRing value={macros.carbs.percent} label="Carbs" sublabel={`${targets.carbGrams}g`} tone="neutral" />
-              <ProgressRing value={macros.fat.percent} label="Fat" sublabel={`${targets.fatGrams}g`} tone="neutral" />
+              <ProgressRing
+                value={macros.protein.percent}
+                label="Protein"
+                sublabel={`${targets.proteinGrams}g`}
+                tone="accent"
+              />
+              <ProgressRing
+                value={macros.carbs.percent}
+                label="Carbs"
+                sublabel={`${targets.carbGrams}g`}
+                tone="neutral"
+              />
+              <ProgressRing
+                value={macros.fat.percent}
+                label="Fat"
+                sublabel={`${targets.fatGrams}g`}
+                tone="neutral"
+              />
             </div>
           </div>
 
@@ -134,11 +191,18 @@ export default async function NutritionPage() {
                     <div className="p-5">
                       <div className="flex items-center justify-between gap-2">
                         <p className="eyebrow">{meal.slot}</p>
-                        {meal.planned.status === 'logged' && <Chip tone="good" size="sm">Logged</Chip>}
+                        {meal.planned.status === 'logged' && (
+                          <Chip tone="good" size="sm">
+                            Logged
+                          </Chip>
+                        )}
                       </div>
-                      <h3 className="mt-2 font-semibold leading-snug">{meal.planned.recipe.name}</h3>
+                      <h3 className="mt-2 font-semibold leading-snug">
+                        {meal.planned.recipe.name}
+                      </h3>
                       <p className="mt-2 text-xs text-muted">
-                        {meal.planned.recipe.calories} kcal · {meal.planned.recipe.proteinGrams}g protein ·{' '}
+                        {meal.planned.recipe.calories} kcal · {meal.planned.recipe.proteinGrams}g
+                        protein ·{' '}
                         {meal.planned.recipe.prepMinutes + meal.planned.recipe.cookMinutes} min
                       </p>
                       {target && (
@@ -161,7 +225,9 @@ export default async function NutritionPage() {
                     <p className="eyebrow">{meal.slot}</p>
                     <p className="mt-3 text-sm text-muted">Nothing planned for this slot.</p>
                     <div className="mt-4">
-                      <ButtonLink href="/nutrition" variant="ghost" size="sm">Pick a meal</ButtonLink>
+                      <ButtonLink href="/nutrition" variant="ghost" size="sm">
+                        Pick a meal
+                      </ButtonLink>
                     </div>
                   </div>
                 )}
@@ -180,7 +246,15 @@ export default async function NutritionPage() {
   );
 }
 
-function MacroBar({ label, progress, unit }: { label: string; progress: MacroProgress; unit: string }) {
+function MacroBar({
+  label,
+  progress,
+  unit,
+}: {
+  label: string;
+  progress: MacroProgress;
+  unit: string;
+}) {
   return (
     <div>
       <ProgressBar
@@ -192,7 +266,8 @@ function MacroBar({ label, progress, unit }: { label: string; progress: MacroPro
       />
       {progress.over && (
         <p className="mt-2 text-[0.6875rem] text-status-warn">
-          <span aria-hidden>!</span> Over target — not a problem on a training day, worth watching across a week.
+          <span aria-hidden>!</span> Over target — not a problem on a training day, worth watching
+          across a week.
         </p>
       )}
     </div>

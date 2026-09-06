@@ -3,7 +3,15 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/primitives';
 import {
-  ChoiceCard, Checkbox, FilterChips, SearchInput, Select, Tabs, TextArea, TextInput, Toggle,
+  ChoiceCard,
+  Checkbox,
+  FilterChips,
+  SearchInput,
+  Select,
+  Tabs,
+  TextArea,
+  TextInput,
+  Toggle,
 } from '@/components/ui/forms';
 
 /** The interactive half of the design system page. */
@@ -28,7 +36,12 @@ export function DesignSystemInteractive() {
             options={[3, 4, 5].map((n) => ({ value: String(n), label: `${n} days` }))}
           />
           <TextArea label="Coach note" hint="What to focus on this week." />
-          <SearchInput value={search} onChange={setSearch} label="Search" placeholder="Search programmes" />
+          <SearchInput
+            value={search}
+            onChange={setSearch}
+            label="Search"
+            placeholder="Search programmes"
+          />
         </div>
       </Card>
 
@@ -37,8 +50,16 @@ export function DesignSystemInteractive() {
           <p className="eyebrow mb-5">Choice cards</p>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
-              { value: 'build-muscle', label: 'Build Muscle', description: 'Hypertrophy volume with progressive overload.' },
-              { value: 'improve-strength', label: 'Improve Strength', description: 'Heavy compounds, low fatigue, long rest.' },
+              {
+                value: 'build-muscle',
+                label: 'Build Muscle',
+                description: 'Hypertrophy volume with progressive overload.',
+              },
+              {
+                value: 'improve-strength',
+                label: 'Improve Strength',
+                description: 'Heavy compounds, low fatigue, long rest.',
+              },
             ].map((option) => (
               <ChoiceCard
                 key={option.value}
@@ -60,7 +81,9 @@ export function DesignSystemInteractive() {
                 value={value}
                 label={value.charAt(0).toUpperCase() + value.slice(1)}
                 checked={multi.includes(value)}
-                onChange={(v) => setMulti((c) => (c.includes(v) ? c.filter((x) => x !== v) : [...c, v]))}
+                onChange={(v) =>
+                  setMulti((c) => (c.includes(v) ? c.filter((x) => x !== v) : [...c, v]))
+                }
                 multi
               />
             ))}

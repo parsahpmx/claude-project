@@ -40,7 +40,10 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
     <>
       <Section tone="light" size="md">
         <div className="pt-20">
-          <Link href="/nutrition" className="text-xs uppercase tracking-[0.14em] text-muted hover:opacity-100">
+          <Link
+            href="/nutrition"
+            className="text-xs uppercase tracking-[0.14em] text-muted hover:opacity-100"
+          >
             ← Nutrition
           </Link>
 
@@ -53,7 +56,9 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
               <p className="mt-5 text-lg leading-relaxed opacity-80">{recipe.summary}</p>
 
               <div className="mt-7 flex flex-wrap gap-2">
-                {recipe.tags.map((tag) => <Chip key={tag}>{tag.replace(/-/g, ' ')}</Chip>)}
+                {recipe.tags.map((tag) => (
+                  <Chip key={tag}>{tag.replace(/-/g, ' ')}</Chip>
+                ))}
               </div>
 
               <dl className="mt-9 grid grid-cols-2 gap-6 sm:grid-cols-4">
@@ -65,13 +70,21 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
 
               <dl className="mt-8 grid grid-cols-3 gap-6 border-t border-ink-900/10 pt-6">
                 <Stat inList label="Prep" value={formatMinutes(recipe.prepMinutes)} />
-                <Stat inList label="Cook" value={recipe.cookMinutes > 0 ? formatMinutes(recipe.cookMinutes) : 'None'} />
+                <Stat
+                  inList
+                  label="Cook"
+                  value={recipe.cookMinutes > 0 ? formatMinutes(recipe.cookMinutes) : 'None'}
+                />
                 <Stat inList label="Serves" value={recipe.servings} />
               </dl>
 
               <div className="mt-9 flex flex-wrap gap-3">
-                <ButtonLink href="/app/nutrition" size="lg">Log This Meal</ButtonLink>
-                <ButtonLink href="/app/nutrition" variant="ghost" size="lg">Add to Shopping List</ButtonLink>
+                <ButtonLink href="/app/nutrition" size="lg">
+                  Log This Meal
+                </ButtonLink>
+                <ButtonLink href="/app/nutrition" variant="ghost" size="lg">
+                  Add to Shopping List
+                </ButtonLink>
               </div>
             </div>
           </div>
@@ -82,10 +95,15 @@ export default async function RecipePage({ params }: { params: Promise<{ slug: s
         <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
           <Card>
             <p className="eyebrow mb-5">Ingredients</p>
-            <p className="mb-4 text-xs text-muted">For {recipe.servings} serving{recipe.servings === 1 ? '' : 's'}</p>
+            <p className="mb-4 text-xs text-muted">
+              For {recipe.servings} serving{recipe.servings === 1 ? '' : 's'}
+            </p>
             <ul className="space-y-3">
               {ingredients.map((ingredient) => (
-                <li key={`${ingredient.name}-${ingredient.unit}`} className="flex justify-between gap-4 border-b border-ink-900/8 pb-3 text-sm last:border-0">
+                <li
+                  key={`${ingredient.name}-${ingredient.unit}`}
+                  className="flex justify-between gap-4 border-b border-ink-900/8 pb-3 text-sm last:border-0"
+                >
                   <span>{ingredient.name}</span>
                   <span className="shrink-0 tabular-nums text-muted">
                     {trim(ingredient.quantity)} {ingredient.unit}

@@ -39,7 +39,13 @@ const ACTION_HREF: Record<string, string> = {
   'adapt-session': '/app/plan',
 };
 
-export function AiChat({ suggestions, initialQuestion }: { suggestions: string[]; initialQuestion: string | null }) {
+export function AiChat({
+  suggestions,
+  initialQuestion,
+}: {
+  suggestions: string[];
+  initialQuestion: string | null;
+}) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
@@ -84,13 +90,17 @@ export function AiChat({ suggestions, initialQuestion }: { suggestions: string[]
       <div>
         {turns.length === 0 && (
           <Card tone="dark">
-            <p className="display text-display-sm text-bone-100">ASK ME ANYTHING ABOUT YOUR TRAINING.</p>
-            <p className="mt-4 text-sm leading-relaxed text-bone-200/65">
-              I work from your plan, your logged sessions, your readiness and your nutrition targets. If I do
-              not have the data to answer something, I will say so rather than guess.
+            <p className="display text-display-sm text-bone-100">
+              ASK ME ANYTHING ABOUT YOUR TRAINING.
             </p>
             <p className="mt-4 text-sm leading-relaxed text-bone-200/65">
-              I do not answer medical or injury questions. Those go to a qualified professional, every time.
+              I work from your plan, your logged sessions, your readiness and your nutrition
+              targets. If I do not have the data to answer something, I will say so rather than
+              guess.
+            </p>
+            <p className="mt-4 text-sm leading-relaxed text-bone-200/65">
+              I do not answer medical or injury questions. Those go to a qualified professional,
+              every time.
             </p>
           </Card>
         )}
@@ -108,7 +118,8 @@ export function AiChat({ suggestions, initialQuestion }: { suggestions: string[]
                 {turn.failed ? (
                   <Card>
                     <p className="text-sm text-status-bad">
-                      <span aria-hidden>!</span> I could not reach the assistant. Try again in a moment.
+                      <span aria-hidden>!</span> I could not reach the assistant. Try again in a
+                      moment.
                     </p>
                   </Card>
                 ) : turn.answer ? (
@@ -133,7 +144,9 @@ export function AiChat({ suggestions, initialQuestion }: { suggestions: string[]
           }}
           className="sticky bottom-4 mt-8 flex gap-3"
         >
-          <label htmlFor="ai-input" className="sr-only">Ask FORGE AI</label>
+          <label htmlFor="ai-input" className="sr-only">
+            Ask FORGE AI
+          </label>
           <input
             id="ai-input"
             value={input}
@@ -147,7 +160,10 @@ export function AiChat({ suggestions, initialQuestion }: { suggestions: string[]
         </form>
       </div>
 
-      <aside aria-label="Suggested questions" className="space-y-6 lg:sticky lg:top-8 lg:self-start">
+      <aside
+        aria-label="Suggested questions"
+        className="space-y-6 lg:sticky lg:top-8 lg:self-start"
+      >
         <Card>
           <p className="eyebrow mb-4">Try asking</p>
           <ul className="space-y-2">
@@ -177,14 +193,16 @@ export function AiChat({ suggestions, initialQuestion }: { suggestions: string[]
               'The equipment on your profile',
             ].map((item) => (
               <li key={item} className="flex gap-2.5 text-muted">
-                <span aria-hidden className="text-accent">·</span>
+                <span aria-hidden className="text-accent">
+                  ·
+                </span>
                 {item}
               </li>
             ))}
           </ul>
           <p className="mt-5 text-xs leading-relaxed text-muted">
-            FORGE AI does not replace a human coach. For anything about pain, injury or a medical condition,
-            speak to a qualified healthcare professional.
+            FORGE AI does not replace a human coach. For anything about pain, injury or a medical
+            condition, speak to a qualified healthcare professional.
           </p>
         </Card>
       </aside>
@@ -196,12 +214,19 @@ function AnswerCard({ answer }: { answer: AiAnswer }) {
   return (
     <Card>
       <div className="flex items-start gap-4">
-        <span aria-hidden className="accent-tint grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ember/12 text-accent">✦</span>
+        <span
+          aria-hidden
+          className="accent-tint grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ember/12 text-accent"
+        >
+          ✦
+        </span>
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold leading-snug">{answer.headline}</h3>
           <div className="mt-3 space-y-3">
             {answer.body.map((paragraph, index) => (
-              <p key={index} className="text-sm leading-relaxed opacity-80">{paragraph}</p>
+              <p key={index} className="text-sm leading-relaxed opacity-80">
+                {paragraph}
+              </p>
             ))}
           </div>
 
@@ -239,7 +264,11 @@ function AnswerCard({ answer }: { answer: AiAnswer }) {
             <div className="mt-5 border-t border-ink-900/8 pt-4">
               <p className="text-[0.625rem] uppercase tracking-[0.12em] text-muted">Based on</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {answer.sources.map((source) => <Chip key={source} size="sm">{source}</Chip>)}
+                {answer.sources.map((source) => (
+                  <Chip key={source} size="sm">
+                    {source}
+                  </Chip>
+                ))}
               </div>
             </div>
           )}

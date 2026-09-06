@@ -3,8 +3,17 @@ import { z } from 'zod';
 import { and, asc, desc, eq, gte, sql } from 'drizzle-orm';
 import { randomId, scoreCheckIn, startOfWeek, addDays } from '@forge/core';
 import {
-  bookings, checkIns, coachClients, coaches, coachNotes, formCheckComments,
-  messages, messageThreads, recoveryLogs, recoverySessions, users,
+  bookings,
+  checkIns,
+  coachClients,
+  coaches,
+  coachNotes,
+  formCheckComments,
+  messages,
+  messageThreads,
+  recoveryLogs,
+  recoverySessions,
+  users,
 } from '@forge/db';
 import { badRequest, conflict, forbidden, notFound } from '../lib/errors.js';
 import { parse } from '../lib/validate.js';
@@ -18,7 +27,8 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
 
     const [relationship] = await db
       .select({
-        coach: coaches, coachUser: { firstName: users.firstName, lastName: users.lastName },
+        coach: coaches,
+        coachUser: { firstName: users.firstName, lastName: users.lastName },
         startedOn: coachClients.startedOn,
       })
       .from(coachClients)
@@ -30,24 +40,31 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
     if (!relationship) return { coach: null };
 
     const [thread] = await db
-      .select().from(messageThreads)
-      .where(and(
-        eq(messageThreads.memberId, principal.userId),
-        eq(messageThreads.coachId, relationship.coach.id),
-      ))
+      .select()
+      .from(messageThreads)
+      .where(
+        and(
+          eq(messageThreads.memberId, principal.userId),
+          eq(messageThreads.coachId, relationship.coach.id),
+        ),
+      )
       .limit(1);
 
     const [nextBooking] = await db
-      .select().from(bookings)
-      .where(and(
-        eq(bookings.memberId, principal.userId),
-        gte(bookings.startsAt, new Date(`${today()}T00:00:00Z`)),
-      ))
+      .select()
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.memberId, principal.userId),
+          gte(bookings.startsAt, new Date(`${today()}T00:00:00Z`)),
+        ),
+      )
       .orderBy(asc(bookings.startsAt))
       .limit(1);
 
     const history = await db
-      .select().from(checkIns)
+      .select()
+      .from(checkIns)
       .where(eq(checkIns.memberId, principal.userId))
       .orderBy(desc(checkIns.weekStart))
       .limit(12);
@@ -59,11 +76,13 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
       ? await db
           .select({ count: sql<number>`count(*)::int` })
           .from(messages)
-          .where(and(
-            eq(messages.threadId, thread.id),
-            sql`${messages.senderId} <> ${principal.userId}`,
-            sql`${messages.readAt} is null`,
-          ))
+          .where(
+            and(
+              eq(messages.threadId, thread.id),
+              sql`${messages.senderId} <> ${principal.userId}`,
+              sql`${messages.readAt} is null`,
+            ),
+          )
       : [];
 
     return {
@@ -87,14 +106,19 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
     const body = parse(z.object({ coachSlug: z.string().max(64) }), request.body);
     const { db, today } = request.ctx;
 
-    const [coach] = await db.select().from(coaches).where(eq(coaches.slug, body.coachSlug)).limit(1);
+    const [coach] = await db
+      .select()
+      .from(coaches)
+      .where(eq(coaches.slug, body.coachSlug))
+      .limit(1);
     if (!coach) throw notFound('Coach');
     if (!coach.acceptingClients) {
       throw conflict('coach_full', 'That coach is not taking new clients right now.');
     }
 
     const existing = await db
-      .select({ id: coachClients.id }).from(coachClients)
+      .select({ id: coachClients.id })
+      .from(coachClients)
       .where(and(eq(coachClients.memberId, principal.userId), eq(coachClients.status, 'active')))
       .limit(1);
     if (existing[0]) {
@@ -102,18 +126,27 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
     }
 
     await db.insert(coachClients).values({
-      id: randomId('coach'), coachId: coach.id, memberId: principal.userId,
-      status: 'active', startedOn: today(),
+      id: randomId('coach'),
+      coachId: coach.id,
+      memberId: principal.userId,
+      status: 'active',
+      startedOn: today(),
     });
 
     const thread = await db
-      .select({ id: messageThreads.id }).from(messageThreads)
-      .where(and(eq(messageThreads.memberId, principal.userId), eq(messageThreads.coachId, coach.id)))
+      .select({ id: messageThreads.id })
+      .from(messageThreads)
+      .where(
+        and(eq(messageThreads.memberId, principal.userId), eq(messageThreads.coachId, coach.id)),
+      )
       .limit(1);
 
     if (!thread[0]) {
       await db.insert(messageThreads).values({
-        id: randomId('thread'), memberId: principal.userId, coachId: coach.id, subject: 'Coaching',
+        id: randomId('thread'),
+        memberId: principal.userId,
+        coachId: coach.id,
+        subject: 'Coaching',
       });
     }
 
@@ -147,8 +180,11 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
       .limit(1);
 
     const scored = scoreCheckIn({
-      energy: body.energy, sleepQuality: body.sleepQuality, stress: body.stress,
-      nutritionAdherence: body.nutritionAdherence, trainingAdherence: body.trainingAdherence,
+      energy: body.energy,
+      sleepQuality: body.sleepQuality,
+      stress: body.stress,
+      nutritionAdherence: body.nutritionAdherence,
+      trainingAdherence: body.trainingAdherence,
       ...(body.weightKg !== undefined ? { weightKg: body.weightKg } : {}),
       ...(body.painNotes !== undefined ? { painNotes: body.painNotes } : {}),
       ...(body.questions !== undefined ? { questionsForCoach: body.questions } : {}),
@@ -156,18 +192,25 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
     });
 
     const existing = await db
-      .select({ id: checkIns.id }).from(checkIns)
+      .select({ id: checkIns.id })
+      .from(checkIns)
       .where(and(eq(checkIns.memberId, principal.userId), eq(checkIns.weekStart, weekStart)))
       .limit(1);
 
     const values = {
       coachId: relationship?.coachId ?? null,
-      energy: body.energy, sleepQuality: body.sleepQuality, stress: body.stress,
-      nutritionAdherence: body.nutritionAdherence, trainingAdherence: body.trainingAdherence,
+      energy: body.energy,
+      sleepQuality: body.sleepQuality,
+      stress: body.stress,
+      nutritionAdherence: body.nutritionAdherence,
+      trainingAdherence: body.trainingAdherence,
       weightGrams: body.weightKg ? Math.round(body.weightKg * 1000) : null,
-      painNotes: body.painNotes ?? null, questions: body.questions ?? null,
+      painNotes: body.painNotes ?? null,
+      questions: body.questions ?? null,
       progressPhotoCount: body.progressPhotoCount,
-      score: scored.overall, band: scored.band, flags: scored.flags,
+      score: scored.overall,
+      band: scored.band,
+      flags: scored.flags,
       submittedAt: new Date(),
     };
 
@@ -175,7 +218,10 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
       await db.update(checkIns).set(values).where(eq(checkIns.id, existing[0].id));
     } else {
       await db.insert(checkIns).values({
-        id: randomId('checkIn'), memberId: principal.userId, weekStart, ...values,
+        id: randomId('checkIn'),
+        memberId: principal.userId,
+        weekStart,
+        ...values,
       });
     }
 
@@ -188,7 +234,8 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
 
     const threads = await db
       .select({
-        thread: messageThreads, coach: coaches,
+        thread: messageThreads,
+        coach: coaches,
         coachUser: { firstName: users.firstName, lastName: users.lastName },
       })
       .from(messageThreads)
@@ -206,7 +253,10 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
     const { db } = request.ctx;
 
     const [thread] = await db
-      .select().from(messageThreads).where(eq(messageThreads.id, threadId)).limit(1);
+      .select()
+      .from(messageThreads)
+      .where(eq(messageThreads.id, threadId))
+      .limit(1);
     if (!thread) throw notFound('Conversation');
 
     // Ownership is checked against both sides — a coach reading their own
@@ -217,22 +267,27 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
     if (!isMember && !isCoach && principal.role !== 'admin') throw forbidden();
 
     const rows = await db
-      .select().from(messages)
+      .select()
+      .from(messages)
       .where(eq(messages.threadId, threadId))
       .orderBy(asc(messages.createdAt));
 
     const commentRows = await db
-      .select().from(formCheckComments)
+      .select()
+      .from(formCheckComments)
       .where(sql`${formCheckComments.messageId} in ${rows.map((m) => m.id)}`)
       .orderBy(asc(formCheckComments.timestampSeconds));
 
-    await db.update(messages)
+    await db
+      .update(messages)
       .set({ readAt: new Date() })
-      .where(and(
-        eq(messages.threadId, threadId),
-        sql`${messages.senderId} <> ${principal.userId}`,
-        sql`${messages.readAt} is null`,
-      ));
+      .where(
+        and(
+          eq(messages.threadId, threadId),
+          sql`${messages.senderId} <> ${principal.userId}`,
+          sql`${messages.readAt} is null`,
+        ),
+      );
 
     return {
       thread,
@@ -259,7 +314,10 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
     const { db } = request.ctx;
 
     const [thread] = await db
-      .select().from(messageThreads).where(eq(messageThreads.id, threadId)).limit(1);
+      .select()
+      .from(messageThreads)
+      .where(eq(messageThreads.id, threadId))
+      .limit(1);
     if (!thread) throw notFound('Conversation');
 
     const [coach] = await db.select().from(coaches).where(eq(coaches.id, thread.coachId)).limit(1);
@@ -276,11 +334,17 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
 
     const messageId = randomId('message');
     await db.insert(messages).values({
-      id: messageId, threadId, senderId: principal.userId, kind: body.kind,
-      body: body.body ?? null, mediaKey: body.mediaKey ?? null,
-      durationSeconds: body.durationSeconds ?? null, exerciseId: body.exerciseId ?? null,
+      id: messageId,
+      threadId,
+      senderId: principal.userId,
+      kind: body.kind,
+      body: body.body ?? null,
+      mediaKey: body.mediaKey ?? null,
+      durationSeconds: body.durationSeconds ?? null,
+      exerciseId: body.exerciseId ?? null,
     });
-    await db.update(messageThreads)
+    await db
+      .update(messageThreads)
       .set({ lastMessageAt: new Date(), updatedAt: new Date() })
       .where(eq(messageThreads.id, threadId));
 
@@ -294,13 +358,19 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
       request.params,
     );
     const body = parse(
-      z.object({ timestampSeconds: z.number().int().min(0).max(3600), body: z.string().min(1).max(1000) }),
+      z.object({
+        timestampSeconds: z.number().int().min(0).max(3600),
+        body: z.string().min(1).max(1000),
+      }),
       request.body,
     );
     const { db } = request.ctx;
 
     const [thread] = await db
-      .select().from(messageThreads).where(eq(messageThreads.id, params.threadId)).limit(1);
+      .select()
+      .from(messageThreads)
+      .where(eq(messageThreads.id, params.threadId))
+      .limit(1);
     if (!thread) throw notFound('Conversation');
 
     const [coach] = await db.select().from(coaches).where(eq(coaches.id, thread.coachId)).limit(1);
@@ -311,15 +381,19 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
     }
 
     const [message] = await db
-      .select().from(messages)
+      .select()
+      .from(messages)
       .where(and(eq(messages.id, params.messageId), eq(messages.threadId, params.threadId)))
       .limit(1);
     if (!message || message.kind !== 'form-check') throw notFound('Form check');
 
     const id = randomId('comment');
     await db.insert(formCheckComments).values({
-      id, messageId: params.messageId, authorId: principal.userId,
-      timestampSeconds: body.timestampSeconds, body: body.body,
+      id,
+      messageId: params.messageId,
+      authorId: principal.userId,
+      timestampSeconds: body.timestampSeconds,
+      body: body.body,
     });
     return { ok: true, id };
   });
@@ -350,7 +424,11 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
     );
     const { db } = request.ctx;
 
-    const [coach] = await db.select().from(coaches).where(eq(coaches.slug, body.coachSlug)).limit(1);
+    const [coach] = await db
+      .select()
+      .from(coaches)
+      .where(eq(coaches.slug, body.coachSlug))
+      .limit(1);
     if (!coach) throw notFound('Coach');
 
     const startsAt = new Date(body.startsAt);
@@ -359,14 +437,21 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
     }
 
     const durationMinutes = body.kind === '60-minute-coaching' ? 60 : 30;
-    const priceCents = body.kind === '30-minute-consultation'
-      ? coach.consultationPriceCents
-      : coach.sessionPriceCents;
+    const priceCents =
+      body.kind === '30-minute-consultation'
+        ? coach.consultationPriceCents
+        : coach.sessionPriceCents;
 
     const id = randomId('booking');
     await db.insert(bookings).values({
-      id, coachId: coach.id, memberId: principal.userId, kind: body.kind,
-      startsAt, durationMinutes, status: 'confirmed', priceCents,
+      id,
+      coachId: coach.id,
+      memberId: principal.userId,
+      kind: body.kind,
+      startsAt,
+      durationMinutes,
+      status: 'confirmed',
+      priceCents,
       agenda: body.agenda ?? null,
     });
 
@@ -382,10 +467,15 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
       .select({ log: recoveryLogs, session: recoverySessions })
       .from(recoveryLogs)
       .leftJoin(recoverySessions, eq(recoverySessions.id, recoveryLogs.recoverySessionId))
-      .where(and(eq(recoveryLogs.userId, principal.userId), gte(recoveryLogs.date, addDays(date, -28))))
+      .where(
+        and(eq(recoveryLogs.userId, principal.userId), gte(recoveryLogs.date, addDays(date, -28))),
+      )
       .orderBy(desc(recoveryLogs.date));
 
-    const catalogue = await db.select().from(recoverySessions).orderBy(asc(recoverySessions.minutes));
+    const catalogue = await db
+      .select()
+      .from(recoverySessions)
+      .orderBy(asc(recoverySessions.minutes));
     const categories = [...new Set(catalogue.map((session) => session.category))];
 
     return {
@@ -414,15 +504,21 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
     let minutes = body.minutes ?? 10;
     if (body.slug) {
       const [session] = await db
-        .select().from(recoverySessions).where(eq(recoverySessions.slug, body.slug)).limit(1);
+        .select()
+        .from(recoverySessions)
+        .where(eq(recoverySessions.slug, body.slug))
+        .limit(1);
       if (!session) throw notFound('Recovery session');
       sessionId = session.id;
       minutes = body.minutes ?? session.minutes;
     }
 
     await db.insert(recoveryLogs).values({
-      id: randomId('workout'), userId: principal.userId, recoverySessionId: sessionId,
-      date: body.date ?? today(), minutes,
+      id: randomId('workout'),
+      userId: principal.userId,
+      recoverySessionId: sessionId,
+      date: body.date ?? today(),
+      minutes,
     });
     return { ok: true };
   });
@@ -433,7 +529,8 @@ export async function registerCoachingRoutes(app: FastifyInstance): Promise<void
     // Members only ever see notes their coach chose to share.
     return {
       notes: await db
-        .select().from(coachNotes)
+        .select()
+        .from(coachNotes)
         .where(and(eq(coachNotes.memberId, principal.userId), eq(coachNotes.visibility, 'shared')))
         .orderBy(desc(coachNotes.createdAt)),
     };

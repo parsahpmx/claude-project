@@ -38,11 +38,13 @@ function hash(key: string): number {
   return Math.abs(h);
 }
 
-export function generateImage(key: string, variant: 'default' | 'light' = 'default'): GeneratedImage {
+export function generateImage(
+  key: string,
+  variant: 'default' | 'light' = 'default',
+): GeneratedImage {
   const seed = hash(key);
-  const palette = variant === 'light'
-    ? PALETTES[PALETTES.length - 1]!
-    : PALETTES[seed % (PALETTES.length - 1)]!;
+  const palette =
+    variant === 'light' ? PALETTES[PALETTES.length - 1]! : PALETTES[seed % (PALETTES.length - 1)]!;
 
   const angle = 20 + (seed % 8) * 15;
   const x1 = 12 + (seed % 60);

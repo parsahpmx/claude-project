@@ -7,14 +7,23 @@ import { Button, Card } from '@/components/ui/primitives';
 import { EmptyState } from '@/components/ui/feedback';
 
 interface Item {
-  id: string; name: string; quantity: number; unit: string;
-  section: string; recipeCount: number; checked: boolean;
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  section: string;
+  recipeCount: number;
+  checked: boolean;
 }
 
 const SECTION_ORDER = ['produce', 'protein', 'dairy', 'pantry', 'frozen', 'other'];
 const SECTION_LABEL: Record<string, string> = {
-  produce: 'Produce', protein: 'Protein', dairy: 'Dairy',
-  pantry: 'Pantry', frozen: 'Frozen', other: 'Other',
+  produce: 'Produce',
+  protein: 'Protein',
+  dairy: 'Dairy',
+  pantry: 'Pantry',
+  frozen: 'Frozen',
+  other: 'Other',
 };
 
 export function ShoppingList({ weekStart, items }: { weekStart: string; items: Item[] }) {
@@ -52,7 +61,11 @@ export function ShoppingList({ weekStart, items }: { weekStart: string; items: I
         icon="⌸"
         title="No shopping list for this week"
         body="Plan your meals and FORGE merges every ingredient into one list, sorted the way a shop is laid out."
-        action={<Button onClick={() => void regenerate()} disabled={generating}>Generate List</Button>}
+        action={
+          <Button onClick={() => void regenerate()} disabled={generating}>
+            Generate List
+          </Button>
+        }
       />
     );
   }
@@ -80,7 +93,10 @@ export function ShoppingList({ weekStart, items }: { weekStart: string; items: I
 
       <div className="grid sm:grid-cols-2 xl:grid-cols-3">
         {bySection.map((group) => (
-          <section key={group.section} className="border-b border-r border-ink-900/8 p-5 last:border-r-0">
+          <section
+            key={group.section}
+            className="border-b border-r border-ink-900/8 p-5 last:border-r-0"
+          >
             <h3 className="eyebrow mb-4">{SECTION_LABEL[group.section] ?? group.section}</h3>
             <ul className="space-y-3">
               {group.items.map((item) => {

@@ -40,7 +40,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     <>
       <Section tone="light" size="md">
         <div className="pt-20">
-          <Link href="/equipment" className="text-xs uppercase tracking-[0.14em] text-muted hover:opacity-100">
+          <Link
+            href="/equipment"
+            className="text-xs uppercase tracking-[0.14em] text-muted hover:opacity-100"
+          >
             ← Equipment
           </Link>
 
@@ -49,7 +52,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <Media imageKey={product.imageKey} ratio="1/1" variant="light" alt={product.name} />
               <div className="grid grid-cols-3 gap-4">
                 {['detail-a', 'detail-b', 'detail-c'].map((key) => (
-                  <Media key={key} imageKey={`${product.imageKey}-${key}`} ratio="1/1" variant="light" alt={`${product.name} detail`} />
+                  <Media
+                    key={key}
+                    imageKey={`${product.imageKey}-${key}`}
+                    ratio="1/1"
+                    variant="light"
+                    alt={`${product.name} detail`}
+                  />
                 ))}
               </div>
             </div>
@@ -60,7 +69,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
               <div className="mt-4 flex items-center gap-3 text-sm">
                 <span className="flex items-center gap-1">
-                  <span aria-hidden className="text-accent">★</span>
+                  <span aria-hidden className="text-accent">
+                    ★
+                  </span>
                   <span className="font-semibold">{formatRating(product.ratingTenths)}</span>
                 </span>
                 <span className="text-muted">{formatNumber(product.reviewCount)} reviews</span>
@@ -71,32 +82,41 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <div className="mt-8 flex flex-wrap items-baseline gap-4">
                 <span className="display text-display-sm">{formatCents(product.priceCents)}</span>
                 {product.compareAtCents && (
-                  <span className="text-lg line-through text-muted">{formatCents(product.compareAtCents)}</span>
+                  <span className="text-lg line-through text-muted">
+                    {formatCents(product.compareAtCents)}
+                  </span>
                 )}
               </div>
               {product.financingMonths > 0 && (
                 <p className="mt-2 text-sm text-muted">
-                  or {formatCents(Math.round(product.priceCents / product.financingMonths))} a month for{' '}
-                  {product.financingMonths} months, interest free
+                  or {formatCents(Math.round(product.priceCents / product.financingMonths))} a month
+                  for {product.financingMonths} months, interest free
                 </p>
               )}
 
               <div className="mt-8 flex flex-wrap gap-3">
-                <ButtonLink href="/signin" size="lg">Add to Basket</ButtonLink>
-                <ButtonLink href="/app/equipment" variant="ghost" size="lg">Check Compatibility</ButtonLink>
+                <ButtonLink href="/signin" size="lg">
+                  Add to Basket
+                </ButtonLink>
+                <ButtonLink href="/app/equipment" variant="ghost" size="lg">
+                  Check Compatibility
+                </ButtonLink>
               </div>
 
               <Card padded={false}>
                 <div className="accent-tint mt-8 rounded-card border border-ember/25 bg-ember/[0.06] p-5">
                   <p className="eyebrow text-accent">Works with</p>
                   <p className="mt-2 font-semibold">
-                    {compatiblePrograms.length} FORGE programme{compatiblePrograms.length === 1 ? '' : 's'}
+                    {compatiblePrograms.length} FORGE programme
+                    {compatiblePrograms.length === 1 ? '' : 's'}
                   </p>
                   <ul className="mt-3 flex flex-wrap gap-2">
                     {compatiblePrograms.map((program) => (
                       <li key={program.slug}>
                         <Link href={`/programs/${program.slug}`}>
-                          <Chip tone="accent" size="sm">{program.name}</Chip>
+                          <Chip tone="accent" size="sm">
+                            {program.name}
+                          </Chip>
                         </Link>
                       </li>
                     ))}
@@ -133,7 +153,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <p className="eyebrow mb-5">Specifications</p>
             <dl className="space-y-3 text-sm">
               {Object.entries(product.specs).map(([key, value]) => (
-                <div key={key} className="flex justify-between gap-4 border-b border-ink-900/8 pb-3 last:border-0">
+                <div
+                  key={key}
+                  className="flex justify-between gap-4 border-b border-ink-900/8 pb-3 last:border-0"
+                >
                   <dt className="text-muted">{key}</dt>
                   <dd className="text-right font-medium">{value}</dd>
                 </div>

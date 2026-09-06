@@ -5,9 +5,22 @@ import {
   isCompleteAnswerSheet,
   recommendTier,
 } from './assessment.js';
-import { buildDailyTimeline, buildPhases, buildRoadmap, buildSession, phaseForWeek, selectSessions } from './planning.js';
+import {
+  buildDailyTimeline,
+  buildPhases,
+  buildRoadmap,
+  buildSession,
+  phaseForWeek,
+  selectSessions,
+} from './planning.js';
 import { findProgram, filterPrograms, rankPrograms, PROGRAMS } from './programs.js';
-import { canPerform, EXERCISE_LIBRARY, expandEquipment, findExercise, substituteExercise } from './exercises.js';
+import {
+  canPerform,
+  EXERCISE_LIBRARY,
+  expandEquipment,
+  findExercise,
+  substituteExercise,
+} from './exercises.js';
 import {
   applyDifficultyFeedback,
   detectPersonalRecords,
@@ -26,10 +39,24 @@ import {
   recipeMatchesDiet,
   splitMealTargets,
 } from './nutrition.js';
-import { computeStreaks, consistencyHeatmap, movingAverage, strengthTrend, summariseProgress } from './progress.js';
+import {
+  computeStreaks,
+  consistencyHeatmap,
+  movingAverage,
+  strengthTrend,
+  summariseProgress,
+} from './progress.js';
 import { coachCapacity, matchCoaches, scoreCheckIn } from './coaching.js';
 import { buildLeaderboard, challengeProgress, CHALLENGES, findChallenge } from './challenges.js';
-import { effectiveFeatures, entitlementsFor, findPlan, hasEntitlement, planPricing, resolvePromo, summariseCheckout } from './pricing.js';
+import {
+  effectiveFeatures,
+  entitlementsFor,
+  findPlan,
+  hasEntitlement,
+  planPricing,
+  resolvePromo,
+  summariseCheckout,
+} from './pricing.js';
 import { answer, classifyIntent, MEDICAL_DISCLAIMER } from './ai-coach.js';
 import { addDays, daysBetween, formatClock, startOfWeek } from './dates.js';
 import { createIdFactory, slugify } from './ids.js';
@@ -111,7 +138,10 @@ describe('assessment', () => {
   });
 
   it('never recommends a barbell programme to someone without a barbell', () => {
-    const profile = buildPerformanceProfile({ ...ANSWERS, equipment: ['bodyweight', 'resistance-bands'] });
+    const profile = buildPerformanceProfile({
+      ...ANSWERS,
+      equipment: ['bodyweight', 'resistance-bands'],
+    });
     const program = findProgram(profile.recommendedProgramSlug);
     expect(program).toBeDefined();
     expect(program!.equipment).not.toContain('barbell');
@@ -120,7 +150,12 @@ describe('assessment', () => {
   it('raises recovery priority with age and frequency', () => {
     const older = buildPerformanceProfile({ ...ANSWERS, ageRange: '55-64', daysPerWeek: 5 });
     expect(older.recoveryPriority).toBe('high');
-    const young = buildPerformanceProfile({ ...ANSWERS, ageRange: '18-24', daysPerWeek: 3, experience: 'advanced' });
+    const young = buildPerformanceProfile({
+      ...ANSWERS,
+      ageRange: '18-24',
+      daysPerWeek: 3,
+      experience: 'advanced',
+    });
     expect(young.recoveryPriority).toBe('low');
   });
 
@@ -148,7 +183,9 @@ describe('exercise library', () => {
     const owned = ['bodyweight', 'resistance-bands'] as const;
     for (const exercise of EXERCISE_LIBRARY) {
       if (canPerform(exercise, owned)) {
-        expect(exercise.requires.every((r) => r === 'bodyweight' || r === 'resistance-bands')).toBe(true);
+        expect(exercise.requires.every((r) => r === 'bodyweight' || r === 'resistance-bands')).toBe(
+          true,
+        );
       }
     }
   });
@@ -246,9 +283,14 @@ describe('roadmap and sessions', () => {
   it('is deterministic — identical input produces an identical plan', () => {
     const again = buildRoadmap(
       {
-        program, goal: ANSWERS.primaryGoal, level: profile.trainingLevel,
-        sessionsPerWeek: profile.suggestedFrequency, sessionMinutes: profile.sessionMinutes,
-        startDate: '2026-09-07', coached: true, nutritionGoal: profile.nutritionGoal,
+        program,
+        goal: ANSWERS.primaryGoal,
+        level: profile.trainingLevel,
+        sessionsPerWeek: profile.suggestedFrequency,
+        sessionMinutes: profile.sessionMinutes,
+        startDate: '2026-09-07',
+        coached: true,
+        nutritionGoal: profile.nutritionGoal,
         recoveryPriority: profile.recoveryPriority,
       },
       profile.phaseEmphasis,
@@ -300,12 +342,22 @@ describe('roadmap and sessions', () => {
   it('fits the session inside the time the member gave', () => {
     const day = roadmap.weeks[0]!.days.find((d) => d.sessionTemplate !== null)!;
     const short = buildSession({
-      session: day.sessionTemplate!, equipment: ['full-gym'], level: 'intermediate',
-      phase: roadmap.phases[0]!, deload: false, minutes: 25, bodyweightKg: 82,
+      session: day.sessionTemplate!,
+      equipment: ['full-gym'],
+      level: 'intermediate',
+      phase: roadmap.phases[0]!,
+      deload: false,
+      minutes: 25,
+      bodyweightKg: 82,
     });
     const long = buildSession({
-      session: day.sessionTemplate!, equipment: ['full-gym'], level: 'intermediate',
-      phase: roadmap.phases[0]!, deload: false, minutes: 60, bodyweightKg: 82,
+      session: day.sessionTemplate!,
+      equipment: ['full-gym'],
+      level: 'intermediate',
+      phase: roadmap.phases[0]!,
+      deload: false,
+      minutes: 60,
+      bodyweightKg: 82,
     });
     expect(short.exercises.length).toBeLessThanOrEqual(long.exercises.length);
     expect(short.exercises.length).toBeGreaterThan(0);
@@ -329,7 +381,12 @@ describe('roadmap and sessions', () => {
 
 describe('progression', () => {
   const base: ExercisePrescription = {
-    sets: 4, reps: 8, repsTop: 10, loadGrams: 100_000, rpe: 8, restSeconds: 180,
+    sets: 4,
+    reps: 8,
+    repsTop: 10,
+    loadGrams: 100_000,
+    rpe: 8,
+    restSeconds: 180,
   };
 
   it('adds reps before load under double progression', () => {
@@ -378,7 +435,12 @@ describe('progression', () => {
   });
 
   it('never moves a load more than ten percent in one step', () => {
-    const types = ['linear-load', 'double-progression', 'volume-accumulation', 'rpe-autoregulated'] as const;
+    const types = [
+      'linear-load',
+      'double-progression',
+      'volume-accumulation',
+      'rpe-autoregulated',
+    ] as const;
     for (const type of types) {
       for (const rpe of [4, 6, 8, 10]) {
         const decision = progressExercise(
@@ -436,13 +498,19 @@ describe('progression', () => {
     // biased number is stored back, the next build biases it again.
     const trueWorkingLoad = 100_000;
     const prescribed: ExercisePrescription = {
-      ...base, loadGrams: trueWorkingLoad * 0.85, intensityBias: 0.85,
+      ...base,
+      loadGrams: trueWorkingLoad * 0.85,
+      intensityBias: 0.85,
     };
     const logs = Array.from({ length: prescribed.sets }, () => ({
-      reps: prescribed.reps, loadGrams: prescribed.loadGrams, rpe: 7, completed: true,
+      reps: prescribed.reps,
+      loadGrams: prescribed.loadGrams,
+      rpe: 7,
+      completed: true,
     }));
     const held = progressExercise(prescribed, logs, {
-      type: 'double-progression', level: 'intermediate',
+      type: 'double-progression',
+      level: 'intermediate',
     });
     // Reps go up before load does, so the load is unchanged — and unbiased it
     // must be exactly the working load we started from.
@@ -460,12 +528,19 @@ describe('progression', () => {
     for (const bias of [0.85, 0.85, 0.85, 0.85, 0.95, 0.95, 0.95, 0.95, 1.05, 1.05, 1.05, 1.05]) {
       for (let session = 0; session < 5; session += 1) {
         const prescribed: ExercisePrescription = {
-          sets: 4, reps: 6, repsTop: 8, rpe: 7, restSeconds: 180,
+          sets: 4,
+          reps: 6,
+          repsTop: 8,
+          rpe: 7,
+          restSeconds: 180,
           loadGrams: roundToPlate(workingLoad * bias, 2500),
           intensityBias: bias,
         };
         const logs = Array.from({ length: prescribed.sets }, () => ({
-          reps: prescribed.repsTop!, loadGrams: prescribed.loadGrams, rpe: 7, completed: true,
+          reps: prescribed.repsTop!,
+          loadGrams: prescribed.loadGrams,
+          rpe: 7,
+          completed: true,
         }));
         const decision = progressExercise(prescribed, logs, { type: 'double-progression', level });
         workingLoad = workingLoadFrom(decision.next, prescribed);
@@ -492,13 +567,25 @@ describe('readiness', () => {
   });
 
   it('scores a well-recovered morning high', () => {
-    const result = computeReadiness({ sleepMinutes: 480, hrvMs: 72, restingHeartRate: 54, soreness: 1, stress: 1 });
+    const result = computeReadiness({
+      sleepMinutes: 480,
+      hrvMs: 72,
+      restingHeartRate: 54,
+      soreness: 1,
+      stress: 1,
+    });
     expect(result.score!).toBeGreaterThanOrEqual(85);
     expect(result.band).toBe('primed');
   });
 
   it('scores a bad night low and tells the member to back off', () => {
-    const result = computeReadiness({ sleepMinutes: 280, hrvMs: 38, restingHeartRate: 68, soreness: 5, stress: 5 });
+    const result = computeReadiness({
+      sleepMinutes: 280,
+      hrvMs: 38,
+      restingHeartRate: 68,
+      soreness: 5,
+      stress: 5,
+    });
     expect(result.score!).toBeLessThan(50);
     expect(result.band).toBe('compromised');
     expect(result.guidance).toMatch(/mobility|easy/i);
@@ -513,7 +600,10 @@ describe('readiness', () => {
   it('flags an acute load spike', () => {
     const steady = Array.from({ length: 28 }, () => 100);
     expect(assessTrainingLoad(steady).zone).toBe('optimal');
-    const spiked = [...Array.from({ length: 21 }, () => 50), ...Array.from({ length: 7 }, () => 300)];
+    const spiked = [
+      ...Array.from({ length: 21 }, () => 50),
+      ...Array.from({ length: 7 }, () => 300),
+    ];
     expect(assessTrainingLoad(spiked).zone).toBe('spike');
     expect(assessTrainingLoad([1, 2, 3]).zone).toBe('insufficient-data');
   });
@@ -523,7 +613,10 @@ describe('readiness', () => {
   });
 
   it('moves the baseline gradually rather than jumping to the latest reading', () => {
-    const next = updateBaseline({ sleepMinutes: 450, hrvMs: 60, restingHeartRate: 58 }, { hrvMs: 100 });
+    const next = updateBaseline(
+      { sleepMinutes: 450, hrvMs: 60, restingHeartRate: 58 },
+      { hrvMs: 100 },
+    );
     expect(next.hrvMs).toBeCloseTo(64, 5);
     expect(next.sleepMinutes).toBe(450);
   });
@@ -532,8 +625,13 @@ describe('readiness', () => {
 describe('nutrition', () => {
   it('computes macros that add back up to the calorie target', () => {
     const targets = computeMacroTargets({
-      weightKg: 82, heightCm: 180, ageRange: '25-34', sexAtBirth: 'male',
-      goal: 'build-muscle', trainingDaysPerWeek: 5, diet: 'high-protein',
+      weightKg: 82,
+      heightCm: 180,
+      ageRange: '25-34',
+      sexAtBirth: 'male',
+      goal: 'build-muscle',
+      trainingDaysPerWeek: 5,
+      diet: 'high-protein',
     });
     const fromMacros = targets.proteinGrams * 4 + targets.carbGrams * 4 + targets.fatGrams * 9;
     expect(Math.abs(fromMacros - targets.calories)).toBeLessThanOrEqual(25);
@@ -542,14 +640,26 @@ describe('nutrition', () => {
 
   it('never prescribes below the calorie floor, however aggressive the goal', () => {
     const targets = computeMacroTargets({
-      weightKg: 48, heightCm: 152, ageRange: '55-64', sexAtBirth: 'female',
-      goal: 'lose-body-fat', trainingDaysPerWeek: 2, diet: 'balanced',
+      weightKg: 48,
+      heightCm: 152,
+      ageRange: '55-64',
+      sexAtBirth: 'female',
+      goal: 'lose-body-fat',
+      trainingDaysPerWeek: 2,
+      diet: 'balanced',
     });
     expect(targets.calories).toBeGreaterThanOrEqual(ABSOLUTE_CALORIE_FLOOR);
   });
 
   it('puts a cut below and a bulk above maintenance', () => {
-    const shared = { weightKg: 75, heightCm: 175, ageRange: '25-34', sexAtBirth: 'female', trainingDaysPerWeek: 4, diet: 'balanced' } as const;
+    const shared = {
+      weightKg: 75,
+      heightCm: 175,
+      ageRange: '25-34',
+      sexAtBirth: 'female',
+      trainingDaysPerWeek: 4,
+      diet: 'balanced',
+    } as const;
     const cut = computeMacroTargets({ ...shared, goal: 'lose-body-fat' });
     const bulk = computeMacroTargets({ ...shared, goal: 'build-muscle' });
     expect(cut.calories).toBeLessThan(bulk.calories);
@@ -557,8 +667,13 @@ describe('nutrition', () => {
 
   it('splits the day into four meals that sum to the daily target', () => {
     const targets = computeMacroTargets({
-      weightKg: 82, heightCm: 180, ageRange: '25-34', sexAtBirth: 'male',
-      goal: 'build-muscle', trainingDaysPerWeek: 5, diet: 'balanced',
+      weightKg: 82,
+      heightCm: 180,
+      ageRange: '25-34',
+      sexAtBirth: 'male',
+      goal: 'build-muscle',
+      trainingDaysPerWeek: 5,
+      diet: 'balanced',
     });
     const meals = splitMealTargets(targets);
     expect(meals).toHaveLength(4);
@@ -569,9 +684,20 @@ describe('nutrition', () => {
   it('merges shopping list lines only when the unit matches', () => {
     const list = buildShoppingList(
       [
-        { servings: 2, ingredients: [{ name: 'Chicken breast', quantity: 300, unit: 'g', section: 'protein' }] },
-        { servings: 2, ingredients: [{ name: 'Chicken breast', quantity: 200, unit: 'g', section: 'protein' }] },
-        { servings: 1, ingredients: [{ name: 'Chicken breast', quantity: 2, unit: 'fillet', section: 'protein' }] },
+        {
+          servings: 2,
+          ingredients: [{ name: 'Chicken breast', quantity: 300, unit: 'g', section: 'protein' }],
+        },
+        {
+          servings: 2,
+          ingredients: [{ name: 'Chicken breast', quantity: 200, unit: 'g', section: 'protein' }],
+        },
+        {
+          servings: 1,
+          ingredients: [
+            { name: 'Chicken breast', quantity: 2, unit: 'fillet', section: 'protein' },
+          ],
+        },
       ],
       2,
     );
@@ -609,9 +735,30 @@ describe('nutrition', () => {
 
 describe('progress analytics', () => {
   const records = [
-    { date: '2026-09-01', durationMinutes: 45, volumeGrams: 12_000_000, calories: 420, kind: 'strength', muscleGroups: ['chest' as const] },
-    { date: '2026-09-03', durationMinutes: 50, volumeGrams: 14_000_000, calories: 460, kind: 'strength', muscleGroups: ['back' as const] },
-    { date: '2026-09-05', durationMinutes: 30, volumeGrams: 0, calories: 300, kind: 'conditioning', muscleGroups: ['quads' as const] },
+    {
+      date: '2026-09-01',
+      durationMinutes: 45,
+      volumeGrams: 12_000_000,
+      calories: 420,
+      kind: 'strength',
+      muscleGroups: ['chest' as const],
+    },
+    {
+      date: '2026-09-03',
+      durationMinutes: 50,
+      volumeGrams: 14_000_000,
+      calories: 460,
+      kind: 'strength',
+      muscleGroups: ['back' as const],
+    },
+    {
+      date: '2026-09-05',
+      durationMinutes: 30,
+      volumeGrams: 0,
+      calories: 300,
+      kind: 'conditioning',
+      muscleGroups: ['quads' as const],
+    },
   ];
 
   it('summarises totals and the weekly average', () => {
@@ -622,7 +769,9 @@ describe('progress analytics', () => {
   });
 
   it('allows one rest day inside a streak but breaks on three', () => {
-    expect(computeStreaks(['2026-09-01', '2026-09-03', '2026-09-05'], '2026-09-05').current).toBe(5);
+    expect(computeStreaks(['2026-09-01', '2026-09-03', '2026-09-05'], '2026-09-05').current).toBe(
+      5,
+    );
     expect(computeStreaks(['2026-09-01', '2026-09-06'], '2026-09-06').current).toBe(1);
     expect(computeStreaks(['2026-09-01'], '2026-09-10').current).toBe(0);
   });
@@ -636,7 +785,9 @@ describe('progress analytics', () => {
 
   it('smooths bodyweight without inventing points', () => {
     const raw = [
-      { date: '2026-09-01', value: 82 }, { date: '2026-09-02', value: 83 }, { date: '2026-09-03', value: 81 },
+      { date: '2026-09-01', value: 82 },
+      { date: '2026-09-02', value: 83 },
+      { date: '2026-09-03', value: 81 },
     ];
     const smoothed = movingAverage(raw, 3);
     expect(smoothed).toHaveLength(3);
@@ -655,8 +806,26 @@ describe('progress analytics', () => {
 
 describe('coaching', () => {
   const coaches = [
-    { slug: 'maya-roberts', specialties: ['strength' as const, 'hypertrophy' as const], languages: ['English'], yearsExperience: 8, rating: 4.9, clientCount: 428, availableSlotsThisWeek: 3, monthlyPriceCents: 14900 },
-    { slug: 'amara-diallo', specialties: ['endurance' as const], languages: ['English', 'French'], yearsExperience: 11, rating: 4.8, clientCount: 260, availableSlotsThisWeek: 0, monthlyPriceCents: 17900 },
+    {
+      slug: 'maya-roberts',
+      specialties: ['strength' as const, 'hypertrophy' as const],
+      languages: ['English'],
+      yearsExperience: 8,
+      rating: 4.9,
+      clientCount: 428,
+      availableSlotsThisWeek: 3,
+      monthlyPriceCents: 14900,
+    },
+    {
+      slug: 'amara-diallo',
+      specialties: ['endurance' as const],
+      languages: ['English', 'French'],
+      yearsExperience: 11,
+      rating: 4.8,
+      clientCount: 260,
+      availableSlotsThisWeek: 0,
+      monthlyPriceCents: 17900,
+    },
   ];
 
   it('ranks the coach whose specialty matches the goal first, with reasons', () => {
@@ -666,22 +835,44 @@ describe('coaching', () => {
   });
 
   it('applies availability, price and language as hard filters', () => {
-    expect(matchCoaches(coaches, { goal: 'improve-endurance', needsAvailabilityThisWeek: true })).toHaveLength(1);
-    expect(matchCoaches(coaches, { goal: 'build-muscle', maxMonthlyPriceCents: 15_000 })).toHaveLength(1);
-    expect(matchCoaches(coaches, { goal: 'improve-endurance', language: 'French' })[0]?.slug).toBe('amara-diallo');
+    expect(
+      matchCoaches(coaches, { goal: 'improve-endurance', needsAvailabilityThisWeek: true }),
+    ).toHaveLength(1);
+    expect(
+      matchCoaches(coaches, { goal: 'build-muscle', maxMonthlyPriceCents: 15_000 }),
+    ).toHaveLength(1);
+    expect(matchCoaches(coaches, { goal: 'improve-endurance', language: 'French' })[0]?.slug).toBe(
+      'amara-diallo',
+    );
   });
 
   it('scores a strong check-in high and a hard one low', () => {
-    const strong = scoreCheckIn({ energy: 5, sleepQuality: 5, stress: 1, nutritionAdherence: 5, trainingAdherence: 5 });
+    const strong = scoreCheckIn({
+      energy: 5,
+      sleepQuality: 5,
+      stress: 1,
+      nutritionAdherence: 5,
+      trainingAdherence: 5,
+    });
     expect(strong.band).toBe('thriving');
-    const hard = scoreCheckIn({ energy: 2, sleepQuality: 1, stress: 5, nutritionAdherence: 2, trainingAdherence: 1 });
+    const hard = scoreCheckIn({
+      energy: 2,
+      sleepQuality: 1,
+      stress: 5,
+      nutritionAdherence: 2,
+      trainingAdherence: 1,
+    });
     expect(hard.band).toBe('at-risk');
     expect(hard.flags).toContain('poor-sleep');
   });
 
   it('puts a reported pain note at the top of the coach prompts', () => {
     const result = scoreCheckIn({
-      energy: 4, sleepQuality: 4, stress: 2, nutritionAdherence: 4, trainingAdherence: 4,
+      energy: 4,
+      sleepQuality: 4,
+      stress: 2,
+      nutritionAdherence: 4,
+      trainingAdherence: 4,
       painNotes: 'Left knee aches on the way down',
     });
     expect(result.flags).toContain('pain-reported');
@@ -689,8 +880,14 @@ describe('coaching', () => {
   });
 
   it('reports coach capacity honestly', () => {
-    expect(coachCapacity({ activeClients: 39, pendingCheckIns: 2, unreadMessages: 1, upcomingCalls: 3 }).status).toBe('at-capacity');
-    expect(coachCapacity({ activeClients: 12, pendingCheckIns: 0, unreadMessages: 0, upcomingCalls: 0 }).status).toBe('available');
+    expect(
+      coachCapacity({ activeClients: 39, pendingCheckIns: 2, unreadMessages: 1, upcomingCalls: 3 })
+        .status,
+    ).toBe('at-capacity');
+    expect(
+      coachCapacity({ activeClients: 12, pendingCheckIns: 0, unreadMessages: 0, upcomingCalls: 0 })
+        .status,
+    ).toBe('available');
   });
 });
 
@@ -740,14 +937,20 @@ describe('pricing', () => {
   });
 
   it('inherits features and entitlements up the tiers', () => {
-    expect(effectiveFeatures('forge-coach').length).toBeGreaterThan(effectiveFeatures('forge').length);
+    expect(effectiveFeatures('forge-coach').length).toBeGreaterThan(
+      effectiveFeatures('forge').length,
+    );
     expect(hasEntitlement('forge-coach', 'training')).toBe(true);
     expect(hasEntitlement('forge', 'human-coach')).toBe(false);
     expect(entitlementsFor('forge-pro')).toContain('wearables');
   });
 
   it('states the recurring-billing disclosure with the real charge date', () => {
-    const summary = summariseCheckout({ tier: 'forge-pro', interval: 'monthly', todayIso: '2026-09-04' })!;
+    const summary = summariseCheckout({
+      tier: 'forge-pro',
+      interval: 'monthly',
+      todayIso: '2026-09-04',
+    })!;
     expect(summary.firstChargeDate).toBe('2026-09-11');
     expect(summary.disclosure).toContain('7-day free trial');
     expect(summary.disclosure).toContain('$49');
@@ -756,7 +959,12 @@ describe('pricing', () => {
   it('applies a promo code to the total', () => {
     expect(resolvePromo('forge20')).toBe(20);
     expect(resolvePromo('nope')).toBe(0);
-    const summary = summariseCheckout({ tier: 'forge', interval: 'monthly', promoPercentOff: 20, todayIso: '2026-09-04' })!;
+    const summary = summariseCheckout({
+      tier: 'forge',
+      interval: 'monthly',
+      promoPercentOff: 20,
+      todayIso: '2026-09-04',
+    })!;
     expect(summary.totalCents).toBe(2320);
   });
 });
@@ -768,10 +976,21 @@ describe('FORGE AI', () => {
     todaySessionTitle: 'Upper Body Strength',
     todaySessionMinutes: 45,
     todaySessionKind: 'strength',
-    readiness: computeReadiness({ sleepMinutes: 400, hrvMs: 48, restingHeartRate: 64, soreness: 4, stress: 3 }),
+    readiness: computeReadiness({
+      sleepMinutes: 400,
+      hrvMs: 48,
+      restingHeartRate: 64,
+      soreness: 4,
+      stress: 3,
+    }),
     macros: computeMacroTargets({
-      weightKg: 82, heightCm: 180, ageRange: '25-34', sexAtBirth: 'male',
-      goal: 'build-muscle', trainingDaysPerWeek: 5, diet: 'high-protein',
+      weightKg: 82,
+      heightCm: 180,
+      ageRange: '25-34',
+      sexAtBirth: 'male',
+      goal: 'build-muscle',
+      trainingDaysPerWeek: 5,
+      diet: 'high-protein',
     }),
     equipment: ['dumbbells', 'bench'] as const as ('dumbbells' | 'bench')[],
     weeklyCompleted: 3,

@@ -12,7 +12,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <p className="text-caption muted">© 2026 FORGE · Beta</p>
       </main>
 
-      <aside aria-hidden className="relative hidden overflow-hidden border-l border-ink-600 bg-ink-800 lg:block">
+      <aside
+        aria-hidden
+        className="relative hidden overflow-hidden border-l border-ink-600 bg-ink-800 lg:block"
+      >
         <div className="absolute inset-0 text-signal/35">
           <RouteGlyph seed="forge-auth-panel" className="h-full w-full" strokeWidth={1.6} />
         </div>

@@ -14,8 +14,12 @@ import { integer, timestamp, varchar } from 'drizzle-orm/pg-core';
 export const id = (name = 'id') => varchar(name, { length: 40 });
 
 export const timestamps = {
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
 };
 
 /** Money is always an integer count of cents. There is no float money column. */

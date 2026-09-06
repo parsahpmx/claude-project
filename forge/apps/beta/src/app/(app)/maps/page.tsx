@@ -47,17 +47,23 @@ export default async function MapsPage() {
         >
           <h1 className="text-page-title font-display text-bone-100">Your map</h1>
           <p className="mt-2 text-secondary muted">
-            Routes you have saved and activities you have recorded. Private to you
-            unless you share a route deliberately.
+            Routes you have saved and activities you have recorded. Private to you unless you share
+            a route deliberately.
           </p>
 
           <div className="mt-7">
-            <h2 className="eyebrow mb-3">Saved routes <span className="muted">{routes.length}</span></h2>
+            <h2 className="eyebrow mb-3">
+              Saved routes <span className="muted">{routes.length}</span>
+            </h2>
             {routes.length === 0 ? (
               <EmptyState
                 title="No saved routes"
                 body="Build a route and it will show here, ready to send to your phone before a session."
-                action={<ButtonLink href="/routes/new" size="sm" variant="secondary">Build a route</ButtonLink>}
+                action={
+                  <ButtonLink href="/routes/new" size="sm" variant="secondary">
+                    Build a route
+                  </ButtonLink>
+                }
               />
             ) : (
               <ul className="space-y-2.5">
@@ -72,7 +78,8 @@ export default async function MapsPage() {
                         <Badge>{SPORT_LABEL[route.sport]}</Badge>
                       </div>
                       <p className="mt-1.5 text-secondary muted tabular-nums">
-                        {formatDistance(route.distanceM, units)} · {formatElevation(route.elevationGainM, units)}
+                        {formatDistance(route.distanceM, units)} ·{' '}
+                        {formatElevation(route.elevationGainM, units)}
                       </p>
                     </Link>
                   </li>
@@ -87,8 +94,8 @@ export default async function MapsPage() {
             </h2>
             {traced.length === 0 ? (
               <p className="text-secondary muted">
-                None of your activities carry a map yet. Activities recorded with GPS
-                will appear here once processed.
+                None of your activities carry a map yet. Activities recorded with GPS will appear
+                here once processed.
               </p>
             ) : (
               <ul className="space-y-2">

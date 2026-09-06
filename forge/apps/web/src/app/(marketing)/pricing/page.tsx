@@ -45,10 +45,14 @@ export default async function PricingPage() {
       <Section tone="dark" size="lg">
         <div className="mx-auto max-w-3xl pt-16 text-center">
           <p className="eyebrow mb-6">Pricing</p>
-          <h1 className="display text-display-lg text-balance">ONE SYSTEM.<br />THREE LEVELS OF SUPPORT.</h1>
+          <h1 className="display text-display-lg text-balance">
+            ONE SYSTEM.
+            <br />
+            THREE LEVELS OF SUPPORT.
+          </h1>
           <p className="mt-6 text-lg leading-relaxed text-bone-200/70">
-            Every plan starts with a seven-day free trial. Cancel any time before it ends and you are not
-            charged.
+            Every plan starts with a seven-day free trial. Cancel any time before it ends and you
+            are not charged.
           </p>
         </div>
       </Section>
@@ -69,22 +73,34 @@ export default async function PricingPage() {
             <caption className="sr-only">Feature comparison across FORGE plans</caption>
             <thead>
               <tr className="border-b border-ink-900/10">
-                <th scope="col" className="p-5 text-left font-semibold">Feature</th>
+                <th scope="col" className="p-5 text-left font-semibold">
+                  Feature
+                </th>
                 {plans.map((plan) => (
-                  <th key={plan.tier} scope="col" className="p-5 text-left font-semibold">{plan.name}</th>
+                  <th key={plan.tier} scope="col" className="p-5 text-left font-semibold">
+                    {plan.name}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {COMPARISON.map((row) => (
                 <tr key={row.label} className="border-b border-ink-900/8 last:border-0">
-                  <th scope="row" className="p-5 text-left font-normal opacity-75">{row.label}</th>
+                  <th scope="row" className="p-5 text-left font-normal opacity-75">
+                    {row.label}
+                  </th>
                   {row.values.map((value, index) => (
                     <td key={index} className="p-5">
                       {value === true ? (
-                        <span className="text-status-good"><span aria-hidden>✓</span><span className="sr-only">Included</span></span>
+                        <span className="text-status-good">
+                          <span aria-hidden>✓</span>
+                          <span className="sr-only">Included</span>
+                        </span>
                       ) : value === false ? (
-                        <span className="text-muted"><span aria-hidden>—</span><span className="sr-only">Not included</span></span>
+                        <span className="text-muted">
+                          <span aria-hidden>—</span>
+                          <span className="sr-only">Not included</span>
+                        </span>
                       ) : (
                         <span className="opacity-80">{value}</span>
                       )}
@@ -101,10 +117,18 @@ export default async function PricingPage() {
         <SectionHeading eyebrow="Questions" title="THE THINGS PEOPLE ASK." />
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
           {FAQ.map((entry) => (
-            <details key={entry.q} className="light-surface group rounded-card border border-ink-900/10 bg-bone-100 p-6">
+            <details
+              key={entry.q}
+              className="light-surface group rounded-card border border-ink-900/10 bg-bone-100 p-6"
+            >
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold">
                 {entry.q}
-                <span aria-hidden className="text-lg text-muted transition-transform group-open:rotate-45">+</span>
+                <span
+                  aria-hidden
+                  className="text-lg text-muted transition-transform group-open:rotate-45"
+                >
+                  +
+                </span>
               </summary>
               <p className="mt-4 text-sm leading-relaxed text-muted">{entry.a}</p>
             </details>
@@ -116,8 +140,14 @@ export default async function PricingPage() {
         <div className="grid gap-6 sm:grid-cols-3">
           {[
             ['Cancel anytime', 'Month-to-month with no notice period and no cancellation fee.'],
-            ['Secure payments', 'Card details are handled by the payment processor. FORGE stores only the last four digits.'],
-            ['No hidden fees', 'The price you see at checkout is the price billed. Nothing is added later.'],
+            [
+              'Secure payments',
+              'Card details are handled by the payment processor. FORGE stores only the last four digits.',
+            ],
+            [
+              'No hidden fees',
+              'The price you see at checkout is the price billed. Nothing is added later.',
+            ],
           ].map(([title, body]) => (
             <Card key={title} tone="dark">
               <p className="display text-lg">{title}</p>
@@ -136,7 +166,10 @@ const COMPARISON: { label: string; values: (boolean | string)[] }[] = [
   { label: 'Nutrition targets, meals and shopping list', values: [true, true, true] },
   { label: 'Recovery and mobility sessions', values: [true, true, true] },
   { label: 'Progress analytics', values: ['Standard', 'Advanced', 'Advanced'] },
-  { label: 'FORGE AI assistant', values: ['Standard', 'With session analysis', 'With session analysis'] },
+  {
+    label: 'FORGE AI assistant',
+    values: ['Standard', 'With session analysis', 'With session analysis'],
+  },
   { label: 'Adaptive training from readiness', values: [false, true, true] },
   { label: 'Wearable insights', values: [false, true, true] },
   { label: 'Dedicated human coach', values: [false, false, true] },

@@ -10,13 +10,15 @@ import { SPORTS, VISIBILITY } from './types';
 export const sportSchema = z.enum(SPORTS);
 export const visibilitySchema = z.enum(VISIBILITY);
 
-export const lngLatSchema = z.tuple([
-  z.number().min(-180).max(180),
-  z.number().min(-90).max(90),
-]);
+export const lngLatSchema = z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]);
 
 export const profileUpdateSchema = z.object({
-  username: z.string().min(3).max(30).regex(/^[a-z0-9_]+$/i, 'Letters, numbers and underscores only').optional(),
+  username: z
+    .string()
+    .min(3)
+    .max(30)
+    .regex(/^[a-z0-9_]+$/i, 'Letters, numbers and underscores only')
+    .optional(),
   displayName: z.string().min(1).max(60).optional(),
   bio: z.string().max(400).optional(),
   primarySport: sportSchema.nullable().optional(),
@@ -37,26 +39,36 @@ export const privacyUpdateSchema = z.object({
   aiConsent: z.boolean().optional(),
 });
 
-export const activityCreateSchema = z.object({
-  sport: sportSchema,
-  title: z.string().min(1).max(140),
-  description: z.string().max(2000).default(''),
-  startedAt: z.string().datetime(),
-  timezone: z.string().max(64).default('UTC'),
-  elapsedS: z.number().int().min(0).max(86_400 * 7),
-  movingS: z.number().int().min(0).max(86_400 * 7),
-  distanceM: z.number().int().min(0).max(1_000_000),
-  elevationGainM: z.number().int().min(0).max(30_000),
-  avgHr: z.number().int().min(20).max(260).nullable().default(null),
-  maxHr: z.number().int().min(20).max(260).nullable().default(null),
-  calories: z.number().int().min(0).max(30_000).nullable().default(null),
-  visibility: visibilitySchema.optional(),
-  // Bounded so one request cannot post a million-point track (§77).
-  track: z.array(lngLatSchema).max(50_000).optional(),
-}).refine((v) => v.movingS <= v.elapsedS, {
-  message: 'Moving time cannot exceed elapsed time',
-  path: ['movingS'],
-});
+export const activityCreateSchema = z
+  .object({
+    sport: sportSchema,
+    title: z.string().min(1).max(140),
+    description: z.string().max(2000).default(''),
+    startedAt: z.string().datetime(),
+    timezone: z.string().max(64).default('UTC'),
+    elapsedS: z
+      .number()
+      .int()
+      .min(0)
+      .max(86_400 * 7),
+    movingS: z
+      .number()
+      .int()
+      .min(0)
+      .max(86_400 * 7),
+    distanceM: z.number().int().min(0).max(1_000_000),
+    elevationGainM: z.number().int().min(0).max(30_000),
+    avgHr: z.number().int().min(20).max(260).nullable().default(null),
+    maxHr: z.number().int().min(20).max(260).nullable().default(null),
+    calories: z.number().int().min(0).max(30_000).nullable().default(null),
+    visibility: visibilitySchema.optional(),
+    // Bounded so one request cannot post a million-point track (§77).
+    track: z.array(lngLatSchema).max(50_000).optional(),
+  })
+  .refine((v) => v.movingS <= v.elapsedS, {
+    message: 'Moving time cannot exceed elapsed time',
+    path: ['movingS'],
+  });
 
 export const routeCreateSchema = z.object({
   name: z.string().min(1).max(120),
@@ -68,7 +80,14 @@ export const routeCreateSchema = z.object({
 });
 
 export const goalCreateSchema = z.object({
-  kind: z.enum(['weekly_sessions', 'weekly_minutes', 'weekly_distance', 'strength_sessions', 'program_completion', 'race']),
+  kind: z.enum([
+    'weekly_sessions',
+    'weekly_minutes',
+    'weekly_distance',
+    'strength_sessions',
+    'program_completion',
+    'race',
+  ]),
   sport: sportSchema.nullable().default(null),
   target: z.number().positive().max(1_000_000),
   unit: z.string().max(16).default(''),

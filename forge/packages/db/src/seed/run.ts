@@ -10,7 +10,9 @@ import { seedDatabase } from './seed.js';
  * silently double-seeding, which is the failure mode you want.
  */
 const handle = await createDatabase();
-console.log(`[forge] database driver: ${handle.driver}${handle.dataDir ? ` (${handle.dataDir})` : ''}`);
+console.log(
+  `[forge] database driver: ${handle.driver}${handle.dataDir ? ` (${handle.dataDir})` : ''}`,
+);
 
 await runMigrations(handle);
 console.log('[forge] migrations applied');

@@ -8,16 +8,37 @@ import { SuccessState, ErrorState } from '@/components/ui/feedback';
 import type { MemberProfile } from '@/lib/types';
 
 const EQUIPMENT = [
-  'bodyweight', 'dumbbells', 'barbell', 'bench', 'rack', 'kettlebell',
-  'resistance-bands', 'cable-machine', 'full-gym', 'cardio-equipment',
+  'bodyweight',
+  'dumbbells',
+  'barbell',
+  'bench',
+  'rack',
+  'kettlebell',
+  'resistance-bands',
+  'cable-machine',
+  'full-gym',
+  'cardio-equipment',
 ];
 
 const GOALS = [
-  'build-muscle', 'lose-body-fat', 'improve-strength', 'improve-endurance',
-  'build-healthy-habits', 'improve-mobility', 'train-for-competition',
+  'build-muscle',
+  'lose-body-fat',
+  'improve-strength',
+  'improve-endurance',
+  'build-healthy-habits',
+  'improve-mobility',
+  'train-for-competition',
 ];
 
-const DIETS = ['balanced', 'high-protein', 'vegetarian', 'vegan', 'pescatarian', 'gluten-free', 'dairy-free'];
+const DIETS = [
+  'balanced',
+  'high-protein',
+  'vegetarian',
+  'vegan',
+  'pescatarian',
+  'gluten-free',
+  'dairy-free',
+];
 
 export function ProfileForm({
   user,
@@ -72,14 +93,31 @@ export function ProfileForm({
         />
       )}
       {state === 'error' && (
-        <ErrorState title="Could not save" body="Something went wrong. Your changes have not been saved." />
+        <ErrorState
+          title="Could not save"
+          body="Something went wrong. Your changes have not been saved."
+        />
       )}
 
       <div className="grid gap-5 sm:grid-cols-2">
         <TextInput label="First name" name="firstName" defaultValue={user.firstName} required />
         <TextInput label="Last name" name="lastName" defaultValue={user.lastName} required />
-        <TextInput label="Height (cm)" name="heightCm" type="number" min={120} max={230} defaultValue={profile.heightCm ?? ''} />
-        <TextInput label="Weight (kg)" name="weightKg" type="number" min={35} max={250} defaultValue={profile.weightKg ?? ''} />
+        <TextInput
+          label="Height (cm)"
+          name="heightCm"
+          type="number"
+          min={120}
+          max={230}
+          defaultValue={profile.heightCm ?? ''}
+        />
+        <TextInput
+          label="Weight (kg)"
+          name="weightKg"
+          type="number"
+          min={35}
+          max={250}
+          defaultValue={profile.weightKg ?? ''}
+        />
         <Select
           label="Units"
           name="unitSystem"

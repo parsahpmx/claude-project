@@ -92,11 +92,31 @@ export const PROGRAMS: Program[] = [
       'You can commit to five sessions most weeks',
     ],
     template: [
-      S(1, 'Upper Body Strength', 'strength', 'Push emphasis', 60, ['horizontal-push', 'horizontal-pull', 'vertical-push', 'core']),
-      S(2, 'Lower Body Strength', 'strength', 'Squat emphasis', 60, ['squat', 'lunge', 'hinge', 'core']),
+      S(1, 'Upper Body Strength', 'strength', 'Push emphasis', 60, [
+        'horizontal-push',
+        'horizontal-pull',
+        'vertical-push',
+        'core',
+      ]),
+      S(2, 'Lower Body Strength', 'strength', 'Squat emphasis', 60, [
+        'squat',
+        'lunge',
+        'hinge',
+        'core',
+      ]),
       S(3, 'Conditioning & Core', 'conditioning', 'Aerobic base', 35, ['conditioning', 'core']),
-      S(4, 'Upper Body Volume', 'strength', 'Pull emphasis', 60, ['vertical-pull', 'horizontal-push', 'horizontal-pull', 'core']),
-      S(5, 'Lower Body Volume', 'strength', 'Hinge emphasis', 60, ['hinge', 'lunge', 'squat', 'core']),
+      S(4, 'Upper Body Volume', 'strength', 'Pull emphasis', 60, [
+        'vertical-pull',
+        'horizontal-push',
+        'horizontal-pull',
+        'core',
+      ]),
+      S(5, 'Lower Body Volume', 'strength', 'Hinge emphasis', 60, [
+        'hinge',
+        'lunge',
+        'squat',
+        'core',
+      ]),
       S(6, 'Mobility Reset', 'mobility', 'Full body', 20, ['mobility']),
     ],
     accentImage: 'muscle-builder',
@@ -131,9 +151,24 @@ export const PROGRAMS: Program[] = [
       'You have three days a week and access to a rack',
     ],
     template: [
-      S(1, 'Squat & Press', 'strength', 'Squat focus', 55, ['squat', 'vertical-push', 'horizontal-pull', 'core']),
-      S(3, 'Deadlift & Bench', 'strength', 'Hinge focus', 55, ['hinge', 'horizontal-push', 'vertical-pull', 'core']),
-      S(5, 'Squat & Accessories', 'strength', 'Volume', 55, ['squat', 'horizontal-push', 'horizontal-pull', 'core']),
+      S(1, 'Squat & Press', 'strength', 'Squat focus', 55, [
+        'squat',
+        'vertical-push',
+        'horizontal-pull',
+        'core',
+      ]),
+      S(3, 'Deadlift & Bench', 'strength', 'Hinge focus', 55, [
+        'hinge',
+        'horizontal-push',
+        'vertical-pull',
+        'core',
+      ]),
+      S(5, 'Squat & Accessories', 'strength', 'Volume', 55, [
+        'squat',
+        'horizontal-push',
+        'horizontal-pull',
+        'core',
+      ]),
       S(7, 'Mobility Reset', 'mobility', 'Full body', 20, ['mobility']),
     ],
     accentImage: 'strength-foundation',
@@ -168,9 +203,19 @@ export const PROGRAMS: Program[] = [
       'You would rather have a sustainable deficit than a fast one',
     ],
     template: [
-      S(1, 'Full Body Strength', 'strength', 'Push/pull', 45, ['squat', 'horizontal-push', 'horizontal-pull', 'core']),
+      S(1, 'Full Body Strength', 'strength', 'Push/pull', 45, [
+        'squat',
+        'horizontal-push',
+        'horizontal-pull',
+        'core',
+      ]),
       S(2, 'Conditioning Circuit', 'conditioning', 'Density', 35, ['conditioning', 'core']),
-      S(4, 'Full Body Strength', 'strength', 'Hinge/pull', 45, ['hinge', 'vertical-pull', 'vertical-push', 'core']),
+      S(4, 'Full Body Strength', 'strength', 'Hinge/pull', 45, [
+        'hinge',
+        'vertical-pull',
+        'vertical-push',
+        'core',
+      ]),
       S(6, 'Long Aerobic', 'conditioning', 'Zone 2', 45, ['conditioning']),
       S(7, 'Mobility Reset', 'mobility', 'Full body', 20, ['mobility']),
     ],
@@ -208,7 +253,11 @@ export const PROGRAMS: Program[] = [
     template: [
       S(1, 'Lower Strength', 'strength', 'Squat', 55, ['squat', 'hinge', 'core']),
       S(2, 'Interval Run', 'running', 'VO2', 40, ['conditioning']),
-      S(3, 'Upper Strength', 'strength', 'Push/pull', 55, ['horizontal-push', 'vertical-pull', 'core']),
+      S(3, 'Upper Strength', 'strength', 'Push/pull', 55, [
+        'horizontal-push',
+        'vertical-pull',
+        'core',
+      ]),
       S(5, 'Tempo Run', 'running', 'Threshold', 40, ['conditioning']),
       S(6, 'Full Body Power', 'strength', 'Hinge', 55, ['hinge', 'carry', 'core']),
       S(7, 'Mobility Reset', 'mobility', 'Full body', 20, ['mobility']),
@@ -358,9 +407,17 @@ export const PROGRAMS: Program[] = [
       'You want strength that starts from where you are today',
     ],
     template: [
-      S(1, 'Push Strength', 'strength', 'Upper push', 35, ['horizontal-push', 'vertical-push', 'core']),
+      S(1, 'Push Strength', 'strength', 'Upper push', 35, [
+        'horizontal-push',
+        'vertical-push',
+        'core',
+      ]),
       S(2, 'Leg Strength', 'strength', 'Lower body', 35, ['squat', 'lunge', 'core']),
-      S(4, 'Pull Strength', 'strength', 'Upper pull', 35, ['vertical-pull', 'horizontal-pull', 'core']),
+      S(4, 'Pull Strength', 'strength', 'Upper pull', 35, [
+        'vertical-pull',
+        'horizontal-pull',
+        'core',
+      ]),
       S(6, 'Full Body Circuit', 'conditioning', 'Integration', 30, ['conditioning', 'core']),
     ],
     accentImage: 'bodyweight-strength',
@@ -396,9 +453,17 @@ export const PROGRAMS: Program[] = [
     ],
     template: [
       S(1, 'Lower Strength', 'strength', 'Squat', 50, ['squat', 'lunge', 'core']),
-      S(2, 'Upper Strength', 'strength', 'Pull emphasis', 50, ['vertical-pull', 'horizontal-push', 'core']),
+      S(2, 'Upper Strength', 'strength', 'Pull emphasis', 50, [
+        'vertical-pull',
+        'horizontal-push',
+        'core',
+      ]),
       S(4, 'Posterior Chain', 'strength', 'Hinge', 50, ['hinge', 'lunge', 'core']),
-      S(6, 'Full Body & Conditioning', 'conditioning', 'Integration', 40, ['conditioning', 'carry', 'core']),
+      S(6, 'Full Body & Conditioning', 'conditioning', 'Integration', 40, [
+        'conditioning',
+        'carry',
+        'core',
+      ]),
     ],
     accentImage: 'womens-strength',
   },
@@ -470,7 +535,11 @@ export const PROGRAMS: Program[] = [
     ],
     template: [
       S(1, 'Power & Lower Strength', 'strength', 'Squat', 60, ['squat', 'hinge', 'core']),
-      S(2, 'Upper Power & Strength', 'strength', 'Push/pull', 60, ['horizontal-push', 'vertical-pull', 'core']),
+      S(2, 'Upper Power & Strength', 'strength', 'Push/pull', 60, [
+        'horizontal-push',
+        'vertical-pull',
+        'core',
+      ]),
       S(3, 'Conditioning', 'conditioning', 'Repeat effort', 40, ['conditioning', 'carry']),
       S(5, 'Posterior Power', 'strength', 'Hinge', 60, ['hinge', 'lunge', 'core']),
       S(6, 'Speed & Core', 'conditioning', 'Sprint mechanics', 45, ['conditioning', 'core']),
@@ -508,7 +577,12 @@ export const PROGRAMS: Program[] = [
       'You like varied sessions with a clear structure underneath',
     ],
     template: [
-      S(1, 'Strength & Carry', 'strength', 'Full body', 45, ['squat', 'carry', 'horizontal-push', 'core']),
+      S(1, 'Strength & Carry', 'strength', 'Full body', 45, [
+        'squat',
+        'carry',
+        'horizontal-push',
+        'core',
+      ]),
       S(2, 'Conditioning Couplets', 'conditioning', 'Mixed modal', 35, ['conditioning', 'core']),
       S(4, 'Hinge & Pull', 'strength', 'Posterior', 45, ['hinge', 'horizontal-pull', 'core']),
       S(6, 'Benchmark Session', 'conditioning', 'Work capacity', 40, ['conditioning', 'carry']),
@@ -533,7 +607,10 @@ export interface ProgramFilter {
   search?: string;
 }
 
-export function filterPrograms(filter: ProgramFilter, programs: readonly Program[] = PROGRAMS): Program[] {
+export function filterPrograms(
+  filter: ProgramFilter,
+  programs: readonly Program[] = PROGRAMS,
+): Program[] {
   const owned = filter.equipment ? expandEquipment(filter.equipment) : null;
   const search = filter.search?.trim().toLowerCase();
 
@@ -541,11 +618,13 @@ export function filterPrograms(filter: ProgramFilter, programs: readonly Program
     if (filter.goal && !program.goals.includes(filter.goal)) return false;
     if (filter.difficulty && program.difficulty !== filter.difficulty) return false;
     if (filter.style && !program.styles.includes(filter.style)) return false;
-    if (filter.location && program.location !== 'both' && program.location !== filter.location) return false;
+    if (filter.location && program.location !== 'both' && program.location !== filter.location)
+      return false;
     if (filter.maxSessionMinutes && program.sessionMinutes > filter.maxSessionMinutes) return false;
     if (owned && !program.equipment.every((item) => owned.has(item))) return false;
     if (search) {
-      const haystack = `${program.name} ${program.tagline} ${program.summary} ${program.styles.join(' ')}`.toLowerCase();
+      const haystack =
+        `${program.name} ${program.tagline} ${program.summary} ${program.styles.join(' ')}`.toLowerCase();
       if (!haystack.includes(search)) return false;
     }
     return true;

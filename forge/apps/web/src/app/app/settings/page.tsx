@@ -8,7 +8,11 @@ export const metadata = { title: 'Settings' };
 export const dynamic = 'force-dynamic';
 
 interface Device {
-  id: string; provider: string; status: string; permissions: string[]; lastSyncedAt: string | null;
+  id: string;
+  provider: string;
+  status: string;
+  permissions: string[];
+  lastSyncedAt: string | null;
 }
 
 const NOTIFICATION_GROUPS = [
@@ -43,7 +47,10 @@ export default async function SettingsPage() {
                     {items.map((item) => (
                       <li key={item} className="flex items-center justify-between gap-3 text-sm">
                         <span className="text-muted">{item}</span>
-                        <span aria-hidden className="accent-tint h-5 w-9 rounded-pill bg-ember/80 p-0.5">
+                        <span
+                          aria-hidden
+                          className="accent-tint h-5 w-9 rounded-pill bg-ember/80 p-0.5"
+                        >
                           <span className="light-surface block h-4 w-4 translate-x-4 rounded-full bg-bone-100" />
                         </span>
                       </li>
@@ -61,10 +68,19 @@ export default async function SettingsPage() {
             <p className="eyebrow mb-4">Data and privacy</p>
             <ul className="space-y-3 text-sm">
               {[
-                ['What we store', 'Your training, nutrition, recovery and coaching history — nothing else.'],
+                [
+                  'What we store',
+                  'Your training, nutrition, recovery and coaching history — nothing else.',
+                ],
                 ['What we never store', 'Card numbers. Payment details are held by the processor.'],
-                ['Who can see your data', 'You, and the coach you choose. Nobody else, including other members.'],
-                ['Leaving', 'Export everything as JSON, then delete your account. Deletion is permanent after 30 days.'],
+                [
+                  'Who can see your data',
+                  'You, and the coach you choose. Nobody else, including other members.',
+                ],
+                [
+                  'Leaving',
+                  'Export everything as JSON, then delete your account. Deletion is permanent after 30 days.',
+                ],
               ].map(([title, body]) => (
                 <li key={title} className="border-b border-ink-900/8 pb-3 last:border-0">
                   <p className="font-medium">{title}</p>

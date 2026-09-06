@@ -15,7 +15,10 @@ export default function SignupPage() {
       </div>
       <p className="mt-7 text-center text-secondary muted">
         Already training with us?{' '}
-        <Link href="/login" className="font-semibold text-signal hover:underline underline-offset-4">
+        <Link
+          href="/login"
+          className="font-semibold text-signal hover:underline underline-offset-4"
+        >
           Log in
         </Link>
       </p>

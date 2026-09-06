@@ -176,10 +176,18 @@
      tint of its own hue — they measure between 2.2:1 and 3.9:1, so text takes
      the darkened step on light grounds and the bright value back on ink.
      Status is never colour alone: every badge also carries a glyph and a word. */
-  .text-status-good { color: var(--status-good); }
-  .text-status-warn { color: var(--status-warn); }
-  .text-status-bad { color: var(--status-bad); }
-  .text-status-info { color: var(--status-info); }
+  .text-status-good {
+    color: var(--status-good);
+  }
+  .text-status-warn {
+    color: var(--status-warn);
+  }
+  .text-status-bad {
+    color: var(--status-bad);
+  }
+  .text-status-info {
+    color: var(--status-info);
+  }
 
   .rule {
     @apply h-px w-full;

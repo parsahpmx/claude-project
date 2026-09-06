@@ -15,9 +15,8 @@ export default function FeaturesPage() {
           What FORGE does, and what it does not do yet
         </h1>
         <p className="mt-5 max-w-prose text-body muted">
-          Each capability below says where it stands. Anything marked as coming after
-          the beta is not in the product today, and we would rather say so here than
-          have you find out later.
+          Each capability below says where it stands. Anything marked as coming after the beta is
+          not in the product today, and we would rather say so here than have you find out later.
         </p>
       </section>
 
@@ -28,7 +27,15 @@ export default function FeaturesPage() {
               <Card as="article" className="flex h-full flex-col">
                 <div className="flex items-start justify-between gap-3">
                   <h2 className="text-section text-bone-100">{c.title}</h2>
-                  <Badge tone={c.state === 'In the beta' ? 'good' : c.state === 'Optional in the beta' ? 'warn' : 'neutral'}>
+                  <Badge
+                    tone={
+                      c.state === 'In the beta'
+                        ? 'good'
+                        : c.state === 'Optional in the beta'
+                          ? 'warn'
+                          : 'neutral'
+                    }
+                  >
                     {c.state}
                   </Badge>
                 </div>
@@ -36,7 +43,9 @@ export default function FeaturesPage() {
                 <ul className="mt-5 flex-1 space-y-2.5">
                   {c.points.map((point) => (
                     <li key={point} className="flex gap-3 text-secondary">
-                      <span aria-hidden className="text-signal">—</span>
+                      <span aria-hidden className="text-signal">
+                        —
+                      </span>
                       <span className="muted">{point}</span>
                     </li>
                   ))}
@@ -46,7 +55,9 @@ export default function FeaturesPage() {
           ))}
         </ul>
         <div className="mt-12">
-          <ButtonLink href="/signup" size="lg">Start free beta</ButtonLink>
+          <ButtonLink href="/signup" size="lg">
+            Start free beta
+          </ButtonLink>
         </div>
       </section>
     </>

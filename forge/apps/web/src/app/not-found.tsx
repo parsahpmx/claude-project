@@ -17,9 +17,21 @@ export const metadata = {
  */
 export default function NotFound() {
   const routes = [
-    { href: '/programs', label: 'Programme library', hint: 'Twelve programmes, filtered by goal and kit' },
-    { href: '/coaching', label: 'Find a coach', hint: 'Browse coaches by speciality and availability' },
-    { href: '/assessment', label: 'Take the assessment', hint: 'Ten questions, then a plan built around them' },
+    {
+      href: '/programs',
+      label: 'Programme library',
+      hint: 'Twelve programmes, filtered by goal and kit',
+    },
+    {
+      href: '/coaching',
+      label: 'Find a coach',
+      hint: 'Browse coaches by speciality and availability',
+    },
+    {
+      href: '/assessment',
+      label: 'Take the assessment',
+      hint: 'Ten questions, then a plan built around them',
+    },
     { href: '/app', label: 'Your dashboard', hint: 'If you already train with FORGE' },
   ];
 
@@ -37,7 +49,9 @@ export default function NotFound() {
               The link may be old, or the page may have moved. Nothing is wrong with your account.
             </p>
             <div className="mt-10">
-              <ButtonLink href="/" size="lg">Back to the homepage</ButtonLink>
+              <ButtonLink href="/" size="lg">
+                Back to the homepage
+              </ButtonLink>
             </div>
           </div>
         </Section>

@@ -15,7 +15,9 @@ export const dynamic = 'force-dynamic';
  */
 export default async function FeedPage({
   searchParams,
-}: { searchParams: Promise<{ before?: string }> }) {
+}: {
+  searchParams: Promise<{ before?: string }>;
+}) {
   if (!isEnabled('feed', parseDisabledFeatures(process.env.FORGE_DISABLED_FEATURES))) notFound();
 
   const { before } = await searchParams;
@@ -36,7 +38,11 @@ export default async function FeedPage({
         <EmptyState
           title="Nothing in your feed yet"
           body="Follow another athlete and their shared activities appear here. Your own training lives on Home."
-          action={<ButtonLink href="/community" variant="secondary">Find athletes</ButtonLink>}
+          action={
+            <ButtonLink href="/community" variant="secondary">
+              Find athletes
+            </ButtonLink>
+          }
         />
       ) : (
         <>
@@ -47,7 +53,10 @@ export default async function FeedPage({
           </ul>
           {items.length === 20 && last && (
             <div className="flex justify-center pt-2">
-              <ButtonLink href={`/feed?before=${encodeURIComponent(last.startedAt)}`} variant="secondary">
+              <ButtonLink
+                href={`/feed?before=${encodeURIComponent(last.startedAt)}`}
+                variant="secondary"
+              >
                 Load older
               </ButtonLink>
             </div>

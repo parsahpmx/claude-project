@@ -10,32 +10,32 @@ export type FlagState = 'core' | 'optional' | 'post-beta';
 
 export const FEATURES = {
   // --- BETA CORE: the beta is not a beta without these.
-  auth:        'core',
-  activities:  'core',
-  maps:        'core',
-  routes:      'core',
-  training:    'core',
-  progress:    'core',
-  goals:       'core',
-  privacy:     'core',
+  auth: 'core',
+  activities: 'core',
+  maps: 'core',
+  routes: 'core',
+  training: 'core',
+  progress: 'core',
+  goals: 'core',
+  privacy: 'core',
 
   // --- BETA OPTIONAL: shipped behind a flag, safe to disable per environment.
-  feed:        'optional',
-  follows:     'optional',
-  clubs:       'optional',
-  challenges:  'optional',
-  events:      'optional',
+  feed: 'optional',
+  follows: 'optional',
+  clubs: 'optional',
+  challenges: 'optional',
+  events: 'optional',
 
   // --- POST-BETA: schema may exist, product surface deliberately does not.
-  messaging:   'post-beta',
-  coaching:    'post-beta',
-  nutrition:   'post-beta',
-  recovery:    'post-beta',
+  messaging: 'post-beta',
+  coaching: 'post-beta',
+  nutrition: 'post-beta',
+  recovery: 'post-beta',
   globalHeatmap: 'post-beta',
-  segments:    'post-beta',
+  segments: 'post-beta',
   liveSegments: 'post-beta',
   raceMarketplace: 'post-beta',
-  advancedAi:  'post-beta',
+  advancedAi: 'post-beta',
 } as const satisfies Record<string, FlagState>;
 
 export type FeatureName = keyof typeof FEATURES;
@@ -54,5 +54,8 @@ export function isEnabled(name: FeatureName, disabled: readonly string[] = []): 
 
 export function parseDisabledFeatures(raw: string | undefined): string[] {
   if (!raw) return [];
-  return raw.split(',').map((s) => s.trim()).filter(Boolean);
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 }

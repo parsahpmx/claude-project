@@ -25,7 +25,9 @@ export default async function RouteDetailPage({ params }: { params: Promise<{ id
   // without a PostGIS round trip in the browser.
   const { data } = await supabase
     .from('routes')
-    .select('id, name, description, sport, distance_m, elevation_gain_m, estimated_s, surface, visibility, path')
+    .select(
+      'id, name, description, sport, distance_m, elevation_gain_m, estimated_s, surface, visibility, path',
+    )
     .eq('id', id)
     .maybeSingle();
 
@@ -41,8 +43,11 @@ export default async function RouteDetailPage({ params }: { params: Promise<{ id
         <div className="flex flex-wrap items-center gap-2.5">
           <Badge tone="accent">{SPORT_LABEL[data.sport] ?? data.sport}</Badge>
           <Badge>
-            {data.visibility === 'private' ? 'Only me'
-              : data.visibility === 'followers' ? 'Followers' : 'Anyone'}
+            {data.visibility === 'private'
+              ? 'Only me'
+              : data.visibility === 'followers'
+                ? 'Followers'
+                : 'Anyone'}
           </Badge>
         </div>
         <h1 className="mt-4 text-page-title font-display text-bone-100">{data.name}</h1>
@@ -69,8 +74,12 @@ export default async function RouteDetailPage({ params }: { params: Promise<{ id
       />
 
       <div className="flex flex-wrap gap-3">
-        <ButtonLink href="/routes" variant="secondary">All routes</ButtonLink>
-        <ButtonLink href="/maps" variant="ghost">Open the map</ButtonLink>
+        <ButtonLink href="/routes" variant="secondary">
+          All routes
+        </ButtonLink>
+        <ButtonLink href="/maps" variant="ghost">
+          Open the map
+        </ButtonLink>
       </div>
 
       <p className="text-secondary">
@@ -93,7 +102,9 @@ function extractLineString(value: unknown): LngLat[] {
   const geo = value as { type?: string; coordinates?: unknown };
   if (geo.type !== 'LineString' || !Array.isArray(geo.coordinates)) return [];
   return geo.coordinates
-    .filter((p): p is [number, number] =>
-      Array.isArray(p) && p.length >= 2 && typeof p[0] === 'number' && typeof p[1] === 'number')
+    .filter(
+      (p): p is [number, number] =>
+        Array.isArray(p) && p.length >= 2 && typeof p[0] === 'number' && typeof p[1] === 'number',
+    )
     .map(([lng, lat]) => [lng, lat] as LngLat);
 }

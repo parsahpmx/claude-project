@@ -16,15 +16,30 @@ export function SignInForm() {
       {next && <input type="hidden" name="next" value={next} />}
 
       {state.error && (
-        <p role="alert" className="rounded-control border border-state-bad/40 bg-state-bad/10 px-4 py-3 text-secondary text-state-bad">
+        <p
+          role="alert"
+          className="rounded-control border border-state-bad/40 bg-state-bad/10 px-4 py-3 text-secondary text-state-bad"
+        >
           {state.error}
         </p>
       )}
 
-      <Field label="Email" name="email" type="email" autoComplete="email" required
-        error={state.fieldErrors?.email} />
-      <Field label="Password" name="password" type="password" autoComplete="current-password" required
-        error={state.fieldErrors?.password} />
+      <Field
+        label="Email"
+        name="email"
+        type="email"
+        autoComplete="email"
+        required
+        error={state.fieldErrors?.email}
+      />
+      <Field
+        label="Password"
+        name="password"
+        type="password"
+        autoComplete="current-password"
+        required
+        error={state.fieldErrors?.password}
+      />
 
       <Button type="submit" block size="lg" disabled={pending}>
         {pending ? 'Signing in…' : 'Log in'}

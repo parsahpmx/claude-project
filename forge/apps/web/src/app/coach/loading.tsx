@@ -13,7 +13,10 @@ export default function CoachLoading() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="light-surface rounded-card border border-ink-900/10 bg-bone-100 p-5">
+          <div
+            key={i}
+            className="light-surface rounded-card border border-ink-900/10 bg-bone-100 p-5"
+          >
             <Skeleton className="h-3 w-20" />
             <Skeleton className="mt-4 h-8 w-20" />
           </div>
@@ -21,7 +24,9 @@ export default function CoachLoading() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {[0, 1].map((i) => <SkeletonCard key={i} />)}
+        {[0, 1].map((i) => (
+          <SkeletonCard key={i} />
+        ))}
       </div>
     </div>
   );

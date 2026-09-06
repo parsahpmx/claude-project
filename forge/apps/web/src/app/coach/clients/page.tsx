@@ -11,11 +11,29 @@ export const metadata = { title: 'Clients' };
 export const dynamic = 'force-dynamic';
 
 interface ClientRow {
-  member: { id: string; firstName: string; lastName: string; email: string; avatarKey: string | null; lastSeenAt: string | null };
-  profile: { primaryGoal: string; experience: string; daysPerWeek: number; equipment: string[] } | null;
+  member: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    avatarKey: string | null;
+    lastSeenAt: string | null;
+  };
+  profile: {
+    primaryGoal: string;
+    experience: string;
+    daysPerWeek: number;
+    equipment: string[];
+  } | null;
   startedOn: string;
   week: { completed: number; scheduled: number; adherencePercent: number };
-  latestCheckIn: { id: string; score: number; band: string; flags: string[]; respondedAt: string | null } | null;
+  latestCheckIn: {
+    id: string;
+    score: number;
+    band: string;
+    flags: string[];
+    respondedAt: string | null;
+  } | null;
   needsResponse: boolean;
 }
 
@@ -51,15 +69,18 @@ export default async function CoachClientsPage() {
                         aria-hidden
                         className="dark-surface grid h-12 w-12 shrink-0 place-items-center rounded-full bg-ink-900 text-sm font-semibold text-bone-100"
                       >
-                        {client.member.firstName.charAt(0)}{client.member.lastName.charAt(0)}
+                        {client.member.firstName.charAt(0)}
+                        {client.member.lastName.charAt(0)}
                       </span>
                       <div className="min-w-0">
                         <p className="font-semibold">
                           {client.member.firstName} {client.member.lastName}
                         </p>
                         <p className="mt-0.5 truncate text-xs text-muted">
-                          {client.profile ? client.profile.primaryGoal.replace(/-/g, ' ') : 'No profile'} ·
-                          client since {formatDateLabel(client.startedOn)}
+                          {client.profile
+                            ? client.profile.primaryGoal.replace(/-/g, ' ')
+                            : 'No profile'}{' '}
+                          · client since {formatDateLabel(client.startedOn)}
                         </p>
                       </div>
                     </div>
@@ -70,7 +91,13 @@ export default async function CoachClientsPage() {
                         max={Math.max(1, client.week.scheduled)}
                         label="This week"
                         valueLabel={`${client.week.completed}/${client.week.scheduled}`}
-                        tone={client.week.adherencePercent >= 80 ? 'good' : client.week.adherencePercent >= 50 ? 'warn' : 'bad'}
+                        tone={
+                          client.week.adherencePercent >= 80
+                            ? 'good'
+                            : client.week.adherencePercent >= 50
+                              ? 'warn'
+                              : 'bad'
+                        }
                       />
                     </div>
 
@@ -100,7 +127,11 @@ export default async function CoachClientsPage() {
 
                       <div className="flex flex-wrap gap-1.5">
                         {client.latestCheckIn?.flags.map((flag) => (
-                          <Chip key={flag} tone={flag === 'pain-reported' ? 'bad' : 'warn'} size="sm">
+                          <Chip
+                            key={flag}
+                            tone={flag === 'pain-reported' ? 'bad' : 'warn'}
+                            size="sm"
+                          >
                             {flag.replace(/-/g, ' ')}
                           </Chip>
                         ))}

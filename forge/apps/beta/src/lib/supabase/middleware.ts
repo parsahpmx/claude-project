@@ -4,9 +4,21 @@ import { supabasePublishableKey, supabaseUrl } from './config';
 
 /** Routes that require a session. Everything else is public. */
 const PROTECTED = [
-  '/home', '/feed', '/activities', '/activity', '/maps', '/routes', '/route',
-  '/training', '/programs', '/progress', '/goals', '/community', '/you',
-  '/settings', '/onboarding',
+  '/home',
+  '/feed',
+  '/activities',
+  '/activity',
+  '/maps',
+  '/routes',
+  '/route',
+  '/training',
+  '/programs',
+  '/progress',
+  '/goals',
+  '/community',
+  '/you',
+  '/settings',
+  '/onboarding',
 ];
 
 export async function updateSession(request: NextRequest) {

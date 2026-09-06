@@ -8,7 +8,8 @@ export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Community',
-  description: 'Progress, questions, personal records and coach posts — from members who train like you.',
+  description:
+    'Progress, questions, personal records and coach posts — from members who train like you.',
 };
 
 interface FeedPost {
@@ -23,12 +24,23 @@ interface FeedPost {
 }
 
 interface Group {
-  slug: string; name: string; description: string; memberCount: number; imageKey: string;
+  slug: string;
+  name: string;
+  description: string;
+  memberCount: number;
+  imageKey: string;
 }
 
 interface Challenge {
-  slug: string; name: string; tagline: string; metric: string; target: number;
-  durationDays: number; badge: string; rules: string[]; participants: number;
+  slug: string;
+  name: string;
+  tagline: string;
+  metric: string;
+  target: number;
+  durationDays: number;
+  badge: string;
+  rules: string[];
+  participants: number;
 }
 
 export default async function CommunityPage() {
@@ -45,12 +57,16 @@ export default async function CommunityPage() {
           <p className="eyebrow mb-6">Community</p>
           <h1 className="display text-display-lg text-balance">TRAIN ALONE. NOT BY YOURSELF.</h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-bone-200/70">
-            Progress, questions, personal records and coach posts — from people running the same programmes you
-            are. No transformation photos required, no before-and-after arms race.
+            Progress, questions, personal records and coach posts — from people running the same
+            programmes you are. No transformation photos required, no before-and-after arms race.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
-            <ButtonLink href="/assessment" size="lg">Join FORGE</ButtonLink>
-            <ButtonLink href="#groups" variant="inverse" size="lg">See Groups</ButtonLink>
+            <ButtonLink href="/assessment" size="lg">
+              Join FORGE
+            </ButtonLink>
+            <ButtonLink href="#groups" variant="inverse" size="lg">
+              See Groups
+            </ButtonLink>
           </div>
         </div>
       </Section>
@@ -67,7 +83,8 @@ export default async function CommunityPage() {
                       aria-hidden
                       className="dark-surface grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
                     >
-                      {post.author.firstName.charAt(0)}{post.author.lastName.charAt(0)}
+                      {post.author.firstName.charAt(0)}
+                      {post.author.lastName.charAt(0)}
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
@@ -76,24 +93,36 @@ export default async function CommunityPage() {
                         </span>
                         {post.group && (
                           <>
-                            <span aria-hidden className="opacity-30">·</span>
+                            <span aria-hidden className="opacity-30">
+                              ·
+                            </span>
                             <span className="text-muted">{post.group.name}</span>
                           </>
                         )}
-                        <span aria-hidden className="opacity-30">·</span>
+                        <span aria-hidden className="opacity-30">
+                          ·
+                        </span>
                         <span className="text-xs text-muted">{relativeTime(post.createdAt)}</span>
                       </div>
 
                       {post.kind === 'personal-record' && (
-                        <div className="mt-3"><Badge>Personal record</Badge></div>
+                        <div className="mt-3">
+                          <Badge>Personal record</Badge>
+                        </div>
                       )}
 
                       <p className="mt-3 leading-relaxed opacity-85">{post.body}</p>
 
                       <div className="mt-4 flex items-center gap-5 text-xs text-muted">
-                        <span><span aria-hidden>♡</span> {post.likeCount}</span>
-                        <span><span aria-hidden>💬</span> {post.commentCount}</span>
-                        <span><span aria-hidden>⌸</span> Save</span>
+                        <span>
+                          <span aria-hidden>♡</span> {post.likeCount}
+                        </span>
+                        <span>
+                          <span aria-hidden>💬</span> {post.commentCount}
+                        </span>
+                        <span>
+                          <span aria-hidden>⌸</span> Save
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -113,7 +142,9 @@ export default async function CommunityPage() {
                   'Coaches identify themselves as coaches.',
                 ].map((rule) => (
                   <li key={rule} className="flex gap-3">
-                    <span aria-hidden className="text-accent">→</span>
+                    <span aria-hidden className="text-accent">
+                      →
+                    </span>
                     <span className="text-muted">{rule}</span>
                   </li>
                 ))}
@@ -139,7 +170,9 @@ export default async function CommunityPage() {
                 ))}
               </ul>
               <div className="mt-6">
-                <ButtonLink href="/assessment" variant="inverse" block size="sm">Join a Challenge</ButtonLink>
+                <ButtonLink href="/assessment" variant="inverse" block size="sm">
+                  Join a Challenge
+                </ButtonLink>
               </div>
             </Card>
           </div>
@@ -173,7 +206,9 @@ export default async function CommunityPage() {
             <Card key={challenge.slug} tone="dark">
               <div className="flex items-start justify-between gap-3">
                 <h3 className="display text-xl leading-none text-bone-100">{challenge.name}</h3>
-                <Chip tone="inverse" size="sm">{challenge.durationDays}d</Chip>
+                <Chip tone="inverse" size="sm">
+                  {challenge.durationDays}d
+                </Chip>
               </div>
               <p className="mt-3 text-sm leading-relaxed text-bone-200/65">{challenge.tagline}</p>
               <div className="mt-5">
@@ -182,7 +217,9 @@ export default async function CommunityPage() {
               <ul className="mt-5 space-y-2">
                 {challenge.rules.map((rule) => (
                   <li key={rule} className="flex gap-2.5 text-xs text-bone-200/55">
-                    <span aria-hidden className="text-accent">·</span>
+                    <span aria-hidden className="text-accent">
+                      ·
+                    </span>
                     <span>{rule}</span>
                   </li>
                 ))}

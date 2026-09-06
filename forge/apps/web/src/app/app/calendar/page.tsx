@@ -10,8 +10,14 @@ interface CalendarResponse {
   from: string;
   to: string;
   events: {
-    id: string; kind: string; title: string; date: string;
-    startMinutes: number; durationMinutes: number; status: string; referenceId: string | null;
+    id: string;
+    kind: string;
+    title: string;
+    date: string;
+    startMinutes: number;
+    durationMinutes: number;
+    status: string;
+    referenceId: string | null;
   }[];
 }
 

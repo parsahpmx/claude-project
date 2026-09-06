@@ -21,7 +21,9 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center rounded-card border border-dashed border-ink-900/15 px-6 py-14 text-center">
-      <span aria-hidden className="display mb-4 text-2xl opacity-25">{icon}</span>
+      <span aria-hidden className="display mb-4 text-2xl opacity-25">
+        {icon}
+      </span>
       <h3 className="display text-lg">{title}</h3>
       <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">{body}</p>
       {action && <div className="mt-6">{action}</div>}
@@ -29,7 +31,15 @@ export function EmptyState({
   );
 }
 
-export function ErrorState({ title, body, action }: { title: string; body: string; action?: ReactNode }) {
+export function ErrorState({
+  title,
+  body,
+  action,
+}: {
+  title: string;
+  body: string;
+  action?: ReactNode;
+}) {
   return (
     <div
       role="alert"
@@ -43,7 +53,15 @@ export function ErrorState({ title, body, action }: { title: string; body: strin
   );
 }
 
-export function SuccessState({ title, body, action }: { title: string; body: string; action?: ReactNode }) {
+export function SuccessState({
+  title,
+  body,
+  action,
+}: {
+  title: string;
+  body: string;
+  action?: ReactNode;
+}) {
   return (
     <div className="rounded-card border border-signal-good/30 bg-signal-good/[0.07] px-6 py-8">
       <p className="eyebrow text-status-good">Done</p>
@@ -57,10 +75,7 @@ export function SuccessState({ title, body, action }: { title: string; body: str
 /** Skeletons match the real content's box exactly, so nothing jumps on load. */
 export function Skeleton({ className }: { className?: string }) {
   return (
-    <div
-      aria-hidden
-      className={clsx('animate-pulse rounded-[8px] bg-ink-900/[0.07]', className)}
-    />
+    <div aria-hidden className={clsx('animate-pulse rounded-[8px] bg-ink-900/[0.07]', className)} />
   );
 }
 
@@ -84,17 +99,57 @@ export function SkeletonCard() {
 export function Status({
   status,
 }: {
-  status: 'completed' | 'scheduled' | 'skipped' | 'connected' | 'not-connected' | 'syncing' | 'pending' | 'paid';
+  status:
+    | 'completed'
+    | 'scheduled'
+    | 'skipped'
+    | 'connected'
+    | 'not-connected'
+    | 'syncing'
+    | 'pending'
+    | 'paid';
 }) {
   const map = {
-    completed: { label: 'Completed', glyph: '✓', tone: 'text-status-good border-signal-good/30 bg-signal-good/10' },
-    scheduled: { label: 'Scheduled', glyph: '○', tone: 'text-muted border-current/20 bg-current/[0.05]' },
-    skipped: { label: 'Missed', glyph: '×', tone: 'text-status-bad border-signal-bad/30 bg-signal-bad/[0.08]' },
-    connected: { label: 'Connected', glyph: '✓', tone: 'text-status-good border-signal-good/30 bg-signal-good/10' },
-    'not-connected': { label: 'Not connected', glyph: '○', tone: 'text-muted border-current/20 bg-current/[0.05]' },
-    syncing: { label: 'Syncing', glyph: '↻', tone: 'text-status-info border-signal-info/30 bg-signal-info/10' },
-    pending: { label: 'Pending', glyph: '•', tone: 'text-status-warn border-signal-warn/30 bg-signal-warn/10' },
-    paid: { label: 'Paid', glyph: '✓', tone: 'text-status-good border-signal-good/30 bg-signal-good/10' },
+    completed: {
+      label: 'Completed',
+      glyph: '✓',
+      tone: 'text-status-good border-signal-good/30 bg-signal-good/10',
+    },
+    scheduled: {
+      label: 'Scheduled',
+      glyph: '○',
+      tone: 'text-muted border-current/20 bg-current/[0.05]',
+    },
+    skipped: {
+      label: 'Missed',
+      glyph: '×',
+      tone: 'text-status-bad border-signal-bad/30 bg-signal-bad/[0.08]',
+    },
+    connected: {
+      label: 'Connected',
+      glyph: '✓',
+      tone: 'text-status-good border-signal-good/30 bg-signal-good/10',
+    },
+    'not-connected': {
+      label: 'Not connected',
+      glyph: '○',
+      tone: 'text-muted border-current/20 bg-current/[0.05]',
+    },
+    syncing: {
+      label: 'Syncing',
+      glyph: '↻',
+      tone: 'text-status-info border-signal-info/30 bg-signal-info/10',
+    },
+    pending: {
+      label: 'Pending',
+      glyph: '•',
+      tone: 'text-status-warn border-signal-warn/30 bg-signal-warn/10',
+    },
+    paid: {
+      label: 'Paid',
+      glyph: '✓',
+      tone: 'text-status-good border-signal-good/30 bg-signal-good/10',
+    },
   } as const;
   const entry = map[status];
   return (

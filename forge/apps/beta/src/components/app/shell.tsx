@@ -28,7 +28,10 @@ export function TopNav({ displayName }: { displayName: string }) {
     <header className="sticky top-0 z-40 border-b border-ink-600/60 bg-ink-900/85 backdrop-blur-lg">
       <div className="shell flex h-16 items-center justify-between gap-6">
         <div className="flex items-center gap-8">
-          <Link href="/home" className="font-display text-lg font-bold tracking-[0.14em] text-bone-100">
+          <Link
+            href="/home"
+            className="font-display text-lg font-bold tracking-[0.14em] text-bone-100"
+          >
             FORGE
           </Link>
           <nav aria-label="Main" className="hidden md:block">
@@ -47,7 +50,10 @@ export function TopNav({ displayName }: { displayName: string }) {
                   >
                     {item.label}
                     {isActive(item.href) && (
-                      <span aria-hidden className="absolute inset-x-3 -bottom-[13px] h-0.5 rounded-pill bg-signal" />
+                      <span
+                        aria-hidden
+                        className="absolute inset-x-3 -bottom-[13px] h-0.5 rounded-pill bg-signal"
+                      />
                     )}
                   </Link>
                 </li>
@@ -96,7 +102,9 @@ export function BottomNav() {
                 isActive(item.href) ? 'text-signal' : 'text-smoke-400',
               )}
             >
-              <span aria-hidden className="text-base leading-none">{item.glyph}</span>
+              <span aria-hidden className="text-base leading-none">
+                {item.glyph}
+              </span>
               {item.short ?? item.label}
             </Link>
           </li>

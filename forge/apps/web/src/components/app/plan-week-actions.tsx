@@ -65,11 +65,17 @@ export function PlanWeekActions({
           className="light-surface absolute right-0 top-full z-20 mt-2 w-60 rounded-card border border-ink-900/12 bg-bone-100 p-2 text-ink-900 shadow-lift"
         >
           {error && (
-            <p role="alert" className="mb-2 px-3 py-2 text-xs text-status-bad">{error}</p>
+            <p role="alert" className="mb-2 px-3 py-2 text-xs text-status-bad">
+              {error}
+            </p>
           )}
           {[
             { label: `Move to ${nextDay.slice(5)}`, body: { action: 'reschedule', date: nextDay } },
-            { label: `Shorten to 30 minutes`, body: { action: 'shorten', minutes: 30 }, hide: minutes <= 30 },
+            {
+              label: `Shorten to 30 minutes`,
+              body: { action: 'shorten', minutes: 30 },
+              hide: minutes <= 30,
+            },
             { label: 'Shorten to 20 minutes', body: { action: 'shorten', minutes: 20 } },
             { label: 'Skip this session', body: { action: 'skip' } },
           ]

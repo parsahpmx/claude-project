@@ -34,10 +34,13 @@ export function CoachApplication() {
     const about = String(form.get('about') ?? '').trim();
 
     if (fullName.length < 2) nextErrors.fullName = 'Tell us your full name.';
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) nextErrors.email = 'That does not look like an email address.';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+      nextErrors.email = 'That does not look like an email address.';
     if (certifications.length < 3) nextErrors.certifications = 'List at least one qualification.';
-    if (!Number.isFinite(years) || years < 0) nextErrors.yearsExperience = 'Enter a number of years.';
-    if (about.length < 40) nextErrors.about = 'A few sentences, please — members choose on how you think.';
+    if (!Number.isFinite(years) || years < 0)
+      nextErrors.yearsExperience = 'Enter a number of years.';
+    if (about.length < 40)
+      nextErrors.about = 'A few sentences, please — members choose on how you think.';
     if (specialties.length === 0) nextErrors.specialties = 'Pick at least one specialism.';
 
     setErrors(nextErrors);
@@ -48,7 +51,14 @@ export function CoachApplication() {
       const response = await fetch('/api/v1/coach-applications', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ fullName, email, certifications, yearsExperience: years, about, specialties }),
+        body: JSON.stringify({
+          fullName,
+          email,
+          certifications,
+          yearsExperience: years,
+          about,
+          specialties,
+        }),
       });
       setState(response.ok ? 'done' : 'error');
     } catch {
@@ -77,8 +87,21 @@ export function CoachApplication() {
       )}
 
       <form onSubmit={submit} noValidate className="space-y-6">
-        <TextInput label="Full name" name="fullName" required error={errors.fullName} autoComplete="name" />
-        <TextInput label="Email" name="email" type="email" required error={errors.email} autoComplete="email" />
+        <TextInput
+          label="Full name"
+          name="fullName"
+          required
+          error={errors.fullName}
+          autoComplete="name"
+        />
+        <TextInput
+          label="Email"
+          name="email"
+          type="email"
+          required
+          error={errors.email}
+          autoComplete="email"
+        />
         <TextInput
           label="Certifications"
           name="certifications"

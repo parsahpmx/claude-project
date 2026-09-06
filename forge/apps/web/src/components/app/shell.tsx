@@ -92,7 +92,8 @@ export function AppShell({
   const mobileNav = role === 'coach' ? COACH_MOBILE : MEMBER_MOBILE;
   const home = role === 'coach' ? '/coach' : '/app';
 
-  const isActive = (href: string) => (href === home ? pathname === href : pathname.startsWith(href));
+  const isActive = (href: string) =>
+    href === home ? pathname === href : pathname.startsWith(href);
 
   const signOut = async () => {
     await fetch('/api/v1/auth/logout', { method: 'POST' });
@@ -103,10 +104,19 @@ export function AppShell({
   return (
     <div className="light-surface min-h-dvh bg-bone-200">
       {/* -------------------------------------------------- desktop sidebar */}
-      <aside aria-label="Sidebar" className="dark-surface fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col border-r border-bone-200/10 bg-ink-900 text-bone-200 lg:flex">
+      <aside
+        aria-label="Sidebar"
+        className="dark-surface fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col border-r border-bone-200/10 bg-ink-900 text-bone-200 lg:flex"
+      >
         <div className="flex h-[72px] items-center px-6">
-          <Link href="/" className="display text-xl tracking-[0.08em] text-bone-100">FORGE</Link>
-          {role === 'coach' && <span className="ml-2 text-[0.625rem] uppercase tracking-[0.14em] text-accent">Coach</span>}
+          <Link href="/" className="display text-xl tracking-[0.08em] text-bone-100">
+            FORGE
+          </Link>
+          {role === 'coach' && (
+            <span className="ml-2 text-[0.625rem] uppercase tracking-[0.14em] text-accent">
+              Coach
+            </span>
+          )}
         </div>
 
         <nav aria-label="Application" className="flex-1 overflow-y-auto px-3 py-4">
@@ -137,10 +147,13 @@ export function AppShell({
               aria-hidden
               className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ember-600 text-xs font-semibold text-bone-100"
             >
-              {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+              {user.firstName.charAt(0)}
+              {user.lastName.charAt(0)}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm text-bone-100">{user.firstName} {user.lastName}</p>
+              <p className="truncate text-sm text-bone-100">
+                {user.firstName} {user.lastName}
+              </p>
               <p className="truncate text-[0.6875rem] text-muted">{user.email}</p>
             </div>
           </div>
@@ -157,7 +170,9 @@ export function AppShell({
       {/* -------------------------------------------------- mobile top bar */}
       <header className="dark-surface sticky top-0 z-40 border-b border-bone-200/10 bg-ink-900 text-bone-200 lg:hidden">
         <div className="flex h-[60px] items-center justify-between px-4">
-          <Link href={home} className="display text-lg tracking-[0.08em] text-bone-100">FORGE</Link>
+          <Link href={home} className="display text-lg tracking-[0.08em] text-bone-100">
+            FORGE
+          </Link>
           <div className="flex items-center gap-1">
             <Link
               href="/app/notifications"
@@ -166,7 +181,10 @@ export function AppShell({
             >
               <span aria-hidden>◔</span>
               {unreadNotifications > 0 && (
-                <span aria-hidden className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-ember" />
+                <span
+                  aria-hidden
+                  className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-ember"
+                />
               )}
             </Link>
             <button
@@ -182,7 +200,10 @@ export function AppShell({
         </div>
 
         {mobileMenu && (
-          <nav aria-label="All sections" className="max-h-[70vh] overflow-y-auto border-t border-bone-200/10 px-3 py-3">
+          <nav
+            aria-label="All sections"
+            className="max-h-[70vh] overflow-y-auto border-t border-bone-200/10 px-3 py-3"
+          >
             <ul className="grid grid-cols-2 gap-1">
               {[...nav, ...(role === 'member' ? MEMBER_FOOTER : [])].map((item) => (
                 <li key={item.href}>
@@ -191,7 +212,9 @@ export function AppShell({
                     onClick={() => setMobileMenu(false)}
                     className="flex min-h-[48px] items-center gap-3 rounded-[8px] px-3 text-sm text-bone-200/75"
                   >
-                    <span aria-hidden className="w-4 text-center opacity-50">{item.glyph}</span>
+                    <span aria-hidden className="w-4 text-center opacity-50">
+                      {item.glyph}
+                    </span>
                     {item.label}
                   </Link>
                 </li>
@@ -212,7 +235,9 @@ export function AppShell({
 
       {/* -------------------------------------------------- content */}
       <div className="lg:pl-[248px]">
-        <main id="main" className="min-w-0 overflow-x-clip pb-28 lg:pb-16">{children}</main>
+        <main id="main" className="min-w-0 overflow-x-clip pb-28 lg:pb-16">
+          {children}
+        </main>
       </div>
 
       {/* -------------------------------------------------- mobile bottom nav */}
@@ -234,9 +259,13 @@ export function AppShell({
                     active ? 'text-bone-100' : 'text-muted',
                   )}
                 >
-                  <span aria-hidden className="text-base">{item.glyph}</span>
+                  <span aria-hidden className="text-base">
+                    {item.glyph}
+                  </span>
                   {item.label}
-                  {active && <span aria-hidden className="absolute top-0 h-0.5 w-8 rounded-pill bg-ember" />}
+                  {active && (
+                    <span aria-hidden className="absolute top-0 h-0.5 w-8 rounded-pill bg-ember" />
+                  )}
                 </Link>
               </li>
             );
@@ -265,10 +294,15 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
       aria-current={active ? 'page' : undefined}
       className={clsx(
         'group relative flex min-h-[42px] items-center gap-3 rounded-[8px] px-3 text-sm transition-colors duration-200',
-        active ? 'bg-bone-200/[0.08] text-bone-100' : 'text-bone-200/60 hover:bg-bone-200/[0.04] hover:text-bone-100',
+        active
+          ? 'bg-bone-200/[0.08] text-bone-100'
+          : 'text-bone-200/60 hover:bg-bone-200/[0.04] hover:text-bone-100',
       )}
     >
-      <span aria-hidden className={clsx('w-4 text-center text-xs', active ? 'text-accent' : 'opacity-50')}>
+      <span
+        aria-hidden
+        className={clsx('w-4 text-center text-xs', active ? 'text-accent' : 'opacity-50')}
+      >
         {item.glyph}
       </span>
       <span className="flex-1">{item.label}</span>
@@ -277,7 +311,9 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
           {item.badge}
         </span>
       )}
-      {active && <span aria-hidden className="absolute inset-y-2 left-0 w-0.5 rounded-pill bg-ember" />}
+      {active && (
+        <span aria-hidden className="absolute inset-y-2 left-0 w-0.5 rounded-pill bg-ember" />
+      )}
     </Link>
   );
 }

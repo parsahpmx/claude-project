@@ -73,7 +73,9 @@ export function AssessmentPreview() {
       if (!multi) return { ...current, [key]: existing[0] === value ? [] : [value] };
       return {
         ...current,
-        [key]: existing.includes(value) ? existing.filter((v) => v !== value) : [...existing, value],
+        [key]: existing.includes(value)
+          ? existing.filter((v) => v !== value)
+          : [...existing, value],
       };
     });
   };
@@ -88,7 +90,9 @@ export function AssessmentPreview() {
     <div className="light-surface rounded-card border border-ink-900/10 bg-bone-100 p-6 shadow-card sm:p-8">
       <div className="flex items-center justify-between gap-4">
         <p className="eyebrow">Build my plan</p>
-        <p className="text-xs tabular-nums text-muted">{answered} / {STEPS.length}</p>
+        <p className="text-xs tabular-nums text-muted">
+          {answered} / {STEPS.length}
+        </p>
       </div>
 
       <div className="mt-6 space-y-7">

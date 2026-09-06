@@ -32,7 +32,12 @@ export default function AppError({
         action={
           <div className="flex flex-wrap gap-3">
             <Button onClick={reset}>Try again</Button>
-            <Button variant="ghost" onClick={() => { window.location.href = '/app'; }}>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                window.location.href = '/app';
+              }}
+            >
               Back to dashboard
             </Button>
           </div>

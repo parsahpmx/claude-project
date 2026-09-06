@@ -2,16 +2,47 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import {
-  addDays, adherence, assessTrainingLoad, buildDailyTimeline, computeReadiness,
-  computeRecoveryScore, consistencyHeatmap, entitlementsFor, estimateMaxHeartRate,
-  estimateVo2Max, findPlan, formatLongDate, movingAverage, muscleDistribution,
-  planPricing, randomId, startOfWeek, strengthTrend, summariseProgress, weeklyVolume,
-  type MuscleGroup, type PlanTier,
+  addDays,
+  adherence,
+  assessTrainingLoad,
+  buildDailyTimeline,
+  computeReadiness,
+  computeRecoveryScore,
+  consistencyHeatmap,
+  entitlementsFor,
+  estimateMaxHeartRate,
+  estimateVo2Max,
+  findPlan,
+  formatLongDate,
+  movingAverage,
+  muscleDistribution,
+  planPricing,
+  randomId,
+  startOfWeek,
+  strengthTrend,
+  summariseProgress,
+  weeklyVolume,
+  type MuscleGroup,
+  type PlanTier,
 } from '@forge/core';
 import {
-  bodyMeasurements, calendarEvents, dailyMetrics, devices, invoices, memberProfiles,
-  notifications, nutritionTargets, paymentMethods, personalRecords, planDays, plans,
-  planWeeks, recoveryLogs, subscriptions, users, workoutLogs,
+  bodyMeasurements,
+  calendarEvents,
+  dailyMetrics,
+  devices,
+  invoices,
+  memberProfiles,
+  notifications,
+  nutritionTargets,
+  paymentMethods,
+  personalRecords,
+  planDays,
+  plans,
+  planWeeks,
+  recoveryLogs,
+  subscriptions,
+  users,
+  workoutLogs,
 } from '@forge/db';
 import { notFound } from '../lib/errors.js';
 import { parse } from '../lib/validate.js';
@@ -33,10 +64,14 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     const weekStart = startOfWeek(date);
 
     const [profile] = await db
-      .select().from(memberProfiles).where(eq(memberProfiles.userId, principal.userId)).limit(1);
+      .select()
+      .from(memberProfiles)
+      .where(eq(memberProfiles.userId, principal.userId))
+      .limit(1);
 
     const [metrics] = await db
-      .select().from(dailyMetrics)
+      .select()
+      .from(dailyMetrics)
       .where(and(eq(dailyMetrics.userId, principal.userId), eq(dailyMetrics.date, date)))
       .limit(1);
 
@@ -56,44 +91,56 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     );
 
     const [plan] = await db
-      .select().from(plans)
+      .select()
+      .from(plans)
       .where(and(eq(plans.userId, principal.userId), eq(plans.status, 'active')))
       .limit(1);
 
     const [todaysDay] = await db
-      .select().from(planDays)
+      .select()
+      .from(planDays)
       .where(and(eq(planDays.userId, principal.userId), eq(planDays.date, date)))
       .limit(1);
 
     const weekDays = await db
-      .select().from(planDays)
-      .where(and(
-        eq(planDays.userId, principal.userId),
-        gte(planDays.date, weekStart),
-        sql`${planDays.date} <= ${addDays(weekStart, 6)}`,
-      ))
+      .select()
+      .from(planDays)
+      .where(
+        and(
+          eq(planDays.userId, principal.userId),
+          gte(planDays.date, weekStart),
+          sql`${planDays.date} <= ${addDays(weekStart, 6)}`,
+        ),
+      )
       .orderBy(planDays.date);
 
     const scheduled = weekDays.filter((d) => d.kind !== 'rest');
     const completed = scheduled.filter((d) => d.status === 'completed');
 
     const recentWorkouts = await db
-      .select().from(workoutLogs)
+      .select()
+      .from(workoutLogs)
       .where(eq(workoutLogs.userId, principal.userId))
       .orderBy(desc(workoutLogs.date))
       .limit(60);
 
     const summary = summariseProgress(
       recentWorkouts.map((w) => ({
-        date: w.date, durationMinutes: Math.round(w.durationSeconds / 60),
-        volumeGrams: w.volumeGrams, calories: w.calories, kind: w.kind,
+        date: w.date,
+        durationMinutes: Math.round(w.durationSeconds / 60),
+        volumeGrams: w.volumeGrams,
+        calories: w.calories,
+        kind: w.kind,
         muscleGroups: w.muscleGroups as MuscleGroup[],
       })),
       date,
     );
 
     const [targets] = await db
-      .select().from(nutritionTargets).where(eq(nutritionTargets.userId, principal.userId)).limit(1);
+      .select()
+      .from(nutritionTargets)
+      .where(eq(nutritionTargets.userId, principal.userId))
+      .limit(1);
 
     const consumed = await db
       .select({
@@ -109,7 +156,8 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
       .where(and(eq(recoveryLogs.userId, principal.userId), eq(recoveryLogs.date, date)));
 
     const [nextEvent] = await db
-      .select().from(calendarEvents)
+      .select()
+      .from(calendarEvents)
       .where(and(eq(calendarEvents.userId, principal.userId), gte(calendarEvents.date, date)))
       .orderBy(calendarEvents.date, calendarEvents.startMinutes)
       .limit(1);
@@ -120,9 +168,12 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
       .where(and(eq(notifications.userId, principal.userId), sql`${notifications.readAt} is null`));
 
     const timeline = buildDailyTimeline({
-      trainingMinutesFromMidnight: todaysDay && todaysDay.kind !== 'rest'
-        ? (todaysDay.kind === 'running' ? 7 * 60 : 17 * 60 + 30)
-        : null,
+      trainingMinutesFromMidnight:
+        todaysDay && todaysDay.kind !== 'rest'
+          ? todaysDay.kind === 'running'
+            ? 7 * 60
+            : 17 * 60 + 30
+          : null,
       hasMobility: (profile?.daysPerWeek ?? 3) >= 4,
       coachCheckInMinutes: nextEvent?.kind === 'coach-session' ? nextEvent.startMinutes : null,
     });
@@ -177,38 +228,51 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     const from = addDays(date, -90);
 
     const logs = await db
-      .select().from(workoutLogs)
+      .select()
+      .from(workoutLogs)
       .where(and(eq(workoutLogs.userId, principal.userId), gte(workoutLogs.date, from)))
       .orderBy(workoutLogs.date);
 
     const records = logs.map((w) => ({
-      date: w.date, durationMinutes: Math.round(w.durationSeconds / 60),
-      volumeGrams: w.volumeGrams, calories: w.calories, kind: w.kind,
+      date: w.date,
+      durationMinutes: Math.round(w.durationSeconds / 60),
+      volumeGrams: w.volumeGrams,
+      calories: w.calories,
+      kind: w.kind,
       muscleGroups: w.muscleGroups as MuscleGroup[],
     }));
 
     const prs = await db
-      .select().from(personalRecords)
+      .select()
+      .from(personalRecords)
       .where(eq(personalRecords.userId, principal.userId))
       .orderBy(desc(personalRecords.achievedOn))
       .limit(40);
 
     const measurements = await db
-      .select().from(bodyMeasurements)
+      .select()
+      .from(bodyMeasurements)
       .where(and(eq(bodyMeasurements.userId, principal.userId), gte(bodyMeasurements.date, from)))
       .orderBy(bodyMeasurements.date);
 
     const metrics = await db
-      .select().from(dailyMetrics)
+      .select()
+      .from(dailyMetrics)
       .where(and(eq(dailyMetrics.userId, principal.userId), gte(dailyMetrics.date, from)))
       .orderBy(dailyMetrics.date);
 
     const [profile] = await db
-      .select().from(memberProfiles).where(eq(memberProfiles.userId, principal.userId)).limit(1);
+      .select()
+      .from(memberProfiles)
+      .where(eq(memberProfiles.userId, principal.userId))
+      .limit(1);
 
     // Strength trends are built from the recorded estimated-1RM PRs, so the
     // chart shows what the member actually did rather than a model of it.
-    const byExercise = new Map<string, { name: string; points: { date: string; estimatedOneRepMax: number }[] }>();
+    const byExercise = new Map<
+      string,
+      { name: string; points: { date: string; estimatedOneRepMax: number }[] }
+    >();
     for (const record of [...prs].reverse()) {
       if (record.kind !== 'estimated-1rm') continue;
       const entry = byExercise.get(record.exerciseId) ?? { name: record.exerciseName, points: [] };
@@ -216,9 +280,10 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
       byExercise.set(record.exerciseId, entry);
     }
 
-    const ageYears = { '18-24': 21, '25-34': 30, '35-44': 40, '45-54': 50, '55-64': 60, '65+': 70 }[
-      profile?.ageRange ?? '25-34'
-    ] ?? 30;
+    const ageYears =
+      { '18-24': 21, '25-34': 30, '35-44': 40, '45-54': 50, '55-64': 60, '65+': 70 }[
+        profile?.ageRange ?? '25-34'
+      ] ?? 30;
     const latestRhr = metrics.filter((m) => m.restingHeartRate).at(-1)?.restingHeartRate ?? null;
     const maxHeartRate = estimateMaxHeartRate(ageYears);
 
@@ -248,8 +313,12 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
         ),
       },
       recovery: metrics.map((m) => ({
-        date: m.date, readiness: m.readinessScore, recovery: m.recoveryScore,
-        sleepMinutes: m.sleepMinutes, hrv: m.hrvMs, restingHeartRate: m.restingHeartRate,
+        date: m.date,
+        readiness: m.readinessScore,
+        recovery: m.recoveryScore,
+        sleepMinutes: m.sleepMinutes,
+        hrv: m.hrvMs,
+        restingHeartRate: m.restingHeartRate,
       })),
       cardio: {
         restingHeartRate: latestRhr,
@@ -264,16 +333,25 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     const principal = requireMember(request.principal);
     const { db } = request.ctx;
     const [profile] = await db
-      .select().from(memberProfiles).where(eq(memberProfiles.userId, principal.userId)).limit(1);
+      .select()
+      .from(memberProfiles)
+      .where(eq(memberProfiles.userId, principal.userId))
+      .limit(1);
     const [user] = await db.select().from(users).where(eq(users.id, principal.userId)).limit(1);
     const deviceRows = await db.select().from(devices).where(eq(devices.userId, principal.userId));
 
     return {
       user: user
         ? {
-            id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName,
-            timezone: user.timezone, unitSystem: user.unitSystem, locale: user.locale,
-            marketingOptIn: user.marketingOptIn, avatarKey: user.avatarKey,
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            timezone: user.timezone,
+            unitSystem: user.unitSystem,
+            locale: user.locale,
+            marketingOptIn: user.marketingOptIn,
+            avatarKey: user.avatarKey,
           }
         : null,
       profile: profile ?? null,
@@ -303,20 +381,42 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     );
     const { db } = request.ctx;
 
-    const userPatch = pick(body, ['firstName', 'lastName', 'timezone', 'unitSystem', 'locale', 'marketingOptIn']);
+    const userPatch = pick(body, [
+      'firstName',
+      'lastName',
+      'timezone',
+      'unitSystem',
+      'locale',
+      'marketingOptIn',
+    ]);
     if (Object.keys(userPatch).length > 0) {
-      await db.update(users).set({ ...userPatch, updatedAt: new Date() }).where(eq(users.id, principal.userId));
+      await db
+        .update(users)
+        .set({ ...userPatch, updatedAt: new Date() })
+        .where(eq(users.id, principal.userId));
     }
 
-    const profilePatch = pick(body, ['equipment', 'daysPerWeek', 'sessionMinutes', 'primaryGoal', 'diet', 'heightCm', 'weightKg']);
+    const profilePatch = pick(body, [
+      'equipment',
+      'daysPerWeek',
+      'sessionMinutes',
+      'primaryGoal',
+      'diet',
+      'heightCm',
+      'weightKg',
+    ]);
     if (Object.keys(profilePatch).length > 0) {
-      await db.update(memberProfiles)
+      await db
+        .update(memberProfiles)
         .set({ ...profilePatch, updatedAt: new Date() })
         .where(eq(memberProfiles.userId, principal.userId));
     }
 
     const [profile] = await db
-      .select().from(memberProfiles).where(eq(memberProfiles.userId, principal.userId)).limit(1);
+      .select()
+      .from(memberProfiles)
+      .where(eq(memberProfiles.userId, principal.userId))
+      .limit(1);
     return { ok: true, profile: profile ?? null };
   });
 
@@ -339,18 +439,23 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     const { db } = request.ctx;
 
     const existing = await db
-      .select().from(devices)
+      .select()
+      .from(devices)
       .where(and(eq(devices.userId, principal.userId), eq(devices.provider, provider)))
       .limit(1);
 
     if (existing.length === 0) {
       await db.insert(devices).values({
-        id: randomId('device'), userId: principal.userId, provider,
-        status: body.status, permissions: body.permissions,
+        id: randomId('device'),
+        userId: principal.userId,
+        provider,
+        status: body.status,
+        permissions: body.permissions,
         lastSyncedAt: body.status === 'connected' ? new Date() : null,
       });
     } else {
-      await db.update(devices)
+      await db
+        .update(devices)
         .set({
           status: body.status,
           permissions: body.permissions,
@@ -370,19 +475,23 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     const { db } = request.ctx;
 
     const [subscription] = await db
-      .select().from(subscriptions)
+      .select()
+      .from(subscriptions)
       .where(eq(subscriptions.userId, principal.userId))
       .orderBy(desc(subscriptions.createdAt))
       .limit(1);
 
     const invoiceRows = await db
-      .select().from(invoices)
+      .select()
+      .from(invoices)
       .where(eq(invoices.userId, principal.userId))
       .orderBy(desc(invoices.issuedOn))
       .limit(24);
 
     const methods = await db
-      .select().from(paymentMethods).where(eq(paymentMethods.userId, principal.userId));
+      .select()
+      .from(paymentMethods)
+      .where(eq(paymentMethods.userId, principal.userId));
 
     const plan = subscription ? findPlan(subscription.tier as PlanTier) : null;
 
@@ -410,7 +519,8 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     const pricing = planPricing(plan);
 
     const [current] = await db
-      .select().from(subscriptions)
+      .select()
+      .from(subscriptions)
       .where(eq(subscriptions.userId, principal.userId))
       .orderBy(desc(subscriptions.createdAt))
       .limit(1);
@@ -428,8 +538,10 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
       await db.update(subscriptions).set(values).where(eq(subscriptions.id, current.id));
     } else {
       await db.insert(subscriptions).values({
-        id: randomId('subscription'), userId: principal.userId,
-        currentPeriodEndsOn: addDays(today(), 30), ...values,
+        id: randomId('subscription'),
+        userId: principal.userId,
+        currentPeriodEndsOn: addDays(today(), 30),
+        ...values,
       });
     }
     return { ok: true, tier: body.tier };
@@ -439,14 +551,16 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     const principal = requireMember(request.principal);
     const { db } = request.ctx;
     const [current] = await db
-      .select().from(subscriptions)
+      .select()
+      .from(subscriptions)
       .where(eq(subscriptions.userId, principal.userId))
       .orderBy(desc(subscriptions.createdAt))
       .limit(1);
     if (!current) throw notFound('Subscription');
 
     // Cancelling never ends access mid-period. The member paid for the period.
-    await db.update(subscriptions)
+    await db
+      .update(subscriptions)
       .set({ cancelAtPeriodEnd: true, cancelledAt: new Date(), updatedAt: new Date() })
       .where(eq(subscriptions.id, current.id));
 
@@ -460,7 +574,8 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     const from = query.from ?? addDays(today(), -30);
     return {
       metrics: await db
-        .select().from(dailyMetrics)
+        .select()
+        .from(dailyMetrics)
         .where(and(eq(dailyMetrics.userId, principal.userId), gte(dailyMetrics.date, from)))
         .orderBy(dailyMetrics.date),
     };
@@ -485,12 +600,18 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     const date = body.date ?? today();
 
     const [profile] = await db
-      .select().from(memberProfiles).where(eq(memberProfiles.userId, principal.userId)).limit(1);
+      .select()
+      .from(memberProfiles)
+      .where(eq(memberProfiles.userId, principal.userId))
+      .limit(1);
 
     const readiness = computeReadiness(
       {
-        sleepMinutes: body.sleepMinutes, hrvMs: body.hrvMs,
-        restingHeartRate: body.restingHeartRate, soreness: body.soreness, stress: body.stress,
+        sleepMinutes: body.sleepMinutes,
+        hrvMs: body.hrvMs,
+        restingHeartRate: body.restingHeartRate,
+        soreness: body.soreness,
+        stress: body.stress,
       },
       {
         sleepMinutes: profile?.baselineSleepMinutes ?? 450,
@@ -500,22 +621,32 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     );
 
     const existing = await db
-      .select({ id: dailyMetrics.id }).from(dailyMetrics)
+      .select({ id: dailyMetrics.id })
+      .from(dailyMetrics)
       .where(and(eq(dailyMetrics.userId, principal.userId), eq(dailyMetrics.date, date)))
       .limit(1);
 
     const values = {
-      sleepMinutes: body.sleepMinutes ?? null, hrvMs: body.hrvMs ?? null,
-      restingHeartRate: body.restingHeartRate ?? null, steps: body.steps ?? null,
-      waterMl: body.waterMl ?? null, soreness: body.soreness ?? null, stress: body.stress ?? null,
-      readinessScore: readiness.score, source: 'manual', updatedAt: new Date(),
+      sleepMinutes: body.sleepMinutes ?? null,
+      hrvMs: body.hrvMs ?? null,
+      restingHeartRate: body.restingHeartRate ?? null,
+      steps: body.steps ?? null,
+      waterMl: body.waterMl ?? null,
+      soreness: body.soreness ?? null,
+      stress: body.stress ?? null,
+      readinessScore: readiness.score,
+      source: 'manual',
+      updatedAt: new Date(),
     };
 
     if (existing[0]) {
       await db.update(dailyMetrics).set(values).where(eq(dailyMetrics.id, existing[0].id));
     } else {
       await db.insert(dailyMetrics).values({
-        id: randomId('event'), userId: principal.userId, date, ...values,
+        id: randomId('event'),
+        userId: principal.userId,
+        date,
+        ...values,
       });
     }
     return { ok: true, readiness };
@@ -532,12 +663,15 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     const to = query.to ?? addDays(from, 41);
 
     const events = await db
-      .select().from(calendarEvents)
-      .where(and(
-        eq(calendarEvents.userId, principal.userId),
-        gte(calendarEvents.date, from),
-        sql`${calendarEvents.date} <= ${to}`,
-      ))
+      .select()
+      .from(calendarEvents)
+      .where(
+        and(
+          eq(calendarEvents.userId, principal.userId),
+          gte(calendarEvents.date, from),
+          sql`${calendarEvents.date} <= ${to}`,
+        ),
+      )
       .orderBy(calendarEvents.date, calendarEvents.startMinutes);
 
     return { from, to, events };
@@ -571,7 +705,8 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     const { db } = request.ctx;
     return {
       notifications: await db
-        .select().from(notifications)
+        .select()
+        .from(notifications)
         .where(eq(notifications.userId, principal.userId))
         .orderBy(desc(notifications.createdAt))
         .limit(30),
@@ -581,7 +716,8 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
   app.post('/me/notifications/read', async (request) => {
     const principal = requireMember(request.principal);
     const { db } = request.ctx;
-    await db.update(notifications)
+    await db
+      .update(notifications)
       .set({ readAt: new Date() })
       .where(and(eq(notifications.userId, principal.userId), sql`${notifications.readAt} is null`));
     return { ok: true };
@@ -591,12 +727,14 @@ export async function registerMemberRoutes(app: FastifyInstance): Promise<void> 
     const principal = requireMember(request.principal);
     const { db } = request.ctx;
     const [plan] = await db
-      .select().from(plans)
+      .select()
+      .from(plans)
       .where(and(eq(plans.userId, principal.userId), eq(plans.status, 'active')))
       .limit(1);
     if (!plan) return { plan: null, weeks: [] };
     const weeks = await db
-      .select().from(planWeeks)
+      .select()
+      .from(planWeeks)
       .where(eq(planWeeks.planId, plan.id))
       .orderBy(planWeeks.weekNumber);
     return { plan, weeks };

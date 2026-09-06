@@ -40,7 +40,9 @@ export function CoachNoteForm({ memberId }: { memberId: string }) {
           { value: 'shared', label: 'Shared — visible to the client' },
         ]}
       />
-      <Button type="submit" size="sm" disabled={pending}>{pending ? 'Saving…' : 'Save Note'}</Button>
+      <Button type="submit" size="sm" disabled={pending}>
+        {pending ? 'Saving…' : 'Save Note'}
+      </Button>
     </form>
   );
 }

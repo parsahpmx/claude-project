@@ -81,7 +81,11 @@ export function matchCoaches(
 
   return coaches
     .filter((coach) => {
-      if (preferences.maxMonthlyPriceCents && coach.monthlyPriceCents > preferences.maxMonthlyPriceCents) return false;
+      if (
+        preferences.maxMonthlyPriceCents &&
+        coach.monthlyPriceCents > preferences.maxMonthlyPriceCents
+      )
+        return false;
       if (preferences.minRating && coach.rating < preferences.minRating) return false;
       if (preferences.needsAvailabilityThisWeek && coach.availableSlotsThisWeek <= 0) return false;
       if (preferences.language && !coach.languages.includes(preferences.language)) return false;
@@ -94,7 +98,9 @@ export function matchCoaches(
       const overlap = coach.specialties.filter((s) => wanted.has(s));
       if (overlap.length > 0) {
         score += overlap.length * 22;
-        reasons.push(`Specialises in ${overlap.map((s) => COACH_SPECIALTY_LABELS[s]).join(' and ')}`);
+        reasons.push(
+          `Specialises in ${overlap.map((s) => COACH_SPECIALTY_LABELS[s]).join(' and ')}`,
+        );
       }
 
       const experience = clamp(coach.yearsExperience, 0, 20);
@@ -102,7 +108,8 @@ export function matchCoaches(
       if (experience >= 8) reasons.push(`${coach.yearsExperience} years coaching experience`);
 
       score += (coach.rating - 4.0) * 30;
-      if (coach.rating >= 4.8) reasons.push(`Rated ${coach.rating.toFixed(1)} by ${coach.clientCount} clients`);
+      if (coach.rating >= 4.8)
+        reasons.push(`Rated ${coach.rating.toFixed(1)} by ${coach.clientCount} clients`);
 
       if (coach.availableSlotsThisWeek > 0) {
         score += 12;
@@ -162,15 +169,21 @@ export function scoreCheckIn(submission: CheckInSubmission): CheckInScore {
 
   if (submission.painNotes && submission.painNotes.trim().length > 0) {
     flags.push('pain-reported');
-    coachPrompts.push('Open with the pain note before anything else, and refer on if it is not clearly training soreness.');
+    coachPrompts.push(
+      'Open with the pain note before anything else, and refer on if it is not clearly training soreness.',
+    );
   }
   if (submission.trainingAdherence <= 2) {
     flags.push('low-training-adherence');
-    coachPrompts.push('Two or fewer sessions landed. Ask what got in the way before adjusting the plan.');
+    coachPrompts.push(
+      'Two or fewer sessions landed. Ask what got in the way before adjusting the plan.',
+    );
   }
   if (submission.sleepQuality <= 2) {
     flags.push('poor-sleep');
-    coachPrompts.push('Sleep is the limiter this week — pull session volume back rather than pushing through.');
+    coachPrompts.push(
+      'Sleep is the limiter this week — pull session volume back rather than pushing through.',
+    );
   }
   if (submission.stress >= 4) {
     flags.push('high-stress');
@@ -178,14 +191,22 @@ export function scoreCheckIn(submission: CheckInSubmission): CheckInScore {
   }
   if (submission.nutritionAdherence <= 2) {
     flags.push('low-nutrition-adherence');
-    coachPrompts.push('Nutrition slipped. Pick one habit to rebuild rather than resetting the whole plan.');
+    coachPrompts.push(
+      'Nutrition slipped. Pick one habit to rebuild rather than resetting the whole plan.',
+    );
   }
   if (submission.questionsForCoach && submission.questionsForCoach.trim().length > 0) {
     coachPrompts.push('They asked you a direct question — answer it first.');
   }
 
   const band: CheckInScore['band'] =
-    overall >= 80 ? 'thriving' : overall >= 60 ? 'on-track' : overall >= 40 ? 'strained' : 'at-risk';
+    overall >= 80
+      ? 'thriving'
+      : overall >= 60
+        ? 'on-track'
+        : overall >= 40
+          ? 'strained'
+          : 'at-risk';
 
   const headline = {
     thriving: 'Strong week across the board.',
@@ -205,17 +226,28 @@ export interface CoachWorkload {
 }
 
 /** Capacity signal on the coach dashboard: coaches with too many clients coach none of them well. */
-export function coachCapacity(workload: CoachWorkload, clientCap = 40): {
+export function coachCapacity(
+  workload: CoachWorkload,
+  clientCap = 40,
+): {
   utilisation: number;
   status: 'available' | 'busy' | 'at-capacity';
   message: string;
 } {
   const utilisation = percent(workload.activeClients, clientCap);
   if (utilisation >= 95) {
-    return { utilisation, status: 'at-capacity', message: 'At capacity. New enquiries are being waitlisted.' };
+    return {
+      utilisation,
+      status: 'at-capacity',
+      message: 'At capacity. New enquiries are being waitlisted.',
+    };
   }
   if (utilisation >= 75) {
-    return { utilisation, status: 'busy', message: 'Nearly full. Consider closing new enquiries this month.' };
+    return {
+      utilisation,
+      status: 'busy',
+      message: 'Nearly full. Consider closing new enquiries this month.',
+    };
   }
   return { utilisation, status: 'available', message: 'Taking new clients.' };
 }

@@ -9,7 +9,9 @@
     --gutter: clamp(1rem, 4vw, 3rem);
   }
 
-  * { -webkit-tap-highlight-color: transparent; }
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
 
   body {
     @apply bg-ink-900 text-bone-200 antialiased;
@@ -23,7 +25,9 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
+    *,
+    *::before,
+    *::after {
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
@@ -44,13 +48,17 @@
   }
 
   /* Secondary text is a colour, not an opacity. 7.2:1 on ink. */
-  .muted { @apply text-smoke-400; }
+  .muted {
+    @apply text-smoke-400;
+  }
 
   .card {
     @apply rounded-card border border-ink-600 bg-ink-800;
   }
 
-  .rule { @apply h-px w-full bg-ink-600; }
+  .rule {
+    @apply h-px w-full bg-ink-600;
+  }
 
   /* Wide content scrolls in its own container; the page body never does. */
   .scroll-x {

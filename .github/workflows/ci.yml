@@ -119,6 +119,48 @@ jobs:
       - name: Integration tests
         run: pnpm test
 
+  # FORGE is a separate pnpm workspace nested under forge/. The root workspace
+  # is only apps/* and packages/*, so `turbo run test` at the root never sees it
+  # — before this job existed, the only thing in CI that touched forge/ was
+  # `prettier --check .`, because Prettier globs files rather than packages.
+  # Its 206 tests were not running anywhere.
+  forge:
+    name: FORGE workspace (lint, typecheck, tests, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: forge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: forge/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm -r lint
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Unit tests
+        run: pnpm -r test
+
+      # The beta app reads Supabase configuration at module load. CI has no
+      # project and needs none — these are placeholders so the build can run;
+      # nothing in CI connects to a database.
+      - name: Build
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+
   security:
     name: Dependency audit
     runs-on: ubuntu-latest

@@ -34,10 +34,15 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     <>
       <Section tone="dark" size="md">
         <div className="mx-auto max-w-3xl pt-20 text-center">
-          <Link href="/blog" className="text-xs uppercase tracking-[0.14em] text-bone-200/55 hover:text-bone-100">
+          <Link
+            href="/blog"
+            className="text-xs uppercase tracking-[0.14em] text-bone-200/55 hover:text-bone-100"
+          >
             ← Knowledge Hub
           </Link>
-          <div className="mt-6"><Chip tone="inverse">{article.category}</Chip></div>
+          <div className="mt-6">
+            <Chip tone="inverse">{article.category}</Chip>
+          </div>
           <h1 className="display mt-6 text-display-md text-balance">{article.title}</h1>
           <p className="mt-6 text-lg leading-relaxed text-bone-200/70">{article.excerpt}</p>
           <p className="mt-8 text-sm text-muted">
@@ -54,7 +59,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             {paragraphs.map((paragraph, index) => (
               <p
                 key={index}
-                className={index === 0 ? 'text-xl leading-relaxed' : 'mt-6 text-base leading-relaxed opacity-85'}
+                className={
+                  index === 0
+                    ? 'text-xl leading-relaxed'
+                    : 'mt-6 text-base leading-relaxed opacity-85'
+                }
               >
                 {paragraph}
               </p>
@@ -67,7 +76,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
               The assessment turns this into a plan in about two minutes.
             </p>
             <div className="mt-6 flex justify-center">
-              <ButtonLink href="/assessment" size="lg">Take the Assessment</ButtonLink>
+              <ButtonLink href="/assessment" size="lg">
+                Take the Assessment
+              </ButtonLink>
             </div>
           </div>
         </div>

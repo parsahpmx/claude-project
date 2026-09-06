@@ -26,7 +26,11 @@ export default async function CoachAnalyticsPage() {
       <AppSection>
         <PageHeader eyebrow="Analytics" title="COACHING ANALYTICS" />
         <div className="mt-10">
-          <EmptyState icon="◤" title="No data yet" body="Analytics appear once you have active clients." />
+          <EmptyState
+            icon="◤"
+            title="No data yet"
+            body="Analytics appear once you have active clients."
+          />
         </div>
       </AppSection>
     );
@@ -41,11 +45,33 @@ export default async function CoachAnalyticsPage() {
       />
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <Card><Stat label="Active clients" value={data.activeClients} /></Card>
-        <Card><Stat label="Weekly adherence" value={`${data.weeklyAdherence}%`} hint="Across all clients" /></Card>
-        <Card><Stat label="Avg retention" value={`${data.retentionWeeks}w`} hint="Time as your client" /></Card>
-        <Card><Stat label="Check-in replies" value={`${data.checkInResponseRate}%`} hint="Answered" /></Card>
-        <Card><Stat label="Monthly recurring" value={formatCents(data.revenueCents)} hint="At current roster" /></Card>
+        <Card>
+          <Stat label="Active clients" value={data.activeClients} />
+        </Card>
+        <Card>
+          <Stat
+            label="Weekly adherence"
+            value={`${data.weeklyAdherence}%`}
+            hint="Across all clients"
+          />
+        </Card>
+        <Card>
+          <Stat
+            label="Avg retention"
+            value={`${data.retentionWeeks}w`}
+            hint="Time as your client"
+          />
+        </Card>
+        <Card>
+          <Stat label="Check-in replies" value={`${data.checkInResponseRate}%`} hint="Answered" />
+        </Card>
+        <Card>
+          <Stat
+            label="Monthly recurring"
+            value={formatCents(data.revenueCents)}
+            hint="At current roster"
+          />
+        </Card>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -58,8 +84,9 @@ export default async function CoachAnalyticsPage() {
             height={180}
           />
           <p className="mt-5 text-xs leading-relaxed text-muted">
-            Adherence below 70% for two weeks running is the strongest predictor of a client leaving. It is
-            almost never a motivation problem — it is a plan that stopped fitting their week.
+            Adherence below 70% for two weeks running is the strongest predictor of a client
+            leaving. It is almost never a motivation problem — it is a plan that stopped fitting
+            their week.
           </p>
         </Card>
 
@@ -81,18 +108,34 @@ export default async function CoachAnalyticsPage() {
               <caption className="sr-only">Adherence and sessions completed by week</caption>
               <thead>
                 <tr className="border-b border-ink-900/10">
-                  <th scope="col" className="py-3 text-left font-semibold">Week beginning</th>
-                  <th scope="col" className="py-3 text-right font-semibold">Sessions</th>
-                  <th scope="col" className="py-3 text-right font-semibold">Adherence</th>
+                  <th scope="col" className="py-3 text-left font-semibold">
+                    Week beginning
+                  </th>
+                  <th scope="col" className="py-3 text-right font-semibold">
+                    Sessions
+                  </th>
+                  <th scope="col" className="py-3 text-right font-semibold">
+                    Adherence
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {[...data.series].reverse().map((week) => (
                   <tr key={week.weekStart} className="border-b border-ink-900/6 last:border-0">
-                    <th scope="row" className="py-3 text-left font-normal opacity-75">{week.weekStart}</th>
+                    <th scope="row" className="py-3 text-left font-normal opacity-75">
+                      {week.weekStart}
+                    </th>
                     <td className="py-3 text-right tabular-nums">{week.sessions}</td>
                     <td className="py-3 text-right tabular-nums">
-                      <span className={week.adherencePercent >= 80 ? 'text-status-good' : week.adherencePercent >= 60 ? '' : 'text-status-warn'}>
+                      <span
+                        className={
+                          week.adherencePercent >= 80
+                            ? 'text-status-good'
+                            : week.adherencePercent >= 60
+                              ? ''
+                              : 'text-status-warn'
+                        }
+                      >
                         {week.adherencePercent}%
                       </span>
                     </td>

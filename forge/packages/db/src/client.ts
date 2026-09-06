@@ -14,9 +14,7 @@ import * as schema from './schema/index.js';
  * reach production untested.
  */
 
-export type Database =
-  | PgliteDatabase<typeof schema>
-  | PostgresJsDatabase<typeof schema>;
+export type Database = PgliteDatabase<typeof schema> | PostgresJsDatabase<typeof schema>;
 
 export interface DatabaseHandle {
   db: Database;

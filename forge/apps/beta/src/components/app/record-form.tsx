@@ -36,7 +36,10 @@ export function RecordActivityForm({ defaultVisibility }: { defaultVisibility: V
   return (
     <form action={onSubmit} className="space-y-6" noValidate>
       {error && (
-        <p role="alert" className="rounded-control border border-state-bad/40 bg-state-bad/10 px-4 py-3 text-secondary text-state-bad">
+        <p
+          role="alert"
+          className="rounded-control border border-state-bad/40 bg-state-bad/10 px-4 py-3 text-secondary text-state-bad"
+        >
           {error}
         </p>
       )}
@@ -76,7 +79,12 @@ export function RecordActivityForm({ defaultVisibility }: { defaultVisibility: V
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
             <Field label="Climbing (m)" name="elevationGainM" type="number" />
-            <Field label="Average heart rate" name="avgHr" type="number" hint="Leave blank if you did not wear a monitor." />
+            <Field
+              label="Average heart rate"
+              name="avgHr"
+              type="number"
+              hint="Leave blank if you did not wear a monitor."
+            />
           </div>
           <Field label="Notes" name="description" hint="How it felt, what you changed." />
         </div>
@@ -85,7 +93,9 @@ export function RecordActivityForm({ defaultVisibility }: { defaultVisibility: V
       <Card>
         <fieldset>
           <legend className="text-secondary font-medium text-bone-200">Who can see this</legend>
-          <p className="mt-1 text-caption muted">Defaults to your privacy setting. You can change it later.</p>
+          <p className="mt-1 text-caption muted">
+            Defaults to your privacy setting. You can change it later.
+          </p>
           <select
             name="visibility"
             defaultValue={defaultVisibility}

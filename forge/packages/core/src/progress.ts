@@ -30,7 +30,10 @@ export interface ProgressSummary {
   weeklyAverage: number;
 }
 
-export function summariseProgress(records: readonly WorkoutRecord[], today: IsoDate): ProgressSummary {
+export function summariseProgress(
+  records: readonly WorkoutRecord[],
+  today: IsoDate,
+): ProgressSummary {
   const dates = [...new Set(records.map((r) => r.date))].sort();
   const streaks = computeStreaks(dates, today);
   const first = dates[0];
@@ -89,7 +92,11 @@ export interface SeriesPoint {
 }
 
 /** Weekly totals, with empty weeks preserved as zeroes. */
-export function weeklyVolume(records: readonly WorkoutRecord[], from: IsoDate, to: IsoDate): SeriesPoint[] {
+export function weeklyVolume(
+  records: readonly WorkoutRecord[],
+  from: IsoDate,
+  to: IsoDate,
+): SeriesPoint[] {
   const buckets = new Map<IsoDate, number>();
   for (let cursor = from; daysBetween(cursor, to) >= 0; cursor = addDays(cursor, 7)) {
     buckets.set(cursor, 0);
@@ -155,7 +162,10 @@ export interface StrengthTrend {
   changePercent: number;
 }
 
-export function strengthTrend(exerciseId: string, points: readonly StrengthPoint[]): StrengthTrend | null {
+export function strengthTrend(
+  exerciseId: string,
+  points: readonly StrengthPoint[],
+): StrengthTrend | null {
   if (points.length === 0) return null;
   const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date));
   const start = sorted[0]!.estimatedOneRepMax;
@@ -204,7 +214,7 @@ export function movingAverage(points: readonly SeriesPoint[], window = 7): Serie
 /** VO2max estimate from resting heart rate (Uth-Sørensen). Clearly an estimate. */
 export function estimateVo2Max(restingHeartRate: number, maxHeartRate: number): number | null {
   if (restingHeartRate <= 0 || maxHeartRate <= restingHeartRate) return null;
-  return Math.round((15.3 * (maxHeartRate / restingHeartRate)) * 10) / 10;
+  return Math.round(15.3 * (maxHeartRate / restingHeartRate) * 10) / 10;
 }
 
 /** Age-predicted maximum heart rate (Tanaka). Used only for training zones. */

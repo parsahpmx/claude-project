@@ -28,14 +28,21 @@ export default async function EquipmentPage() {
       <Section tone="dark" size="lg">
         <div className="max-w-4xl pt-16">
           <p className="eyebrow mb-6">Equipment</p>
-          <h1 className="display text-display-lg text-balance">BUY THE THING THAT UNLOCKS THE PLAN.</h1>
+          <h1 className="display text-display-lg text-balance">
+            BUY THE THING THAT UNLOCKS THE PLAN.
+          </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-bone-200/70">
-            Every product page tells you exactly which FORGE programmes it opens up. Nothing here exists to
-            fill a category — if it does not change what you can train, it is not in the store.
+            Every product page tells you exactly which FORGE programmes it opens up. Nothing here
+            exists to fill a category — if it does not change what you can train, it is not in the
+            store.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
-            <ButtonLink href="/app/equipment" size="lg">Update My Equipment</ButtonLink>
-            <ButtonLink href="#shop" variant="inverse" size="lg">Shop Now</ButtonLink>
+            <ButtonLink href="/app/equipment" size="lg">
+              Update My Equipment
+            </ButtonLink>
+            <ButtonLink href="#shop" variant="inverse" size="lg">
+              Shop Now
+            </ButtonLink>
           </div>
         </div>
       </Section>
@@ -61,19 +68,32 @@ export default async function EquipmentPage() {
       <Section tone="bone" size="md" id="shop">
         <SectionHeading eyebrow="The store" title="EVERY CATEGORY." />
         <div className="mt-8 flex flex-wrap gap-2">
-          {categories.map((category) => <Chip key={category}>{category}</Chip>)}
+          {categories.map((category) => (
+            <Chip key={category}>{category}</Chip>
+          ))}
         </div>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          {products.map((product) => <ProductCard key={product.slug} product={product} />)}
+          {products.map((product) => (
+            <ProductCard key={product.slug} product={product} />
+          ))}
         </div>
       </Section>
 
       <Section tone="dark" size="md">
         <div className="grid gap-6 sm:grid-cols-3">
           {[
-            ['Programme compatibility', 'Every product lists the exact programmes it unlocks, verified against the movement library.'],
-            ['Financing available', 'Spread larger purchases over 6, 12 or 24 months at no extra cost.'],
-            ['Free delivery over $150', 'Kerbside for racks and rowers, doorstep for everything else.'],
+            [
+              'Programme compatibility',
+              'Every product lists the exact programmes it unlocks, verified against the movement library.',
+            ],
+            [
+              'Financing available',
+              'Spread larger purchases over 6, 12 or 24 months at no extra cost.',
+            ],
+            [
+              'Free delivery over $150',
+              'Kerbside for racks and rowers, doorstep for everything else.',
+            ],
           ].map(([title, body]) => (
             <Card key={title} tone="dark">
               <p className="display text-lg">{title}</p>

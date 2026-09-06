@@ -38,19 +38,26 @@ export function ProgramFilters({
     const maxMinutes = durations.length > 0 ? Math.max(...durations.map(Number)) : null;
 
     return programs.filter((program) => {
-      if (query && !`${program.name} ${program.tagline} ${program.summary}`.toLowerCase().includes(query)) return false;
+      if (
+        query &&
+        !`${program.name} ${program.tagline} ${program.summary}`.toLowerCase().includes(query)
+      )
+        return false;
       if (goals.length > 0 && !goals.some((goal) => program.goals.includes(goal))) return false;
-      if (styles.length > 0 && !styles.some((style) => program.styles.includes(style))) return false;
+      if (styles.length > 0 && !styles.some((style) => program.styles.includes(style)))
+        return false;
       if (levels.length > 0 && !levels.includes(program.difficulty)) return false;
       // Equipment is a capability check, not a tag match: a programme shows if
       // everything it needs is in the member's selection.
-      if (equipment.length > 0 && !program.equipment.every((item) => equipment.includes(item))) return false;
+      if (equipment.length > 0 && !program.equipment.every((item) => equipment.includes(item)))
+        return false;
       if (maxMinutes !== null && program.sessionMinutes > maxMinutes) return false;
       return true;
     });
   }, [programs, search, goals, styles, levels, equipment, durations]);
 
-  const activeCount = goals.length + styles.length + levels.length + equipment.length + durations.length;
+  const activeCount =
+    goals.length + styles.length + levels.length + equipment.length + durations.length;
 
   const clear = () => {
     setSearch('');
@@ -71,8 +78,20 @@ export function ProgramFilters({
             label="Search programmes"
             placeholder="What do you want to train?"
           />
-          <FilterChips label="Goal" options={facets.goals} selected={goals} onChange={setGoals} multi />
-          <FilterChips label="Training style" options={facets.styles} selected={styles} onChange={setStyles} multi />
+          <FilterChips
+            label="Goal"
+            options={facets.goals}
+            selected={goals}
+            onChange={setGoals}
+            multi
+          />
+          <FilterChips
+            label="Training style"
+            options={facets.styles}
+            selected={styles}
+            onChange={setStyles}
+            multi
+          />
           <FilterChips
             label="Experience"
             options={[
@@ -90,7 +109,13 @@ export function ProgramFilters({
             selected={durations}
             onChange={setDurations}
           />
-          <FilterChips label="My equipment" options={facets.equipment} selected={equipment} onChange={setEquipment} multi />
+          <FilterChips
+            label="My equipment"
+            options={facets.equipment}
+            selected={equipment}
+            onChange={setEquipment}
+            multi
+          />
 
           {activeCount > 0 && (
             <Button variant="ghost" size="sm" onClick={clear} block>
@@ -117,7 +142,11 @@ export function ProgramFilters({
             icon="⌕"
             title="Nothing matches all of those filters"
             body="Try widening the equipment selection — programmes only appear when you own everything they need."
-            action={<Button variant="secondary" onClick={clear}>Clear filters</Button>}
+            action={
+              <Button variant="secondary" onClick={clear}>
+                Clear filters
+              </Button>
+            }
           />
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">

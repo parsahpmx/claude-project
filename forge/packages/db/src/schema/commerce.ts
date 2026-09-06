@@ -1,6 +1,15 @@
 import { sql } from 'drizzle-orm';
 import {
-  boolean, date, index, integer, pgTable, smallint, text, timestamp, uniqueIndex, varchar,
+  boolean,
+  date,
+  index,
+  integer,
+  pgTable,
+  smallint,
+  text,
+  timestamp,
+  uniqueIndex,
+  varchar,
 } from 'drizzle-orm/pg-core';
 import { cents, id, timestamps } from './_shared.js';
 import { users } from './identity.js';
@@ -9,7 +18,9 @@ export const subscriptions = pgTable(
   'subscriptions',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     tier: varchar('tier', { length: 24 }).notNull(),
     billingInterval: varchar('billing_interval', { length: 12 }).notNull().default('monthly'),
     status: varchar('status', { length: 16 }).notNull().default('trialing'),
@@ -28,7 +39,9 @@ export const paymentMethods = pgTable(
   'payment_methods',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     kind: varchar('kind', { length: 24 }).notNull(),
     brand: varchar('brand', { length: 24 }),
     // Only the display fragment is ever stored. No PAN, no CVV, no expiry
@@ -46,8 +59,12 @@ export const invoices = pgTable(
   'invoices',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-    subscriptionId: id('subscription_id').references(() => subscriptions.id, { onDelete: 'set null' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    subscriptionId: id('subscription_id').references(() => subscriptions.id, {
+      onDelete: 'set null',
+    }),
     description: varchar('description', { length: 200 }).notNull(),
     amountCents: cents('amount_cents').notNull(),
     status: varchar('status', { length: 16 }).notNull().default('paid'),
@@ -74,8 +91,14 @@ export const products = pgTable(
     reviewCount: integer('review_count').notNull().default(0),
     specs: text('specs').notNull().default('{}'),
     /** Programme slugs this product unlocks — the compatibility claim on the card. */
-    compatiblePrograms: text('compatible_programs').array().notNull().default(sql`'{}'::text[]`),
-    goals: text('goals').array().notNull().default(sql`'{}'::text[]`),
+    compatiblePrograms: text('compatible_programs')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    goals: text('goals')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     warranty: varchar('warranty', { length: 120 }).notNull(),
     shipping: varchar('shipping', { length: 160 }).notNull(),
     inStock: boolean('in_stock').notNull().default(true),
@@ -89,12 +112,18 @@ export const productReviews = pgTable(
   'product_reviews',
   {
     id: id().primaryKey(),
-    productId: id('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    productId: id('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     rating: smallint('rating').notNull(),
     title: varchar('title', { length: 140 }).notNull(),
     body: text('body').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
   },
   (table) => [uniqueIndex('product_reviews_unique').on(table.productId, table.userId)],
 );
@@ -103,8 +132,12 @@ export const cartItems = pgTable(
   'cart_items',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-    productId: id('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    productId: id('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
     quantity: smallint('quantity').notNull().default(1),
     ...timestamps,
   },
@@ -115,12 +148,16 @@ export const orders = pgTable(
   'orders',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     status: varchar('status', { length: 16 }).notNull().default('confirmed'),
     subtotalCents: cents('subtotal_cents').notNull(),
     shippingCents: cents('shipping_cents').notNull().default(0),
     totalCents: cents('total_cents').notNull(),
-    placedAt: timestamp('placed_at', { withTimezone: true }).notNull().default(sql`now()`),
+    placedAt: timestamp('placed_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
     ...timestamps,
   },
   (table) => [index('orders_user_idx').on(table.userId, table.placedAt)],
@@ -130,8 +167,12 @@ export const orderItems = pgTable(
   'order_items',
   {
     id: id().primaryKey(),
-    orderId: id('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }),
-    productId: id('product_id').notNull().references(() => products.id, { onDelete: 'restrict' }),
+    orderId: id('order_id')
+      .notNull()
+      .references(() => orders.id, { onDelete: 'cascade' }),
+    productId: id('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'restrict' }),
     name: varchar('name', { length: 140 }).notNull(),
     quantity: smallint('quantity').notNull(),
     // The price the member actually paid, captured at order time. Reading it

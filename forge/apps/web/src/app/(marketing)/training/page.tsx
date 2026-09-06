@@ -14,11 +14,13 @@ export default function TrainingPage() {
           <p className="eyebrow mb-6">Workout discovery</p>
           <h1 className="display text-display-lg text-balance">TRAIN WITH PURPOSE.</h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-bone-200/70">
-            Eleven training styles, five to sixty minutes, coached or self-guided. Filter by the equipment on
-            your profile and nothing you cannot run will ever appear.
+            Eleven training styles, five to sixty minutes, coached or self-guided. Filter by the
+            equipment on your profile and nothing you cannot run will ever appear.
           </p>
           <div className="mt-9">
-            <ButtonLink href="/assessment" size="lg">Get My Plan</ButtonLink>
+            <ButtonLink href="/assessment" size="lg">
+              Get My Plan
+            </ButtonLink>
           </div>
         </div>
       </Section>
@@ -35,10 +37,22 @@ export default function TrainingPage() {
         />
         <div className="mt-12 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
           {[
-            ['Your previous numbers', 'Every set shows what you actually lifted last time — read from your history, not from the plan.'],
-            ['Rest timer', 'Starts when you log a set, because the rest period is part of the prescription.'],
-            ['Substitute mid-session', 'Machine taken? Swap to something that trains the same pattern with the kit you have.'],
-            ['Coach tips', 'The cue that matters for this movement, on the screen where you need it.'],
+            [
+              'Your previous numbers',
+              'Every set shows what you actually lifted last time — read from your history, not from the plan.',
+            ],
+            [
+              'Rest timer',
+              'Starts when you log a set, because the rest period is part of the prescription.',
+            ],
+            [
+              'Substitute mid-session',
+              'Machine taken? Swap to something that trains the same pattern with the kit you have.',
+            ],
+            [
+              'Coach tips',
+              'The cue that matters for this movement, on the screen where you need it.',
+            ],
           ].map(([title, body]) => (
             <div key={title}>
               <div className="mb-4 h-px w-12 bg-ember" />

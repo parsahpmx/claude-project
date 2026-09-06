@@ -12,41 +12,87 @@ import { formatDateLabel, formatLoad, formatVolume, relativeTime } from '@/lib/f
 export const dynamic = 'force-dynamic';
 
 interface ClientDetail {
-  member: { id: string; firstName: string; lastName: string; email: string; timezone: string } | null;
+  member: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    timezone: string;
+  } | null;
   profile: {
-    primaryGoal: string; experience: string; daysPerWeek: number; sessionMinutes: number;
-    equipment: string[]; diet: string; heightCm: number | null; weightKg: number | null;
+    primaryGoal: string;
+    experience: string;
+    daysPerWeek: number;
+    sessionMinutes: number;
+    equipment: string[];
+    diet: string;
+    heightCm: number | null;
+    weightKg: number | null;
   } | null;
   plan: { programName: string; totalWeeks: number; startDate: string; goal: string } | null;
   summary: {
-    totalWorkouts: number; trainingHours: number; totalVolumeGrams: number;
-    currentStreakDays: number; weeklyAverage: number;
+    totalWorkouts: number;
+    trainingHours: number;
+    totalVolumeGrams: number;
+    currentStreakDays: number;
+    weeklyAverage: number;
   };
   recentWorkouts: {
-    id: string; title: string; date: string; durationSeconds: number;
-    volumeGrams: number; averageRpe: number | null; kind: string;
+    id: string;
+    title: string;
+    date: string;
+    durationSeconds: number;
+    volumeGrams: number;
+    averageRpe: number | null;
+    kind: string;
   }[];
-  personalRecords: { id: string; exerciseName: string; kind: string; valueGrams: number; achievedOn: string }[];
-  workingLoads: { id: string; exerciseId: string; workingLoadGrams: number; bestLoadGrams: number }[];
+  personalRecords: {
+    id: string;
+    exerciseName: string;
+    kind: string;
+    valueGrams: number;
+    achievedOn: string;
+  }[];
+  workingLoads: {
+    id: string;
+    exerciseId: string;
+    workingLoadGrams: number;
+    bestLoadGrams: number;
+  }[];
   checkIns: {
-    id: string; weekStart: string; score: number; band: string; flags: string[];
-    energy: number; sleepQuality: number; stress: number;
-    nutritionAdherence: number; trainingAdherence: number;
-    painNotes: string | null; questions: string | null;
-    coachResponse: string | null; respondedAt: string | null; submittedAt: string;
+    id: string;
+    weekStart: string;
+    score: number;
+    band: string;
+    flags: string[];
+    energy: number;
+    sleepQuality: number;
+    stress: number;
+    nutritionAdherence: number;
+    trainingAdherence: number;
+    painNotes: string | null;
+    questions: string | null;
+    coachResponse: string | null;
+    respondedAt: string | null;
+    submittedAt: string;
   }[];
   notes: { id: string; body: string; visibility: string; createdAt: string }[];
   threadId: string | null;
 }
 
-export default async function CoachClientPage({ params }: { params: Promise<{ memberId: string }> }) {
+export default async function CoachClientPage({
+  params,
+}: {
+  params: Promise<{ memberId: string }>;
+}) {
   const { memberId } = await params;
 
   let data: ClientDetail;
   try {
     data = await apiFetch<ClientDetail>(`/v1/coach/clients/${memberId}`);
   } catch (error) {
-    if (error instanceof ApiRequestError && (error.status === 403 || error.status === 404)) notFound();
+    if (error instanceof ApiRequestError && (error.status === 403 || error.status === 404))
+      notFound();
     throw error;
   }
 
@@ -55,7 +101,10 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
 
   return (
     <AppSection>
-      <Link href="/coach/clients" className="text-xs uppercase tracking-[0.14em] text-muted hover:opacity-100">
+      <Link
+        href="/coach/clients"
+        className="text-xs uppercase tracking-[0.14em] text-muted hover:opacity-100"
+      >
         ← All clients
       </Link>
 
@@ -66,20 +115,46 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
           lead={member.email}
           action={
             <div className="flex flex-wrap gap-2">
-              {data.threadId && <ButtonLink href={`/coach/messages?thread=${data.threadId}`}>Message Client</ButtonLink>}
-              <ButtonLink href="/coach/programs" variant="ghost">Edit Program</ButtonLink>
-              <ButtonLink href="/coach/calendar" variant="ghost">Schedule Call</ButtonLink>
+              {data.threadId && (
+                <ButtonLink href={`/coach/messages?thread=${data.threadId}`}>
+                  Message Client
+                </ButtonLink>
+              )}
+              <ButtonLink href="/coach/programs" variant="ghost">
+                Edit Program
+              </ButtonLink>
+              <ButtonLink href="/coach/calendar" variant="ghost">
+                Schedule Call
+              </ButtonLink>
             </div>
           }
         />
       </div>
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <Card><Stat label="Workouts" value={summary.totalWorkouts} hint={`${summary.weeklyAverage}/week`} /></Card>
-        <Card><Stat label="Training hours" value={`${summary.trainingHours}h`} hint="Last 8 weeks" /></Card>
-        <Card><Stat label="Total volume" value={formatVolume(summary.totalVolumeGrams)} hint="Load × reps" /></Card>
-        <Card><Stat label="Streak" value={`${summary.currentStreakDays}d`} hint="Current" /></Card>
-        <Card><Stat label="Records" value={data.personalRecords.length} hint="All time" /></Card>
+        <Card>
+          <Stat
+            label="Workouts"
+            value={summary.totalWorkouts}
+            hint={`${summary.weeklyAverage}/week`}
+          />
+        </Card>
+        <Card>
+          <Stat label="Training hours" value={`${summary.trainingHours}h`} hint="Last 8 weeks" />
+        </Card>
+        <Card>
+          <Stat
+            label="Total volume"
+            value={formatVolume(summary.totalVolumeGrams)}
+            hint="Load × reps"
+          />
+        </Card>
+        <Card>
+          <Stat label="Streak" value={`${summary.currentStreakDays}d`} hint="Current" />
+        </Card>
+        <Card>
+          <Stat label="Records" value={data.personalRecords.length} hint="All time" />
+        </Card>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
@@ -91,7 +166,11 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
             </div>
             {data.checkIns.length === 0 ? (
               <div className="p-6">
-                <EmptyState icon="☑" title="No check-ins yet" body="They appear here every Monday." />
+                <EmptyState
+                  icon="☑"
+                  title="No check-ins yet"
+                  body="They appear here every Monday."
+                />
               </div>
             ) : (
               <ul className="divide-y divide-ink-900/8">
@@ -126,7 +205,11 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
                     {entry.flags.length > 0 && (
                       <div className="mt-4 flex flex-wrap gap-1.5">
                         {entry.flags.map((flag) => (
-                          <Chip key={flag} tone={flag === 'pain-reported' ? 'bad' : 'warn'} size="sm">
+                          <Chip
+                            key={flag}
+                            tone={flag === 'pain-reported' ? 'bad' : 'warn'}
+                            size="sm"
+                          >
                             {flag.replace(/-/g, ' ')}
                           </Chip>
                         ))}
@@ -166,12 +249,15 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
             </div>
             <ul className="divide-y divide-ink-900/8">
               {data.recentWorkouts.slice(0, 10).map((workout) => (
-                <li key={workout.id} className="flex flex-wrap items-center justify-between gap-4 p-5">
+                <li
+                  key={workout.id}
+                  className="flex flex-wrap items-center justify-between gap-4 p-5"
+                >
                   <div>
                     <p className="font-medium">{workout.title}</p>
                     <p className="mt-0.5 text-xs text-muted">
-                      {formatDateLabel(workout.date)} · {Math.round(workout.durationSeconds / 60)} min ·{' '}
-                      {workout.kind}
+                      {formatDateLabel(workout.date)} · {Math.round(workout.durationSeconds / 60)}{' '}
+                      min · {workout.kind}
                     </p>
                   </div>
                   <div className="flex items-center gap-5 text-sm tabular-nums">
@@ -195,7 +281,10 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
               <dl className="space-y-3 text-sm">
                 <Row label="Goal" value={profile.primaryGoal.replace(/-/g, ' ')} />
                 <Row label="Experience" value={profile.experience} />
-                <Row label="Availability" value={`${profile.daysPerWeek} days · ${profile.sessionMinutes} min`} />
+                <Row
+                  label="Availability"
+                  value={`${profile.daysPerWeek} days · ${profile.sessionMinutes} min`}
+                />
                 <Row label="Diet" value={profile.diet.replace(/-/g, ' ')} />
                 <Row label="Height" value={profile.heightCm ? `${profile.heightCm} cm` : '—'} />
                 <Row label="Weight" value={profile.weightKg ? `${profile.weightKg} kg` : '—'} />
@@ -209,7 +298,9 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
                 <p className="eyebrow mb-3">Equipment</p>
                 <div className="flex flex-wrap gap-1.5">
                   {profile.equipment.map((item) => (
-                    <Chip key={item} size="sm">{item.replace(/-/g, ' ')}</Chip>
+                    <Chip key={item} size="sm">
+                      {item.replace(/-/g, ' ')}
+                    </Chip>
                   ))}
                 </div>
               </>
@@ -229,7 +320,9 @@ export default async function CoachClientPage({ params }: { params: Promise<{ me
                     </span>
                     <span className="shrink-0 tabular-nums">
                       {formatLoad(entry.workingLoadGrams)}
-                      <span className="ml-2 text-xs text-muted">best {formatLoad(entry.bestLoadGrams)}</span>
+                      <span className="ml-2 text-xs text-muted">
+                        best {formatLoad(entry.bestLoadGrams)}
+                      </span>
                     </span>
                   </li>
                 ))}
@@ -280,8 +373,11 @@ function Score({ label, value, inverted }: { label: string; value: number; inver
   return (
     <div>
       <dt className="text-[0.625rem] uppercase tracking-[0.12em] text-muted">{label}</dt>
-      <dd className={`mt-1 text-sm font-semibold tabular-nums ${good ? 'text-status-good' : bad ? 'text-status-warn' : ''}`}>
-        {value}<span className="font-normal text-muted">/5</span>
+      <dd
+        className={`mt-1 text-sm font-semibold tabular-nums ${good ? 'text-status-good' : bad ? 'text-status-warn' : ''}`}
+      >
+        {value}
+        <span className="font-normal text-muted">/5</span>
       </dd>
     </div>
   );

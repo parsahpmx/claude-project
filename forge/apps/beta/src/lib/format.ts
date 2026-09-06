@@ -7,7 +7,20 @@
  * deterministic everywhere.
  */
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
+const MONTHS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+] as const;
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
 export function formatNumber(value: number): string {
@@ -36,7 +49,10 @@ export function formatDuration(seconds: number): string {
 }
 
 /** Pace as m:ss per km or mile. */
-export function formatPace(secondsPerKm: number | null, units: 'metric' | 'imperial' = 'metric'): string {
+export function formatPace(
+  secondsPerKm: number | null,
+  units: 'metric' | 'imperial' = 'metric',
+): string {
   if (secondsPerKm === null) return '—';
   const perUnit = units === 'imperial' ? secondsPerKm * 1.609344 : secondsPerKm;
   const m = Math.floor(perUnit / 60);
@@ -71,13 +87,23 @@ export function formatLoadG(grams: number, units: 'metric' | 'imperial' = 'metri
 }
 
 export const SPORT_LABEL: Record<string, string> = {
-  run: 'Run', walk: 'Walk', hike: 'Hike', ride: 'Ride',
-  strength: 'Strength', functional: 'Functional', mobility: 'Mobility',
+  run: 'Run',
+  walk: 'Walk',
+  hike: 'Hike',
+  ride: 'Ride',
+  strength: 'Strength',
+  functional: 'Functional',
+  mobility: 'Mobility',
 };
 
 export const SPORT_GLYPH: Record<string, string> = {
-  run: '▶', walk: '◦', hike: '△', ride: '◍',
-  strength: '▤', functional: '◈', mobility: '◐',
+  run: '▶',
+  walk: '◦',
+  hike: '△',
+  ride: '◍',
+  strength: '▤',
+  functional: '◈',
+  mobility: '◐',
 };
 
 /** ISO date (YYYY-MM-DD) arithmetic without a date library. */

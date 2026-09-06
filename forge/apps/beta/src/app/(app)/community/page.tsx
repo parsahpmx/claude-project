@@ -22,12 +22,19 @@ export default async function CommunityPage() {
   const supabase = await createClient();
   const [challenges, clubs] = await Promise.all([
     showChallenges
-      ? supabase.from('challenges').select('id, slug, name, description, metric, sport, target, starts_on, ends_on')
-          .eq('published', true).order('starts_on').limit(8)
+      ? supabase
+          .from('challenges')
+          .select('id, slug, name, description, metric, sport, target, starts_on, ends_on')
+          .eq('published', true)
+          .order('starts_on')
+          .limit(8)
       : Promise.resolve({ data: null }),
     showClubs
-      ? supabase.from('clubs').select('id, slug, name, description, sport, location_name')
-          .eq('privacy', 'public').limit(8)
+      ? supabase
+          .from('clubs')
+          .select('id, slug, name, description, sport, location_name')
+          .eq('privacy', 'public')
+          .limit(8)
       : Promise.resolve({ data: null }),
   ]);
 
@@ -42,9 +49,14 @@ export default async function CommunityPage() {
 
       {showChallenges && (
         <section aria-labelledby="challenges-heading">
-          <h2 id="challenges-heading" className="eyebrow mb-4">Challenges</h2>
+          <h2 id="challenges-heading" className="eyebrow mb-4">
+            Challenges
+          </h2>
           {!challenges.data || challenges.data.length === 0 ? (
-            <EmptyState title="No challenges running" body="New challenges open at the start of each month." />
+            <EmptyState
+              title="No challenges running"
+              body="New challenges open at the start of each month."
+            />
           ) : (
             <ul className="grid gap-4 sm:grid-cols-2">
               {challenges.data.map((c) => (
@@ -68,7 +80,9 @@ export default async function CommunityPage() {
 
       {showClubs && (
         <section aria-labelledby="clubs-heading">
-          <h2 id="clubs-heading" className="eyebrow mb-4">Clubs</h2>
+          <h2 id="clubs-heading" className="eyebrow mb-4">
+            Clubs
+          </h2>
           {!clubs.data || clubs.data.length === 0 ? (
             <EmptyState
               title="No public clubs yet"
@@ -81,7 +95,9 @@ export default async function CommunityPage() {
                   <Card interactive>
                     <h3 className="text-card-title text-bone-100">{club.name}</h3>
                     <p className="mt-2 text-secondary muted">{club.description}</p>
-                    {club.location_name && <p className="mt-3 text-caption muted">{club.location_name}</p>}
+                    {club.location_name && (
+                      <p className="mt-3 text-caption muted">{club.location_name}</p>
+                    )}
                   </Card>
                 </li>
               ))}
@@ -92,8 +108,10 @@ export default async function CommunityPage() {
 
       <p className="text-secondary muted">
         Looking for your own training?{' '}
-        <Link href="/home" className="font-semibold text-signal hover:underline underline-offset-4">Home</Link>
-        {' '}has today and this week.
+        <Link href="/home" className="font-semibold text-signal hover:underline underline-offset-4">
+          Home
+        </Link>{' '}
+        has today and this week.
       </p>
     </div>
   );

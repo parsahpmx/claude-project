@@ -18,10 +18,18 @@ export function ProgramCard({ program, href }: { program: Program; href?: string
       href={href ?? `/programs/${program.slug}`}
       className="light-surface group flex flex-col overflow-hidden rounded-card border border-ink-900/10 bg-bone-100 transition-all duration-300 ease-forge hover:-translate-y-1 hover:shadow-lift"
     >
-      <Media imageKey={program.accentImage} ratio="4/3" rounded={false} overlay alt={`${program.name} programme`}>
+      <Media
+        imageKey={program.accentImage}
+        ratio="4/3"
+        rounded={false}
+        overlay
+        alt={`${program.name} programme`}
+      >
         <div className="flex h-full flex-col justify-between p-5">
           <div className="flex justify-between gap-2">
-            <Chip tone="inverse" size="sm">{program.weeks} weeks</Chip>
+            <Chip tone="inverse" size="sm">
+              {program.weeks} weeks
+            </Chip>
             <Chip tone="inverse" size="sm">
               <span aria-hidden>★</span> {program.rating.toFixed(1)}
             </Chip>
@@ -83,8 +91,12 @@ export function WorkoutCard({
       <Media imageKey={imageKey} ratio="16/9" rounded={false} overlay alt={`${title} workout`}>
         <div className="flex h-full flex-col justify-between p-4">
           <div className="flex justify-between">
-            <Chip tone="inverse" size="sm">{format}</Chip>
-            <Chip tone="inverse" size="sm">{formatMinutes(minutes)}</Chip>
+            <Chip tone="inverse" size="sm">
+              {format}
+            </Chip>
+            <Chip tone="inverse" size="sm">
+              {formatMinutes(minutes)}
+            </Chip>
           </div>
           <span
             aria-hidden
@@ -113,7 +125,11 @@ export function CoachCard({ coach }: { coach: CoachCardData }) {
       className="light-surface group flex gap-5 rounded-card border border-ink-900/10 bg-bone-100 p-5 transition-all duration-300 ease-forge hover:-translate-y-1 hover:shadow-lift"
     >
       <div className="w-24 shrink-0 sm:w-28">
-        <Media imageKey={coach.imageKey} ratio="3/4" alt={`${coach.firstName} ${coach.lastName}, coach`} />
+        <Media
+          imageKey={coach.imageKey}
+          ratio="3/4"
+          alt={`${coach.firstName} ${coach.lastName}, coach`}
+        />
       </div>
 
       <div className="min-w-0 flex-1">
@@ -124,7 +140,9 @@ export function CoachCard({ coach }: { coach: CoachCardData }) {
 
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
           <span className="flex items-center gap-1 font-semibold">
-            <span aria-hidden className="text-accent">★</span>
+            <span aria-hidden className="text-accent">
+              ★
+            </span>
             {formatRating(coach.ratingTenths)}
           </span>
           <span className="text-muted">{coach.clientCount} clients</span>
@@ -133,7 +151,9 @@ export function CoachCard({ coach }: { coach: CoachCardData }) {
 
         <div className="mt-3 flex flex-wrap gap-1.5">
           {coach.specialties.slice(0, 3).map((specialty) => (
-            <Chip key={specialty} size="sm">{specialty.replace(/-/g, ' ')}</Chip>
+            <Chip key={specialty} size="sm">
+              {specialty.replace(/-/g, ' ')}
+            </Chip>
           ))}
         </div>
 
@@ -144,7 +164,9 @@ export function CoachCard({ coach }: { coach: CoachCardData }) {
         <div className="mt-4 flex items-center justify-between gap-3">
           <span className="text-xs">
             {coach.availableSlotsThisWeek > 0 ? (
-              <span className="text-status-good">✓ {coach.availableSlotsThisWeek} slots this week</span>
+              <span className="text-status-good">
+                ✓ {coach.availableSlotsThisWeek} slots this week
+              </span>
             ) : (
               <span className="text-muted">○ Waitlist</span>
             )}
@@ -169,7 +191,9 @@ export function RecipeCard({ recipe, href }: { recipe: Recipe; href?: string }) 
         <div className="flex items-center gap-2">
           <p className="eyebrow">{recipe.slot}</p>
           <span aria-hidden className="h-1 w-1 rounded-full bg-current opacity-30" />
-          <p className="text-[0.6875rem] text-muted">{recipe.prepMinutes + recipe.cookMinutes} min</p>
+          <p className="text-[0.6875rem] text-muted">
+            {recipe.prepMinutes + recipe.cookMinutes} min
+          </p>
         </div>
         <h3 className="mt-2 font-semibold leading-snug">{recipe.name}</h3>
         <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-muted">{recipe.summary}</p>
@@ -190,7 +214,13 @@ export function ProductCard({ product }: { product: Product }) {
       href={`/equipment/${product.slug}`}
       className="light-surface group flex flex-col overflow-hidden rounded-card border border-ink-900/10 bg-bone-100 transition-all duration-300 ease-forge hover:-translate-y-1 hover:shadow-lift"
     >
-      <Media imageKey={product.imageKey} ratio="1/1" rounded={false} variant="light" alt={product.name} />
+      <Media
+        imageKey={product.imageKey}
+        ratio="1/1"
+        rounded={false}
+        variant="light"
+        alt={product.name}
+      />
       <div className="flex flex-1 flex-col p-5">
         <p className="eyebrow">{product.category}</p>
         <h3 className="mt-2 font-semibold leading-snug">{product.name}</h3>
@@ -211,7 +241,9 @@ export function ProductCard({ product }: { product: Product }) {
             )}
           </div>
           <span className="flex items-center gap-1 text-xs">
-            <span aria-hidden className="text-accent">★</span>
+            <span aria-hidden className="text-accent">
+              ★
+            </span>
             <span className="font-semibold">{formatRating(product.ratingTenths)}</span>
             <span className="text-muted">({product.reviewCount})</span>
           </span>
@@ -221,19 +253,39 @@ export function ProductCard({ product }: { product: Product }) {
   );
 }
 
-export function ArticleCard({ article, featured = false }: { article: Article; featured?: boolean }) {
+export function ArticleCard({
+  article,
+  featured = false,
+}: {
+  article: Article;
+  featured?: boolean;
+}) {
   return (
     <Link
       href={`/blog/${article.slug}`}
       className="light-surface group block overflow-hidden rounded-card border border-ink-900/10 bg-bone-100 transition-all duration-300 ease-forge hover:-translate-y-1 hover:shadow-lift"
     >
-      <Media imageKey={article.imageKey} ratio={featured ? '21/9' : '16/9'} rounded={false} overlay alt={article.title}>
+      <Media
+        imageKey={article.imageKey}
+        ratio={featured ? '21/9' : '16/9'}
+        rounded={false}
+        overlay
+        alt={article.title}
+      >
         <div className="flex h-full items-end p-5">
-          <Chip tone="inverse" size="sm">{article.category}</Chip>
+          <Chip tone="inverse" size="sm">
+            {article.category}
+          </Chip>
         </div>
       </Media>
       <div className="p-5">
-        <h3 className={featured ? 'display text-display-sm leading-tight' : 'text-lg font-semibold leading-snug'}>
+        <h3
+          className={
+            featured
+              ? 'display text-display-sm leading-tight'
+              : 'text-lg font-semibold leading-snug'
+          }
+        >
           {article.title}
         </h3>
         <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted">{article.excerpt}</p>

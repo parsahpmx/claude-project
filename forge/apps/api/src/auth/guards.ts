@@ -29,8 +29,11 @@ export async function loadPrincipal(
   let coachId: string | null = null;
   let coachSlug: string | null = null;
   if (user.role === 'coach') {
-    const coachRows = await db.select({ id: coaches.id, slug: coaches.slug })
-      .from(coaches).where(eq(coaches.userId, user.id)).limit(1);
+    const coachRows = await db
+      .select({ id: coaches.id, slug: coaches.slug })
+      .from(coaches)
+      .where(eq(coaches.userId, user.id))
+      .limit(1);
     coachId = coachRows[0]?.id ?? null;
     coachSlug = coachRows[0]?.slug ?? null;
   }

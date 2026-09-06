@@ -20,7 +20,12 @@ export function LogRecoveryButton({ slug, minutes }: { slug: string; minutes: nu
   };
 
   return (
-    <Button size="sm" variant={state === 'done' ? 'ghost' : 'secondary'} onClick={() => void log()} disabled={state !== 'idle'}>
+    <Button
+      size="sm"
+      variant={state === 'done' ? 'ghost' : 'secondary'}
+      onClick={() => void log()}
+      disabled={state !== 'idle'}
+    >
       {state === 'done' ? '✓ Logged' : state === 'pending' ? 'Logging…' : 'Start Session'}
     </Button>
   );

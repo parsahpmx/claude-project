@@ -2,9 +2,19 @@ import Link from 'next/link';
 import { loadBalance, loadBand, consistency } from '@forge/contracts';
 import { Card, Badge, Metric, EmptyState, ButtonLink } from '@/components/ui/primitives';
 import { ActivityCard } from '@/components/app/activity-card';
-import { getMyActivities, getActiveGoals, getUpcomingPlanDays, getSessionProfile } from '@/lib/queries';
 import {
-  formatDistance, formatDuration, isoDate, addDays, startOfWeek, SPORT_LABEL,
+  getMyActivities,
+  getActiveGoals,
+  getUpcomingPlanDays,
+  getSessionProfile,
+} from '@/lib/queries';
+import {
+  formatDistance,
+  formatDuration,
+  isoDate,
+  addDays,
+  startOfWeek,
+  SPORT_LABEL,
 } from '@/lib/format';
 
 export const metadata = { title: 'Home' };
@@ -32,10 +42,14 @@ export default async function HomePage() {
   const weekConsistency = consistency(planDays, today);
 
   // Load over the last 28 days, bucketed by day, for the balance figure.
-  const dailyLoads = buildDailyLoads(activities.map((a) => ({
-    date: a.startedAt.slice(0, 10),
-    load: a.trainingLoad ?? Math.round((a.movingS / 60) * 5),
-  })), today, 28);
+  const dailyLoads = buildDailyLoads(
+    activities.map((a) => ({
+      date: a.startedAt.slice(0, 10),
+      load: a.trainingLoad ?? Math.round((a.movingS / 60) * 5),
+    })),
+    today,
+    28,
+  );
   const balance = loadBalance(dailyLoads);
   const band = loadBand(balance);
 
@@ -46,7 +60,9 @@ export default async function HomePage() {
   return (
     <div className="space-y-10">
       <header>
-        <p className="eyebrow">{greeting()} · {formatWeekday(today)}</p>
+        <p className="eyebrow">
+          {greeting()} · {formatWeekday(today)}
+        </p>
         <h1 className="mt-2 text-page-title font-display text-bone-100">
           {profile?.displayName || 'Athlete'}
         </h1>
@@ -54,27 +70,41 @@ export default async function HomePage() {
 
       {/* TODAY */}
       <section aria-labelledby="today-heading">
-        <h2 id="today-heading" className="eyebrow mb-4">Today</h2>
+        <h2 id="today-heading" className="eyebrow mb-4">
+          Today
+        </h2>
         {todaySession ? (
           <Card className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2.5">
-                <Badge tone="accent">{todaySession.sport ? SPORT_LABEL[todaySession.sport] : 'Session'}</Badge>
+                <Badge tone="accent">
+                  {todaySession.sport ? SPORT_LABEL[todaySession.sport] : 'Session'}
+                </Badge>
                 {todaySession.phase && <Badge>{todaySession.phase}</Badge>}
                 {todaySession.status === 'completed' && <Badge tone="good">✓ Done</Badge>}
               </div>
-              <p className="mt-3 text-section text-bone-100">{todaySession.title || 'Scheduled session'}</p>
-              <p className="mt-1.5 text-secondary muted">Week {todaySession.weekIndex + 1} of your plan</p>
+              <p className="mt-3 text-section text-bone-100">
+                {todaySession.title || 'Scheduled session'}
+              </p>
+              <p className="mt-1.5 text-secondary muted">
+                Week {todaySession.weekIndex + 1} of your plan
+              </p>
             </div>
             {todaySession.status !== 'completed' && (
-              <ButtonLink href={`/training?day=${todaySession.id}`} size="lg">Start session</ButtonLink>
+              <ButtonLink href={`/training?day=${todaySession.id}`} size="lg">
+                Start session
+              </ButtonLink>
             )}
           </Card>
         ) : (
           <EmptyState
             title="Nothing scheduled today"
             body="Rest is part of the plan. If you want to move anyway, record an activity and it will still count toward your week."
-            action={<ButtonLink href="/activities/new" variant="secondary">Record an activity</ButtonLink>}
+            action={
+              <ButtonLink href="/activities/new" variant="secondary">
+                Record an activity
+              </ButtonLink>
+            }
           />
         )}
       </section>
@@ -82,15 +112,26 @@ export default async function HomePage() {
       {/* THIS WEEK */}
       <section aria-labelledby="week-heading">
         <div className="mb-4 flex items-baseline justify-between gap-4">
-          <h2 id="week-heading" className="eyebrow">This week</h2>
-          <Link href="/progress" className="text-secondary font-semibold text-signal hover:underline underline-offset-4">
+          <h2 id="week-heading" className="eyebrow">
+            This week
+          </h2>
+          <Link
+            href="/progress"
+            className="text-secondary font-semibold text-signal hover:underline underline-offset-4"
+          >
             Progress →
           </Link>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Card><Metric label="Sessions" value={weekActivities.length} /></Card>
-          <Card><Metric label="Training time" value={formatDuration(weekMinutes * 60)} /></Card>
-          <Card><Metric label="Distance" value={formatDistance(weekDistance, units)} /></Card>
+          <Card>
+            <Metric label="Sessions" value={weekActivities.length} />
+          </Card>
+          <Card>
+            <Metric label="Training time" value={formatDuration(weekMinutes * 60)} />
+          </Card>
+          <Card>
+            <Metric label="Distance" value={formatDistance(weekDistance, units)} />
+          </Card>
           <Card>
             <Metric
               label="Load balance"
@@ -98,15 +139,21 @@ export default async function HomePage() {
               hint={
                 band === null
                   ? 'Needs two weeks of history'
-                  : { detraining: 'Below your recent norm', steady: 'In line with recent weeks', building: 'Building, sensibly', spike: 'A sharp jump — ease off' }[band]
+                  : {
+                      detraining: 'Below your recent norm',
+                      steady: 'In line with recent weeks',
+                      building: 'Building, sensibly',
+                      spike: 'A sharp jump — ease off',
+                    }[band]
               }
             />
           </Card>
         </div>
         {weekConsistency !== null && (
           <p className="mt-4 text-secondary muted">
-            You have completed <span className="font-semibold text-bone-100">{weekConsistency}%</span> of
-            the sessions scheduled so far this week.
+            You have completed{' '}
+            <span className="font-semibold text-bone-100">{weekConsistency}%</span> of the sessions
+            scheduled so far this week.
           </p>
         )}
       </section>
@@ -114,8 +161,13 @@ export default async function HomePage() {
       {/* RECENT */}
       <section aria-labelledby="recent-heading">
         <div className="mb-4 flex items-baseline justify-between gap-4">
-          <h2 id="recent-heading" className="eyebrow">Recent activity</h2>
-          <Link href="/activities" className="text-secondary font-semibold text-signal hover:underline underline-offset-4">
+          <h2 id="recent-heading" className="eyebrow">
+            Recent activity
+          </h2>
+          <Link
+            href="/activities"
+            className="text-secondary font-semibold text-signal hover:underline underline-offset-4"
+          >
             All activities →
           </Link>
         </div>
@@ -138,8 +190,13 @@ export default async function HomePage() {
       {goals.length > 0 && (
         <section aria-labelledby="goals-heading">
           <div className="mb-4 flex items-baseline justify-between gap-4">
-            <h2 id="goals-heading" className="eyebrow">Goals</h2>
-            <Link href="/goals" className="text-secondary font-semibold text-signal hover:underline underline-offset-4">
+            <h2 id="goals-heading" className="eyebrow">
+              Goals
+            </h2>
+            <Link
+              href="/goals"
+              className="text-secondary font-semibold text-signal hover:underline underline-offset-4"
+            >
               Manage →
             </Link>
           </div>
@@ -188,12 +245,14 @@ function formatWeekday(iso: string): string {
 }
 
 function goalLabel(kind: string): string {
-  return {
-    weekly_sessions: 'Sessions each week',
-    weekly_minutes: 'Minutes each week',
-    weekly_distance: 'Distance each week',
-    strength_sessions: 'Strength sessions',
-    program_completion: 'Finish the programme',
-    race: 'Race goal',
-  }[kind] ?? kind;
+  return (
+    {
+      weekly_sessions: 'Sessions each week',
+      weekly_minutes: 'Minutes each week',
+      weekly_distance: 'Distance each week',
+      strength_sessions: 'Strength sessions',
+      program_completion: 'Finish the programme',
+      race: 'Race goal',
+    }[kind] ?? kind
+  );
 }

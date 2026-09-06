@@ -14,7 +14,16 @@ function expand(owned: readonly string[]): Set<string> {
   const set = new Set(owned);
   set.add('bodyweight');
   if (set.has('full-gym')) {
-    for (const item of ['dumbbells', 'barbell', 'bench', 'rack', 'kettlebell', 'resistance-bands', 'cable-machine', 'cardio-equipment']) {
+    for (const item of [
+      'dumbbells',
+      'barbell',
+      'bench',
+      'rack',
+      'kettlebell',
+      'resistance-bands',
+      'cable-machine',
+      'cardio-equipment',
+    ]) {
       set.add(item);
     }
   }
@@ -29,8 +38,12 @@ export default async function MemberEquipmentPage() {
 
   const owned = profile.profile?.equipment ?? ['bodyweight'];
   const available = expand(owned);
-  const unlocked = catalogue.programs.filter((p) => p.equipment.every((item) => available.has(item)));
-  const locked = catalogue.programs.filter((p) => !p.equipment.every((item) => available.has(item)));
+  const unlocked = catalogue.programs.filter((p) =>
+    p.equipment.every((item) => available.has(item)),
+  );
+  const locked = catalogue.programs.filter(
+    (p) => !p.equipment.every((item) => available.has(item)),
+  );
 
   return (
     <AppSection>
@@ -38,7 +51,11 @@ export default async function MemberEquipmentPage() {
         eyebrow="Equipment"
         title="MY EQUIPMENT"
         lead="We only recommend workouts you can actually perform with your setup. Change this and every remaining session in your block is re-checked."
-        action={<ButtonLink href="/equipment" variant="ghost">Equipment Store</ButtonLink>}
+        action={
+          <ButtonLink href="/equipment" variant="ghost">
+            Equipment Store
+          </ButtonLink>
+        }
       />
 
       <div className="mt-10 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
@@ -49,7 +66,10 @@ export default async function MemberEquipmentPage() {
             <p className="eyebrow mb-3">Unlocked</p>
             <p className="display text-display-sm text-bone-100">
               {unlocked.length}
-              <span className="text-lg font-normal text-muted"> of {catalogue.programs.length}</span>
+              <span className="text-lg font-normal text-muted">
+                {' '}
+                of {catalogue.programs.length}
+              </span>
             </p>
             <p className="mt-2 text-sm text-bone-200/60">programmes you can run right now</p>
 
@@ -63,7 +83,9 @@ export default async function MemberEquipmentPage() {
                     className="flex items-center justify-between gap-3 text-sm text-bone-200/80 transition-colors hover:text-bone-100"
                   >
                     <span className="truncate">{program.name}</span>
-                    <span aria-hidden className="shrink-0 text-status-good">✓</span>
+                    <span aria-hidden className="shrink-0 text-status-good">
+                      ✓
+                    </span>
                   </Link>
                 </li>
               ))}
@@ -78,12 +100,17 @@ export default async function MemberEquipmentPage() {
                   const missing = program.equipment.filter((item) => !available.has(item));
                   return (
                     <li key={program.slug} className="border-b border-ink-900/8 pb-3 last:border-0">
-                      <Link href={`/programs/${program.slug}`} className="text-sm font-medium hover:underline">
+                      <Link
+                        href={`/programs/${program.slug}`}
+                        className="text-sm font-medium hover:underline"
+                      >
                         {program.name}
                       </Link>
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {missing.map((item) => (
-                          <Chip key={item} tone="warn" size="sm">needs {item.replace(/-/g, ' ')}</Chip>
+                          <Chip key={item} tone="warn" size="sm">
+                            needs {item.replace(/-/g, ' ')}
+                          </Chip>
                         ))}
                       </div>
                     </li>
@@ -91,8 +118,8 @@ export default async function MemberEquipmentPage() {
                 })}
               </ul>
               <p className="mt-5 text-xs leading-relaxed text-muted">
-                Every product in the store lists exactly which programmes it unlocks, so you can check before
-                you buy rather than after.
+                Every product in the store lists exactly which programmes it unlocks, so you can
+                check before you buy rather than after.
               </p>
             </Card>
           )}

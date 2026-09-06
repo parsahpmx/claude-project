@@ -32,9 +32,12 @@ const KEY_LENGTH = 64;
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16);
-  const derived = (await scrypt(password.normalize('NFKC'), salt, KEY_LENGTH, {
-    N, r: R, p: P, maxmem: 64 * 1024 * 1024,
-  }));
+  const derived = await scrypt(password.normalize('NFKC'), salt, KEY_LENGTH, {
+    N,
+    r: R,
+    p: P,
+    maxmem: 64 * 1024 * 1024,
+  });
   return `scrypt$${N}$${R}$${P}$${salt.toString('base64')}$${derived.toString('base64')}`;
 }
 
@@ -51,9 +54,12 @@ export async function verifyPassword(password: string, stored: string): Promise<
     return false;
   }
 
-  const derived = (await scrypt(password.normalize('NFKC'), salt, expected.length, {
-    N: n, r, p, maxmem: 128 * 1024 * 1024,
-  }));
+  const derived = await scrypt(password.normalize('NFKC'), salt, expected.length, {
+    N: n,
+    r,
+    p,
+    maxmem: 128 * 1024 * 1024,
+  });
 
   // Constant-time: a length-dependent early return leaks hash length, and a
   // byte-by-byte compare leaks the prefix.

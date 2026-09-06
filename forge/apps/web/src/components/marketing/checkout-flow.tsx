@@ -46,7 +46,9 @@ export function CheckoutFlow({
   coachSlug: string | null;
 }) {
   const router = useRouter();
-  const [tier, setTier] = useState(plans.some((p) => p.tier === initialTier) ? initialTier : 'forge-pro');
+  const [tier, setTier] = useState(
+    plans.some((p) => p.tier === initialTier) ? initialTier : 'forge-pro',
+  );
   const [interval, setInterval] = useState<'monthly' | 'yearly'>(initialInterval);
   const [promo, setPromo] = useState('');
   const [appliedPromo, setAppliedPromo] = useState('');
@@ -66,7 +68,11 @@ export function CheckoutFlow({
       const response = await fetch('/api/v1/checkout/preview', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ tier, interval, ...(appliedPromo ? { promoCode: appliedPromo } : {}) }),
+        body: JSON.stringify({
+          tier,
+          interval,
+          ...(appliedPromo ? { promoCode: appliedPromo } : {}),
+        }),
       });
       if (cancelled) return;
       if (!response.ok) {
@@ -108,7 +114,8 @@ export function CheckoutFlow({
 
     if (!firstName) next.firstName = 'We need a first name for your plan.';
     if (!lastName) next.lastName = 'We need a last name for your account.';
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) next.email = 'That does not look like an email address.';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+      next.email = 'That does not look like an email address.';
     if (password.length < 10) next.password = 'Use at least 10 characters. Length beats symbols.';
     if (!accepted) next.accepted = 'Please confirm you understand when billing starts.';
 
@@ -119,7 +126,12 @@ export function CheckoutFlow({
     setSubmitError(null);
 
     const payload: Record<string, unknown> = {
-      email, password, firstName, lastName, tier, billingInterval: interval,
+      email,
+      password,
+      firstName,
+      lastName,
+      tier,
+      billingInterval: interval,
       ...(appliedPromo ? { promoCode: appliedPromo } : {}),
     };
 
@@ -168,15 +180,36 @@ export function CheckoutFlow({
         <div className="mt-12 grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:gap-14">
           {/* ------------------------------------------------ form */}
           <form onSubmit={submit} noValidate className="space-y-10">
-            {submitError && <ErrorState title="We could not create your account" body={submitError} />}
+            {submitError && (
+              <ErrorState title="We could not create your account" body={submitError} />
+            )}
 
             <section>
               <p className="eyebrow mb-5">01 — Your details</p>
               <div className="dark-surface grid gap-5 sm:grid-cols-2 [&_input]:border-bone-200/20 [&_input]:bg-ink-800 [&_input]:text-bone-100 [&_label]:text-bone-200/70">
-                <TextInput label="First name" name="firstName" required autoComplete="given-name" error={errors.firstName} />
-                <TextInput label="Last name" name="lastName" required autoComplete="family-name" error={errors.lastName} />
+                <TextInput
+                  label="First name"
+                  name="firstName"
+                  required
+                  autoComplete="given-name"
+                  error={errors.firstName}
+                />
+                <TextInput
+                  label="Last name"
+                  name="lastName"
+                  required
+                  autoComplete="family-name"
+                  error={errors.lastName}
+                />
                 <div className="sm:col-span-2">
-                  <TextInput label="Email" name="email" type="email" required autoComplete="email" error={errors.email} />
+                  <TextInput
+                    label="Email"
+                    name="email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    error={errors.email}
+                  />
                 </div>
                 <div className="sm:col-span-2">
                   <TextInput
@@ -194,17 +227,28 @@ export function CheckoutFlow({
 
             <section>
               <p className="eyebrow mb-5">02 — Your plan</p>
-              <div className="mb-5"><Toggle checked={interval === 'yearly'} onChange={(v) => setInterval(v ? 'yearly' : 'monthly')} labels={['Monthly', 'Yearly']} /></div>
+              <div className="mb-5">
+                <Toggle
+                  checked={interval === 'yearly'}
+                  onChange={(v) => setInterval(v ? 'yearly' : 'monthly')}
+                  labels={['Monthly', 'Yearly']}
+                />
+              </div>
               <div className="grid gap-3">
                 {plans.map((option) => {
                   const active = option.tier === tier;
-                  const price = interval === 'yearly' ? option.pricing.yearlyMonthlyEquivalentCents : option.pricing.monthlyCents;
+                  const price =
+                    interval === 'yearly'
+                      ? option.pricing.yearlyMonthlyEquivalentCents
+                      : option.pricing.monthlyCents;
                   return (
                     <label
                       key={option.tier}
                       className={clsx(
                         'flex cursor-pointer items-start justify-between gap-4 rounded-card border p-5 transition-all duration-200',
-                        active ? 'accent-tint border-ember bg-ember/[0.08]' : 'dark-surface border-bone-200/12 bg-ink-800 hover:border-bone-200/30',
+                        active
+                          ? 'accent-tint border-ember bg-ember/[0.08]'
+                          : 'dark-surface border-bone-200/12 bg-ink-800 hover:border-bone-200/30',
                       )}
                     >
                       <span className="flex items-start gap-4">
@@ -220,7 +264,9 @@ export function CheckoutFlow({
                           aria-hidden
                           className={clsx(
                             'mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full border text-[0.625rem]',
-                            active ? 'border-ember bg-ember-600 text-bone-100' : 'border-bone-200/30',
+                            active
+                              ? 'border-ember bg-ember-600 text-bone-100'
+                              : 'border-bone-200/30',
                           )}
                         >
                           {active ? '✓' : ''}
@@ -228,13 +274,21 @@ export function CheckoutFlow({
                         <span>
                           <span className="flex items-center gap-2 font-semibold text-bone-100">
                             {option.name}
-                            {option.badge && <Chip tone="accent" size="sm">{option.badge}</Chip>}
+                            {option.badge && (
+                              <Chip tone="accent" size="sm">
+                                {option.badge}
+                              </Chip>
+                            )}
                           </span>
-                          <span className="mt-1 block text-xs text-bone-200/55">{option.tagline}</span>
+                          <span className="mt-1 block text-xs text-bone-200/55">
+                            {option.tagline}
+                          </span>
                         </span>
                       </span>
                       <span className="shrink-0 text-right">
-                        <span className="block font-semibold tabular-nums text-bone-100">{formatCents(price)}</span>
+                        <span className="block font-semibold tabular-nums text-bone-100">
+                          {formatCents(price)}
+                        </span>
                         <span className="block text-[0.6875rem] text-muted">/ month</span>
                       </span>
                     </label>
@@ -246,11 +300,13 @@ export function CheckoutFlow({
             <section>
               <p className="eyebrow mb-5">03 — Payment method</p>
               <div className="grid gap-3 sm:grid-cols-3">
-                {([
-                  ['apple-pay', 'Apple Pay'],
-                  ['google-pay', 'Google Pay'],
-                  ['card', 'Credit Card'],
-                ] as const).map(([value, label]) => (
+                {(
+                  [
+                    ['apple-pay', 'Apple Pay'],
+                    ['google-pay', 'Google Pay'],
+                    ['card', 'Credit Card'],
+                  ] as const
+                ).map(([value, label]) => (
                   <button
                     key={value}
                     type="button"
@@ -271,8 +327,8 @@ export function CheckoutFlow({
               {method === 'card' && (
                 <div className="dark-surface mt-5 rounded-card border border-bone-200/12 bg-ink-800 p-5">
                   <p className="text-xs leading-relaxed text-bone-200/55">
-                    Card details are collected by the payment processor, not by FORGE. This prototype does not
-                    take real payments — no card is charged and none is stored.
+                    Card details are collected by the payment processor, not by FORGE. This
+                    prototype does not take real payments — no card is charged and none is stored.
                   </p>
                 </div>
               )}
@@ -319,7 +375,9 @@ export function CheckoutFlow({
                 <>
                   <div className="flex items-baseline justify-between gap-4">
                     <span className="text-bone-100">{summary.planName}</span>
-                    <span className="tabular-nums text-bone-200/70">{formatCents(summary.subtotalCents)}</span>
+                    <span className="tabular-nums text-bone-200/70">
+                      {formatCents(summary.subtotalCents)}
+                    </span>
                   </div>
                   <p className="mt-1 text-xs capitalize text-muted">Billed {summary.interval}</p>
 
@@ -341,7 +399,12 @@ export function CheckoutFlow({
                         placeholder="Promo code"
                         className="dark-surface min-h-[44px] w-full rounded-[8px] border border-bone-200/20 bg-ink-900 px-4 text-sm text-bone-100 placeholder:text-muted"
                       />
-                      <Button type="button" variant="ghost" size="sm" onClick={() => void applyPromo()}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => void applyPromo()}
+                      >
                         Apply
                       </Button>
                     </div>
@@ -363,8 +426,8 @@ export function CheckoutFlow({
 
                   {summary.trialDays > 0 && (
                     <p className="mt-3 text-xs leading-relaxed text-bone-200/55">
-                      {formatCents(summary.totalCents)} charged on {summary.firstChargeDate}, after your{' '}
-                      {summary.trialDays}-day free trial.
+                      {formatCents(summary.totalCents)} charged on {summary.firstChargeDate}, after
+                      your {summary.trialDays}-day free trial.
                     </p>
                   )}
                 </>
@@ -377,7 +440,9 @@ export function CheckoutFlow({
                   <ul className="space-y-2.5">
                     {plan.features.slice(0, 6).map((feature) => (
                       <li key={feature} className="flex gap-3 text-xs">
-                        <span aria-hidden className="text-accent">✓</span>
+                        <span aria-hidden className="text-accent">
+                          ✓
+                        </span>
                         <span className="text-bone-200/70">{feature}</span>
                       </li>
                     ))}
@@ -391,8 +456,9 @@ export function CheckoutFlow({
                 <Card tone="dark">
                   <p className="eyebrow mb-2">Your coach</p>
                   <p className="text-sm text-bone-200/75">
-                    We will connect you with <span className="text-bone-100">{coachSlug.replace(/-/g, ' ')}</span>{' '}
-                    as soon as your account is created.
+                    We will connect you with{' '}
+                    <span className="text-bone-100">{coachSlug.replace(/-/g, ' ')}</span> as soon as
+                    your account is created.
                   </p>
                 </Card>
               </div>

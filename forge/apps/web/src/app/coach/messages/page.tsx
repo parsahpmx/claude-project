@@ -21,9 +21,15 @@ interface CoachThreads {
 interface ThreadDetail {
   thread: { id: string; subject: string };
   messages: {
-    id: string; senderId: string; kind: string; body: string | null;
-    mediaKey: string | null; durationSeconds: number | null; exerciseId: string | null;
-    createdAt: string; readAt: string | null;
+    id: string;
+    senderId: string;
+    kind: string;
+    body: string | null;
+    mediaKey: string | null;
+    durationSeconds: number | null;
+    exerciseId: string | null;
+    createdAt: string;
+    readAt: string | null;
     formCheckComments: { id: string; timestampSeconds: number; body: string }[];
   }[];
 }
@@ -44,7 +50,11 @@ export default async function CoachMessagesPage({
       <AppSection>
         <PageHeader eyebrow="Messages" title="CLIENT MESSAGES" />
         <div className="mt-10">
-          <EmptyState icon="✉" title="No conversations" body="A thread opens the moment a member chooses you." />
+          <EmptyState
+            icon="✉"
+            title="No conversations"
+            body="A thread opens the moment a member chooses you."
+          />
         </div>
       </AppSection>
     );
@@ -73,15 +83,22 @@ export default async function CoachMessagesPage({
                     aria-hidden
                     className="dark-surface grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
                   >
-                    {entry.member.firstName.charAt(0)}{entry.member.lastName.charAt(0)}
+                    {entry.member.firstName.charAt(0)}
+                    {entry.member.lastName.charAt(0)}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
                       {entry.member.firstName} {entry.member.lastName}
                     </p>
-                    <p className="truncate text-xs text-muted">{relativeTime(entry.thread.lastMessageAt)}</p>
+                    <p className="truncate text-xs text-muted">
+                      {relativeTime(entry.thread.lastMessageAt)}
+                    </p>
                   </div>
-                  {entry.unread > 0 && <Chip tone="accent" size="sm">{entry.unread}</Chip>}
+                  {entry.unread > 0 && (
+                    <Chip tone="accent" size="sm">
+                      {entry.unread}
+                    </Chip>
+                  )}
                 </Link>
               </li>
             ))}

@@ -42,12 +42,16 @@ export const authSessions = pgTable(
   'auth_sessions',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     // Only the hash is stored. A database dump must not hand out live sessions.
     tokenHash: varchar('token_hash', { length: 64 }).notNull(),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     userAgent: varchar('user_agent', { length: 255 }),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
   },
   (table) => [
     uniqueIndex('auth_sessions_token_hash_unique').on(table.tokenHash),
@@ -56,15 +60,23 @@ export const authSessions = pgTable(
 );
 
 export const memberProfiles = pgTable('member_profiles', {
-  userId: id('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  userId: id('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
   primaryGoal: varchar('primary_goal', { length: 32 }).notNull(),
-  secondaryGoals: text('secondary_goals').array().notNull().default(sql`'{}'::text[]`),
+  secondaryGoals: text('secondary_goals')
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
   ageRange: varchar('age_range', { length: 10 }).notNull(),
   experience: varchar('experience', { length: 16 }).notNull(),
   daysPerWeek: smallint('days_per_week').notNull(),
   sessionMinutes: smallint('session_minutes').notNull(),
   trainingLocation: varchar('training_location', { length: 16 }).notNull(),
-  equipment: text('equipment').array().notNull().default(sql`'{}'::text[]`),
+  equipment: text('equipment')
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
   diet: varchar('diet', { length: 24 }).notNull(),
   coachingPreference: varchar('coaching_preference', { length: 24 }).notNull(),
   heightCm: integer('height_cm'),
@@ -98,10 +110,15 @@ export const devices = pgTable(
   'devices',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     provider: varchar('provider', { length: 32 }).notNull(),
     status: varchar('status', { length: 16 }).notNull().default('not-connected'),
-    permissions: text('permissions').array().notNull().default(sql`'{}'::text[]`),
+    permissions: text('permissions')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }),
     ...timestamps,
   },
@@ -112,13 +129,17 @@ export const notifications = pgTable(
   'notifications',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     kind: varchar('kind', { length: 32 }).notNull(),
     title: varchar('title', { length: 160 }).notNull(),
     body: text('body').notNull(),
     href: varchar('href', { length: 255 }),
     readAt: timestamp('read_at', { withTimezone: true }),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
   },
   (table) => [index('notifications_user_idx').on(table.userId, table.createdAt)],
 );
@@ -127,7 +148,9 @@ export const dailyMetrics = pgTable(
   'daily_metrics',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     date: date('date').notNull(),
     sleepMinutes: integer('sleep_minutes'),
     hrvMs: integer('hrv_ms'),

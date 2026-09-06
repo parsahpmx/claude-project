@@ -63,18 +63,30 @@ export const CAPABILITIES = [
     slug: 'coaching',
     title: 'Human coaching',
     lead: 'A coach who can see your training, once you let them.',
-    points: [
-      'Coach access is a separate consent, off by default',
-      'Not open in this beta',
-    ],
+    points: ['Coach access is a separate consent, off by default', 'Not open in this beta'],
     state: 'After the beta',
   },
 ] as const;
 
 export const PRIVACY_PROMISES = [
-  ['Private by default', 'New accounts are followers-only, with routes private and activity starts and ends trimmed.'],
-  ['Separate from your map', 'Raw GPS is stored where no sharing rule can reach it. Other people see a separate, sanitized line.'],
-  ['Private zones', 'Draw a zone and anything inside it is removed from shared maps wherever it falls in the activity.'],
-  ['Per-activity control', 'Visibility is a decision per activity, not one global switch you forget you set.'],
-  ['Consent is granular', 'Coach access, analytics and future model training are four separate switches, all off to begin with.'],
+  [
+    'Private by default',
+    'New accounts are followers-only, with routes private and activity starts and ends trimmed.',
+  ],
+  [
+    'Separate from your map',
+    'Raw GPS is stored where no sharing rule can reach it. Other people see a separate, sanitized line.',
+  ],
+  [
+    'Private zones',
+    'Draw a zone and anything inside it is removed from shared maps wherever it falls in the activity.',
+  ],
+  [
+    'Per-activity control',
+    'Visibility is a decision per activity, not one global switch you forget you set.',
+  ],
+  [
+    'Consent is granular',
+    'Coach access, analytics and future model training are four separate switches, all off to begin with.',
+  ],
 ] as const;

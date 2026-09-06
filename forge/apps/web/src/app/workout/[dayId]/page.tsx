@@ -10,7 +10,9 @@ export default async function WorkoutPage({ params }: { params: Promise<{ dayId:
 
   let data: { day: PlanDay; session: BuiltSession | null };
   try {
-    data = await apiFetch<{ day: PlanDay; session: BuiltSession | null }>(`/v1/me/plan/days/${dayId}`);
+    data = await apiFetch<{ day: PlanDay; session: BuiltSession | null }>(
+      `/v1/me/plan/days/${dayId}`,
+    );
   } catch (error) {
     if (error instanceof ApiRequestError && error.status === 404) notFound();
     throw error;

@@ -30,7 +30,11 @@ export function CheckInResponse({ checkInId }: { checkInId: string }) {
   };
 
   if (!open) {
-    return <Button size="sm" onClick={() => setOpen(true)}>Reply to Check-In</Button>;
+    return (
+      <Button size="sm" onClick={() => setOpen(true)}>
+        Reply to Check-In
+      </Button>
+    );
   }
 
   return (
@@ -42,8 +46,12 @@ export function CheckInResponse({ checkInId }: { checkInId: string }) {
         hint="Open with whatever they flagged. Say what changes and why."
       />
       <div className="flex gap-2">
-        <Button type="submit" size="sm" disabled={pending}>{pending ? 'Sending…' : 'Send Reply'}</Button>
-        <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+        <Button type="submit" size="sm" disabled={pending}>
+          {pending ? 'Sending…' : 'Send Reply'}
+        </Button>
+        <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>
+          Cancel
+        </Button>
       </div>
     </form>
   );

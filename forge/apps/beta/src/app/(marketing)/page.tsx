@@ -43,9 +43,17 @@ export default function LandingPage() {
           below it is visible in the first frame. */}
       <section className="relative overflow-hidden border-b border-ink-600/60">
         <div aria-hidden className="pointer-events-none absolute inset-0 text-signal/25">
-          <RouteGlyph seed="forge-hero-primary" className="absolute -right-[10%] -top-[15%] h-[130%] w-[70%]" strokeWidth={1.2} showMarkers={false} />
+          <RouteGlyph
+            seed="forge-hero-primary"
+            className="absolute -right-[10%] -top-[15%] h-[130%] w-[70%]"
+            strokeWidth={1.2}
+            showMarkers={false}
+          />
         </div>
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-r from-ink-900 via-ink-900/85 to-transparent" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-ink-900 via-ink-900/85 to-transparent"
+        />
 
         <div className="shell relative py-20 sm:py-28">
           <p className="eyebrow">Personal performance network</p>
@@ -53,12 +61,16 @@ export default function LandingPage() {
             Train. Track. Go further.
           </h1>
           <p className="mt-6 max-w-xl text-body muted">
-            Structured training and honest tracking in one place — the barbell and the
-            10K, the plan and the run you actually did. Free while we are in beta.
+            Structured training and honest tracking in one place — the barbell and the 10K, the plan
+            and the run you actually did. Free while we are in beta.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
-            <ButtonLink href="/signup" size="lg">Start free beta</ButtonLink>
-            <ButtonLink href="/features" size="lg" variant="ghost">Explore FORGE</ButtonLink>
+            <ButtonLink href="/signup" size="lg">
+              Start free beta
+            </ButtonLink>
+            <ButtonLink href="/features" size="lg" variant="ghost">
+              Explore FORGE
+            </ButtonLink>
           </div>
           <p className="mt-6 text-caption muted">
             No card required · Your activities are private by default
@@ -72,8 +84,8 @@ export default function LandingPage() {
           One place for the whole athlete
         </h2>
         <p className="mt-4 max-w-prose text-body muted">
-          Most tools do endurance or they do the gym. If you do both, you end up
-          keeping two histories that never meet. FORGE keeps one.
+          Most tools do endurance or they do the gym. If you do both, you end up keeping two
+          histories that never meet. FORGE keeps one.
         </p>
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2">
@@ -82,7 +94,10 @@ export default function LandingPage() {
               <p className="eyebrow text-signal">{pillar.eyebrow}</p>
               <h3 className="mt-3 text-section text-bone-100">{pillar.title}</h3>
               <p className="mt-2.5 flex-1 text-secondary muted">{pillar.body}</p>
-              <Link href={pillar.href} className="mt-5 text-secondary font-semibold text-signal hover:underline underline-offset-4">
+              <Link
+                href={pillar.href}
+                className="mt-5 text-secondary font-semibold text-signal hover:underline underline-offset-4"
+              >
                 Learn more →
               </Link>
             </Card>
@@ -99,10 +114,9 @@ export default function LandingPage() {
               Your map is yours until you say otherwise
             </h2>
             <p className="mt-5 max-w-prose text-body muted">
-              New accounts start followers-only, with routes private and the start and
-              end of every activity trimmed before anyone else can see it. The raw GPS
-              trace is stored where no sharing rule can reach it — what other people
-              see is a separate, sanitized line.
+              New accounts start followers-only, with routes private and the start and end of every
+              activity trimmed before anyone else can see it. The raw GPS trace is stored where no
+              sharing rule can reach it — what other people see is a separate, sanitized line.
             </p>
             <ul className="mt-6 space-y-2.5">
               {[
@@ -111,19 +125,27 @@ export default function LandingPage() {
                 'Follower approval on by default',
               ].map((item) => (
                 <li key={item} className="flex gap-3 text-secondary">
-                  <span aria-hidden className="text-signal">—</span>
+                  <span aria-hidden className="text-signal">
+                    —
+                  </span>
                   <span className="muted">{item}</span>
                 </li>
               ))}
             </ul>
             <div className="mt-8">
-              <ButtonLink href="/privacy" variant="ghost">Read the privacy approach</ButtonLink>
+              <ButtonLink href="/privacy" variant="ghost">
+                Read the privacy approach
+              </ButtonLink>
             </div>
           </div>
 
           <Card padded={false} className="overflow-hidden">
             <div className="relative aspect-[4/3] text-signal">
-              <RouteGlyph seed="forge-privacy-trim" className="absolute inset-0 h-full w-full" strokeWidth={2} />
+              <RouteGlyph
+                seed="forge-privacy-trim"
+                className="absolute inset-0 h-full w-full"
+                strokeWidth={2}
+              />
             </div>
             <div className="border-t border-ink-600 p-5">
               <p className="text-card-title text-bone-100">Trimmed before it is shared</p>
@@ -144,7 +166,9 @@ export default function LandingPage() {
           FORGE is in open beta and free to use while we get it right.
         </p>
         <div className="mt-9 flex justify-center gap-3">
-          <ButtonLink href="/signup" size="lg">Start free beta</ButtonLink>
+          <ButtonLink href="/signup" size="lg">
+            Start free beta
+          </ButtonLink>
         </div>
       </section>
     </>

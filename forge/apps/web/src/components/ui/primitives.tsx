@@ -49,7 +49,13 @@ export interface ButtonProps extends Omit<ComponentProps<'button'>, 'className'>
   children: ReactNode;
 }
 
-export function Button({ variant = 'primary', size = 'md', block, children, ...rest }: ButtonProps) {
+export function Button({
+  variant = 'primary',
+  size = 'md',
+  block,
+  children,
+  ...rest
+}: ButtonProps) {
   return (
     <button
       {...rest}
@@ -69,7 +75,13 @@ export interface ButtonLinkProps {
   prefetch?: boolean;
 }
 
-export function ButtonLink({ href, variant = 'primary', size = 'md', block, children }: ButtonLinkProps) {
+export function ButtonLink({
+  href,
+  variant = 'primary',
+  size = 'md',
+  block,
+  children,
+}: ButtonLinkProps) {
   return (
     <Link
       href={href}
@@ -199,10 +211,7 @@ export function Media({
     <div
       role="img"
       aria-label={alt ?? describeImage(imageKey)}
-      className={clsx(
-        'grain relative overflow-hidden isolate',
-        rounded && 'rounded-card',
-      )}
+      className={clsx('grain relative overflow-hidden isolate', rounded && 'rounded-card')}
       style={{ aspectRatio: ratio.replace('/', ' / '), background: image.background }}
     >
       {/* Hover zoom lives on a pseudo-layer so the content above stays crisp. */}

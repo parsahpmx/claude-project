@@ -26,7 +26,18 @@ export default async function SignupPage({
   };
 
   const answers: Record<string, string[]> = {};
-  for (const key of ['primaryGoal', 'secondaryGoals', 'ageRange', 'experience', 'daysPerWeek', 'sessionMinutes', 'location', 'equipment', 'diet', 'coaching']) {
+  for (const key of [
+    'primaryGoal',
+    'secondaryGoals',
+    'ageRange',
+    'experience',
+    'daysPerWeek',
+    'sessionMinutes',
+    'location',
+    'equipment',
+    'diet',
+    'coaching',
+  ]) {
     const value = single(key);
     if (value) answers[key] = value.split(',');
   }
@@ -35,8 +46,13 @@ export default async function SignupPage({
     <div className="dark-surface min-h-dvh bg-ink-900 text-bone-200">
       <header className="border-b border-bone-200/10">
         <div className="shell flex h-[72px] items-center justify-between">
-          <Link href="/" className="display text-xl tracking-[0.08em] text-bone-100">FORGE</Link>
-          <Link href="/signin" className="text-xs uppercase tracking-[0.12em] text-muted hover:text-bone-100">
+          <Link href="/" className="display text-xl tracking-[0.08em] text-bone-100">
+            FORGE
+          </Link>
+          <Link
+            href="/signin"
+            className="text-xs uppercase tracking-[0.12em] text-muted hover:text-bone-100"
+          >
             Already a member?
           </Link>
         </div>

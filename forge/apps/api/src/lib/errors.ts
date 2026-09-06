@@ -23,6 +23,5 @@ export const unauthorized = (message = 'Sign in to continue.') =>
   new ApiError(401, 'unauthorized', message);
 export const forbidden = (message = 'You do not have access to this.') =>
   new ApiError(403, 'forbidden', message);
-export const notFound = (what = 'Resource') =>
-  new ApiError(404, 'not_found', `${what} not found.`);
+export const notFound = (what = 'Resource') => new ApiError(404, 'not_found', `${what} not found.`);
 export const conflict = (code: string, message: string) => new ApiError(409, code, message);

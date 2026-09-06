@@ -1,12 +1,32 @@
 import Link from 'next/link';
 import {
-  Button, ButtonLink, Card, Chip, Media, Section, SectionHeading, Stat, Divider,
+  Button,
+  ButtonLink,
+  Card,
+  Chip,
+  Media,
+  Section,
+  SectionHeading,
+  Stat,
+  Divider,
 } from '@/components/ui/primitives';
 import {
-  Badge, EmptyState, ErrorState, SuccessState, Skeleton, SkeletonCard, Status,
+  Badge,
+  EmptyState,
+  ErrorState,
+  SuccessState,
+  Skeleton,
+  SkeletonCard,
+  Status,
 } from '@/components/ui/feedback';
 import {
-  BarChart, DonutChart, Heatmap, LineChart, ProgressBar, ProgressRing, Sparkline,
+  BarChart,
+  DonutChart,
+  Heatmap,
+  LineChart,
+  ProgressBar,
+  ProgressRing,
+  Sparkline,
 } from '@/components/ui/charts';
 import { addDays, consistencyHeatmap } from '@forge/core';
 import { DesignSystemInteractive } from '@/components/marketing/design-system-interactive';
@@ -64,7 +84,9 @@ export default function DesignSystemPage() {
     <div className="light-surface min-h-dvh bg-bone-200">
       <header className="dark-surface sticky top-0 z-40 border-b border-bone-200/10 bg-ink-900 text-bone-200">
         <div className="shell flex h-[72px] items-center justify-between">
-          <Link href="/" className="display text-xl tracking-[0.08em] text-bone-100">FORGE</Link>
+          <Link href="/" className="display text-xl tracking-[0.08em] text-bone-100">
+            FORGE
+          </Link>
           <p className="text-xs uppercase tracking-[0.14em] text-muted">Design System</p>
         </div>
       </header>
@@ -75,9 +97,9 @@ export default function DesignSystemPage() {
             <p className="eyebrow mb-5">Design system</p>
             <h1 className="display text-display-lg text-balance">ONE SYSTEM. FORTY SCREENS.</h1>
             <p className="mt-6 text-lg leading-relaxed text-bone-200/70">
-              Every component here is a closed set of variants rather than a className passthrough. That is
-              what keeps the fortieth screen looking like the first, and it is what makes this page a
-              specification rather than a gallery.
+              Every component here is a closed set of variants rather than a className passthrough.
+              That is what keeps the fortieth screen looking like the first, and it is what makes
+              this page a specification rather than a gallery.
             </p>
           </div>
         </Section>
@@ -91,8 +113,14 @@ export default function DesignSystemPage() {
           />
           <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {SWATCHES.map(([name, hex, usage]) => (
-              <div key={name} className="light-surface rounded-card border border-ink-900/10 bg-bone-100 p-4">
-                <div className="h-16 w-full rounded-[8px] border border-ink-900/10" style={{ background: hex }} />
+              <div
+                key={name}
+                className="light-surface rounded-card border border-ink-900/10 bg-bone-100 p-4"
+              >
+                <div
+                  className="h-16 w-full rounded-[8px] border border-ink-900/10"
+                  style={{ background: hex }}
+                />
                 <p className="mt-3 font-mono text-xs">{name}</p>
                 <p className="font-mono text-[0.6875rem] text-muted">{hex}</p>
                 <p className="mt-1.5 text-xs text-muted">{usage}</p>
@@ -119,9 +147,10 @@ export default function DesignSystemPage() {
             <div>
               <p className="eyebrow mb-3">body</p>
               <p className="max-w-prose text-base leading-relaxed">
-                A complete performance system combining personalised training, nutrition, recovery and real
-                coaching. Body copy is set at a comfortable measure — around 68 characters — because a line
-                longer than that costs the reader their place on every return sweep.
+                A complete performance system combining personalised training, nutrition, recovery
+                and real coaching. Body copy is set at a comfortable measure — around 68 characters
+                — because a line longer than that costs the reader their place on every return
+                sweep.
               </p>
             </div>
           </div>
@@ -138,7 +167,9 @@ export default function DesignSystemPage() {
                 <Button variant="secondary">Secondary</Button>
                 <Button variant="ghost">Ghost</Button>
                 <Button variant="danger">Danger</Button>
-                <Button variant="primary" disabled>Disabled</Button>
+                <Button variant="primary" disabled>
+                  Disabled
+                </Button>
               </div>
             </div>
             <div>
@@ -205,7 +236,11 @@ export default function DesignSystemPage() {
             </Card>
             <Card>
               <p className="eyebrow mb-5">Line chart</p>
-              <LineChart label="Estimated 1RM" points={SERIES} format={(v) => `${Math.round(v)} kg`} />
+              <LineChart
+                label="Estimated 1RM"
+                points={SERIES}
+                format={(v) => `${Math.round(v)} kg`}
+              />
             </Card>
             <Card>
               <p className="eyebrow mb-5">Bar chart</p>
@@ -213,10 +248,7 @@ export default function DesignSystemPage() {
             </Card>
             <Card>
               <p className="eyebrow mb-5">Heatmap</p>
-              <Heatmap
-                label="Consistency"
-                cells={HEATMAP_CELLS}
-              />
+              <Heatmap label="Consistency" cells={HEATMAP_CELLS} />
             </Card>
             <Card>
               <p className="eyebrow mb-5">Donut chart</p>
@@ -248,7 +280,11 @@ export default function DesignSystemPage() {
                   icon="▤"
                   title="No active plan yet"
                   body="Pick a programme and FORGE builds the full block before you train once."
-                  action={<ButtonLink href="/programs" size="sm">Browse Programs</ButtonLink>}
+                  action={
+                    <ButtonLink href="/programs" size="sm">
+                      Browse Programs
+                    </ButtonLink>
+                  }
                 />
               </div>
             </Card>
@@ -274,7 +310,9 @@ export default function DesignSystemPage() {
               <Skeleton className="h-5 w-1/2" />
               <Skeleton className="mt-3 h-4 w-full" />
               <Skeleton className="mt-2 h-4 w-4/5" />
-              <div className="mt-6"><SkeletonCard /></div>
+              <div className="mt-6">
+                <SkeletonCard />
+              </div>
             </Card>
           </div>
 
@@ -292,8 +330,8 @@ export default function DesignSystemPage() {
                 <Status status="paid" />
               </div>
               <p className="mt-5 max-w-prose text-sm leading-relaxed text-muted">
-                Every status carries a glyph and a word alongside its colour, so it survives greyscale printing,
-                colour-blindness and a screen in direct sunlight.
+                Every status carries a glyph and a word alongside its colour, so it survives
+                greyscale printing, colour-blindness and a screen in direct sunlight.
               </p>
             </Card>
           </div>
@@ -305,22 +343,32 @@ export default function DesignSystemPage() {
           <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             <Card>
               <p className="eyebrow mb-3">Light card</p>
-              <p className="text-sm text-muted">The default surface for content on the page ground.</p>
+              <p className="text-sm text-muted">
+                The default surface for content on the page ground.
+              </p>
               <Divider />
               <Stat label="Total volume" value="128t" hint="Load × reps" />
             </Card>
             <Card tone="dark">
               <p className="eyebrow mb-3">Dark card</p>
-              <p className="text-sm text-bone-200/70">Used for the one thing on a screen that matters most.</p>
+              <p className="text-sm text-bone-200/70">
+                Used for the one thing on a screen that matters most.
+              </p>
               <Divider />
               <Stat label="Readiness" value="82" hint="Ready" tone="dark" />
             </Card>
             <Card padded={false}>
-              <Media imageKey="design-system-sample" ratio="4/3" rounded={false} alt="Generated media surface" />
+              <Media
+                imageKey="design-system-sample"
+                ratio="4/3"
+                rounded={false}
+                alt="Generated media surface"
+              />
               <div className="p-5">
                 <p className="eyebrow mb-2">Generated media</p>
                 <p className="text-sm text-muted">
-                  Deterministic from the image key. The same key always renders the same composition.
+                  Deterministic from the image key. The same key always renders the same
+                  composition.
                 </p>
               </div>
             </Card>
@@ -329,18 +377,33 @@ export default function DesignSystemPage() {
 
         {/* ------------------------------------------------ accessibility */}
         <Section tone="dark" size="md">
-          <SectionHeading
-            eyebrow="Principles"
-            title="ACCESSIBILITY IS A CONSTRAINT, NOT A PASS"
-          />
+          <SectionHeading eyebrow="Principles" title="ACCESSIBILITY IS A CONSTRAINT, NOT A PASS" />
           <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {[
-              ['Contrast', 'Body text meets WCAG AA against every surface it is used on. The accent is never used for small text on a light ground.'],
-              ['Focus', 'One focus ring, one shape, everywhere. A keyboard user never has to guess where they are.'],
-              ['Touch targets', 'Every interactive element is at least 40px tall, and the primary ones are 48–56px.'],
-              ['Never colour alone', 'Status carries a glyph and a word. Charts label their values as text.'],
-              ['Motion', 'Every animation is decoration and every one is disabled under prefers-reduced-motion.'],
-              ['Captions', 'Workout and recovery videos ship with captions. It is marked on the card, not buried in a player.'],
+              [
+                'Contrast',
+                'Body text meets WCAG AA against every surface it is used on. The accent is never used for small text on a light ground.',
+              ],
+              [
+                'Focus',
+                'One focus ring, one shape, everywhere. A keyboard user never has to guess where they are.',
+              ],
+              [
+                'Touch targets',
+                'Every interactive element is at least 40px tall, and the primary ones are 48–56px.',
+              ],
+              [
+                'Never colour alone',
+                'Status carries a glyph and a word. Charts label their values as text.',
+              ],
+              [
+                'Motion',
+                'Every animation is decoration and every one is disabled under prefers-reduced-motion.',
+              ],
+              [
+                'Captions',
+                'Workout and recovery videos ship with captions. It is marked on the card, not buried in a player.',
+              ],
             ].map(([title, body]) => (
               <div key={title}>
                 <div className="mb-4 h-px w-12 bg-ember" />

@@ -11,7 +11,8 @@ export const metadata: Metadata = {
   applicationName: 'FORGE',
   openGraph: {
     title: 'FORGE — Train. Track. Go further.',
-    description: 'Structured training, activity tracking, routes and maps, and progress that means something.',
+    description:
+      'Structured training, activity tracking, routes and maps, and progress that means something.',
     type: 'website',
   },
 };

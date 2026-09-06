@@ -14,8 +14,13 @@ import {
   type AssessmentAnswers,
 } from '@forge/core';
 import {
-  assessments, hashPassword, memberProfiles, nutritionTargets, subscriptions,
-  users, verifyPassword,
+  assessments,
+  hashPassword,
+  memberProfiles,
+  nutritionTargets,
+  subscriptions,
+  users,
+  verifyPassword,
 } from '@forge/db';
 import { badRequest, conflict, unauthorized } from '../lib/errors.js';
 import { parse } from '../lib/validate.js';
@@ -103,9 +108,13 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
           diet: answers.diet,
         });
         await db.insert(nutritionTargets).values({
-          userId, calories: macros.calories, proteinGrams: macros.proteinGrams,
-          carbGrams: macros.carbGrams, fatGrams: macros.fatGrams,
-          fibreGrams: macros.fibreGrams, waterMl: Math.round(macros.waterLitres * 1000),
+          userId,
+          calories: macros.calories,
+          proteinGrams: macros.proteinGrams,
+          carbGrams: macros.carbGrams,
+          fatGrams: macros.fatGrams,
+          fibreGrams: macros.fibreGrams,
+          waterMl: Math.round(macros.waterLitres * 1000),
         });
       }
     }
@@ -127,17 +136,31 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       });
     }
 
-    const session = await issueSession(db, userId, config.SESSION_TTL_HOURS, request.headers['user-agent']);
+    const session = await issueSession(
+      db,
+      userId,
+      config.SESSION_TTL_HOURS,
+      request.headers['user-agent'],
+    );
     setSessionCookie(reply, session.token, session.expiresAt, config.NODE_ENV === 'production');
 
     return reply.status(201).send({
-      user: { id: userId, email: body.email, firstName: body.firstName, lastName: body.lastName, role: 'member' },
+      user: {
+        id: userId,
+        email: body.email,
+        firstName: body.firstName,
+        lastName: body.lastName,
+        role: 'member',
+      },
       tier,
     });
   });
 
   app.post('/auth/login', async (request, reply) => {
-    const body = parse(z.object({ email: emailSchema, password: z.string().min(1).max(200) }), request.body);
+    const body = parse(
+      z.object({ email: emailSchema, password: z.string().min(1).max(200) }),
+      request.body,
+    );
     const { db, config } = request.ctx;
 
     const rows = await db
@@ -154,13 +177,21 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     if (!user || !ok) throw unauthorized('That email and password do not match.');
 
     await db.update(users).set({ lastSeenAt: new Date() }).where(eq(users.id, user.id));
-    const session = await issueSession(db, user.id, config.SESSION_TTL_HOURS, request.headers['user-agent']);
+    const session = await issueSession(
+      db,
+      user.id,
+      config.SESSION_TTL_HOURS,
+      request.headers['user-agent'],
+    );
     setSessionCookie(reply, session.token, session.expiresAt, config.NODE_ENV === 'production');
 
     return {
       user: {
-        id: user.id, email: user.email, firstName: user.firstName,
-        lastName: user.lastName, role: user.role,
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
       },
     };
   });
@@ -178,16 +209,29 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
     const { db } = request.ctx;
 
     const [profile] = await db
-      .select().from(memberProfiles).where(eq(memberProfiles.userId, principal.userId)).limit(1);
+      .select()
+      .from(memberProfiles)
+      .where(eq(memberProfiles.userId, principal.userId))
+      .limit(1);
     const [subscription] = await db
-      .select().from(subscriptions)
-      .where(and(eq(subscriptions.userId, principal.userId), sql`${subscriptions.status} in ('trialing','active')`))
+      .select()
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.userId, principal.userId),
+          sql`${subscriptions.status} in ('trialing','active')`,
+        ),
+      )
       .limit(1);
 
     return {
       user: {
-        id: principal.userId, email: principal.email, firstName: principal.firstName,
-        lastName: principal.lastName, role: principal.role, unitSystem: principal.unitSystem,
+        id: principal.userId,
+        email: principal.email,
+        firstName: principal.firstName,
+        lastName: principal.lastName,
+        role: principal.role,
+        unitSystem: principal.unitSystem,
         coachSlug: principal.coachSlug,
       },
       profile: profile ?? null,
@@ -206,9 +250,13 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       recommendedTier: recommendTier(answers.coaching),
       program: program
         ? {
-            slug: program.slug, name: program.name, tagline: program.tagline,
-            weeks: program.weeks, sessionsPerWeek: program.sessionsPerWeek,
-            difficulty: program.difficulty, summary: program.summary,
+            slug: program.slug,
+            name: program.name,
+            tagline: program.tagline,
+            weeks: program.weeks,
+            sessionsPerWeek: program.sessionsPerWeek,
+            difficulty: program.difficulty,
+            summary: program.summary,
             accentImage: program.accentImage,
           }
         : null,
@@ -229,7 +277,9 @@ export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
       throw badRequest('invalid_promo', 'That promotion code is not recognised.');
     }
     const summary = summariseCheckout({
-      tier: body.tier, interval: body.interval, promoPercentOff,
+      tier: body.tier,
+      interval: body.interval,
+      promoPercentOff,
       todayIso: request.ctx.today(),
     });
     if (!summary) throw badRequest('unknown_plan', 'That plan does not exist.');

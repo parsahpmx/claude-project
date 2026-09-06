@@ -14,7 +14,12 @@ const schema = z.object({
   FORGE_DATA_DIR: z.string().optional(),
   /** Signs nothing on its own — session tokens are random and stored hashed. */
   COOKIE_SECRET: z.string().min(32).default('forge-development-cookie-secret-value-01'),
-  SESSION_TTL_HOURS: z.coerce.number().int().min(1).max(24 * 90).default(24 * 14),
+  SESSION_TTL_HOURS: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(24 * 90)
+    .default(24 * 14),
   WEB_ORIGIN: z.string().default('http://localhost:3000'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   /** Seed on boot when the database is empty. Development convenience only. */

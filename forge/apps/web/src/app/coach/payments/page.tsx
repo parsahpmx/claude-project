@@ -43,10 +43,22 @@ export default async function CoachPaymentsPage() {
       />
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card><Stat label="Gross monthly" value={formatCents(gross)} hint={`${clients.clients.length} clients`} /></Card>
-        <Card><Stat label="Platform fee" value={formatCents(fee)} hint="15%" /></Card>
-        <Card><Stat label="Net monthly" value={formatCents(net)} hint="Paid weekly" /></Card>
-        <Card><Stat label="Per client" value={formatCents(perClient)} hint="Average" /></Card>
+        <Card>
+          <Stat
+            label="Gross monthly"
+            value={formatCents(gross)}
+            hint={`${clients.clients.length} clients`}
+          />
+        </Card>
+        <Card>
+          <Stat label="Platform fee" value={formatCents(fee)} hint="15%" />
+        </Card>
+        <Card>
+          <Stat label="Net monthly" value={formatCents(net)} hint="Paid weekly" />
+        </Card>
+        <Card>
+          <Stat label="Per client" value={formatCents(perClient)} hint="Average" />
+        </Card>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
@@ -56,16 +68,22 @@ export default async function CoachPaymentsPage() {
           </div>
           <ul className="divide-y divide-ink-900/8">
             {clients.clients.map((client) => (
-              <li key={client.member.id} className="flex flex-wrap items-center justify-between gap-4 p-5">
+              <li
+                key={client.member.id}
+                className="flex flex-wrap items-center justify-between gap-4 p-5"
+              >
                 <div className="flex items-center gap-4">
                   <span
                     aria-hidden
                     className="dark-surface grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
                   >
-                    {client.member.firstName.charAt(0)}{client.member.lastName.charAt(0)}
+                    {client.member.firstName.charAt(0)}
+                    {client.member.lastName.charAt(0)}
                   </span>
                   <div>
-                    <p className="font-medium">{client.member.firstName} {client.member.lastName}</p>
+                    <p className="font-medium">
+                      {client.member.firstName} {client.member.lastName}
+                    </p>
                     <p className="mt-0.5 text-xs text-muted">Client since {client.startedOn}</p>
                   </div>
                 </div>
@@ -81,7 +99,9 @@ export default async function CoachPaymentsPage() {
         <div className="space-y-6">
           <Card>
             <p className="eyebrow mb-4">Next payout</p>
-            <p className="display text-display-sm tabular-nums">{formatCents(Math.round(net / 4))}</p>
+            <p className="display text-display-sm tabular-nums">
+              {formatCents(Math.round(net / 4))}
+            </p>
             <p className="mt-2 text-sm text-muted">Friday, weekly cycle</p>
             <div className="rule my-5" />
             <dl className="space-y-3 text-sm">
@@ -104,8 +124,14 @@ export default async function CoachPaymentsPage() {
             <p className="eyebrow mb-4">How the fee works</p>
             <ul className="space-y-3 text-sm">
               {[
-                ['15% platform fee', 'Covers payments, hosting, the client app and support. No monthly charge.'],
-                ['No fee on consultations', 'Free consultations stay free — they are how members choose you.'],
+                [
+                  '15% platform fee',
+                  'Covers payments, hosting, the client app and support. No monthly charge.',
+                ],
+                [
+                  'No fee on consultations',
+                  'Free consultations stay free — they are how members choose you.',
+                ],
                 ['Weekly payouts', 'Every Friday, for everything settled that week.'],
               ].map(([title, body]) => (
                 <li key={title} className="border-b border-ink-900/8 pb-3 last:border-0">
@@ -115,7 +141,8 @@ export default async function CoachPaymentsPage() {
               ))}
             </ul>
             <p className="mt-5 text-xs text-muted">
-              Payment processing is not connected in this prototype — the earnings model and its arithmetic are.
+              Payment processing is not connected in this prototype — the earnings model and its
+              arithmetic are.
             </p>
           </Card>
         </div>

@@ -35,9 +35,7 @@ export function sanitizeTrack(
   }
 
   if (zones.length > 0) {
-    working = working.filter(
-      (p) => !zones.some((z) => haversineM(p, z.center) <= z.radiusM),
-    );
+    working = working.filter((p) => !zones.some((z) => haversineM(p, z.center) <= z.radiusM));
   }
 
   // Fewer than four surviving points is not a shape, it is a location.
@@ -70,7 +68,8 @@ export function canView(input: {
   eitherHasBlocked: boolean;
   ownerProfileVisibility: Visibility;
 }): boolean {
-  const { viewerId, ownerId, level, viewerFollowsOwner, eitherHasBlocked, ownerProfileVisibility } = input;
+  const { viewerId, ownerId, level, viewerFollowsOwner, eitherHasBlocked, ownerProfileVisibility } =
+    input;
   if (viewerId === ownerId) return true;
   if (viewerId === null) return level === 'public' && ownerProfileVisibility === 'public';
   if (eitherHasBlocked) return false;

@@ -2,7 +2,8 @@ import { ButtonLink, Card, Badge } from '@/components/ui/primitives';
 
 export const metadata = {
   title: 'Pricing',
-  description: 'FORGE is free during the open beta. Here is what that means and what happens afterwards.',
+  description:
+    'FORGE is free during the open beta. Here is what that means and what happens afterwards.',
 };
 
 export default function PricingPage() {
@@ -13,8 +14,8 @@ export default function PricingPage() {
         Free while we are in beta
       </h1>
       <p className="mt-5 max-w-prose text-body muted">
-        No card, no trial countdown, no feature held back to make a point. In exchange we
-        ask for the occasional piece of feedback when something is wrong.
+        No card, no trial countdown, no feature held back to make a point. In exchange we ask for
+        the occasional piece of feedback when something is wrong.
       </p>
 
       <div className="mt-12 grid gap-5 lg:grid-cols-2">
@@ -31,11 +32,18 @@ export default function PricingPage() {
               'Direct line to the people building it',
             ].map((item) => (
               <li key={item} className="flex gap-3 text-secondary">
-                <span aria-hidden className="text-signal">—</span><span className="muted">{item}</span>
+                <span aria-hidden className="text-signal">
+                  —
+                </span>
+                <span className="muted">{item}</span>
               </li>
             ))}
           </ul>
-          <div className="mt-7"><ButtonLink href="/signup" block>Start free beta</ButtonLink></div>
+          <div className="mt-7">
+            <ButtonLink href="/signup" block>
+              Start free beta
+            </ButtonLink>
+          </div>
         </Card>
 
         <Card className="flex flex-col">
@@ -44,8 +52,8 @@ export default function PricingPage() {
             <Badge>Not yet decided</Badge>
           </div>
           <p className="mt-4 text-body muted">
-            We have not set a price, and we are not going to pretend we have. What we will
-            commit to now:
+            We have not set a price, and we are not going to pretend we have. What we will commit to
+            now:
           </p>
           <ul className="mt-6 flex-1 space-y-2.5">
             {[
@@ -54,7 +62,10 @@ export default function PricingPage() {
               'Nothing you have already recorded gets locked behind a new plan',
             ].map((item) => (
               <li key={item} className="flex gap-3 text-secondary">
-                <span aria-hidden className="text-signal">—</span><span className="muted">{item}</span>
+                <span aria-hidden className="text-signal">
+                  —
+                </span>
+                <span className="muted">{item}</span>
               </li>
             ))}
           </ul>

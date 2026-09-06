@@ -12,18 +12,35 @@ export const dynamic = 'force-dynamic';
 
 interface ChallengeBoard {
   challenge: {
-    slug: string; name: string; tagline: string; metric: string;
-    target: number; durationDays: number; badge: string; rules: string[];
+    slug: string;
+    name: string;
+    tagline: string;
+    metric: string;
+    target: number;
+    durationDays: number;
+    badge: string;
+    rules: string[];
   };
   participants: number;
   joined: boolean;
   progress: {
-    value: number; target: number; percent: number; remaining: number;
-    daysRemaining: number; requiredDailyRate: number; onTrack: boolean; message: string;
+    value: number;
+    target: number;
+    percent: number;
+    remaining: number;
+    daysRemaining: number;
+    requiredDailyRate: number;
+    onTrack: boolean;
+    message: string;
   } | null;
   leaderboard: {
-    rank: number; userId: string; displayName: string; value: number;
-    progressPercent: number; completed: boolean; isFriend: boolean;
+    rank: number;
+    userId: string;
+    displayName: string;
+    value: number;
+    progressPercent: number;
+    completed: boolean;
+    isFriend: boolean;
   }[];
   myRank: number | null;
 }
@@ -60,7 +77,10 @@ export default async function ChallengesPage() {
                     <div className="flex items-baseline justify-between gap-4">
                       <p className="display text-2xl tabular-nums">
                         {formatNumber(board.progress.value)}
-                        <span className="text-base font-normal text-muted"> / {formatNumber(board.progress.target)}</span>
+                        <span className="text-base font-normal text-muted">
+                          {' '}
+                          / {formatNumber(board.progress.target)}
+                        </span>
                       </p>
                       <Chip tone={board.progress.onTrack ? 'good' : 'warn'} size="sm">
                         {board.progress.onTrack ? 'On track' : 'Behind pace'}
@@ -73,7 +93,9 @@ export default async function ChallengesPage() {
                         tone={board.progress.onTrack ? 'good' : 'warn'}
                       />
                     </div>
-                    <p className="mt-4 text-sm leading-relaxed text-muted">{board.progress.message}</p>
+                    <p className="mt-4 text-sm leading-relaxed text-muted">
+                      {board.progress.message}
+                    </p>
                     <p className="mt-2 text-xs text-muted">
                       {board.progress.daysRemaining} days remaining
                       {board.myRank ? ` · currently ranked #${board.myRank}` : ''}
@@ -84,7 +106,9 @@ export default async function ChallengesPage() {
                     <ul className="space-y-2">
                       {board.challenge.rules.map((rule) => (
                         <li key={rule} className="flex gap-2.5 text-sm text-muted">
-                          <span aria-hidden className="text-accent">·</span>
+                          <span aria-hidden className="text-accent">
+                            ·
+                          </span>
                           {rule}
                         </li>
                       ))}
@@ -111,19 +135,29 @@ export default async function ChallengesPage() {
                         <span
                           aria-hidden
                           className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold tabular-nums ${
-                            row.rank <= 3 ? 'accent-tint bg-ember/12 text-chip-accent' : 'bg-ink-900/[0.05] opacity-60'
+                            row.rank <= 3
+                              ? 'accent-tint bg-ember/12 text-chip-accent'
+                              : 'bg-ink-900/[0.05] opacity-60'
                           }`}
                         >
                           {row.rank}
                         </span>
                         <span className="min-w-0 flex-1 truncate text-sm">
                           {row.displayName}
-                          {row.isFriend && <span className="ml-2 text-[0.625rem] uppercase tracking-[0.1em] text-accent">Following</span>}
+                          {row.isFriend && (
+                            <span className="ml-2 text-[0.625rem] uppercase tracking-[0.1em] text-accent">
+                              Following
+                            </span>
+                          )}
                         </span>
                         <span className="shrink-0 text-sm tabular-nums text-muted">
                           {formatNumber(row.value)}
                         </span>
-                        {row.completed && <span aria-hidden className="text-status-good">✓</span>}
+                        {row.completed && (
+                          <span aria-hidden className="text-status-good">
+                            ✓
+                          </span>
+                        )}
                       </li>
                     ))}
                   </ol>

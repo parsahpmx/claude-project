@@ -8,8 +8,14 @@ import { Badge, EmptyState } from '@/components/ui/feedback';
 import { TimeAgo } from '@/components/app/time-ago';
 
 interface Post {
-  id: string; kind: string; body: string; likeCount: number; commentCount: number;
-  createdAt: string; likedByViewer: boolean; savedByViewer: boolean;
+  id: string;
+  kind: string;
+  body: string;
+  likeCount: number;
+  commentCount: number;
+  createdAt: string;
+  likedByViewer: boolean;
+  savedByViewer: boolean;
   author: { id: string; firstName: string; lastName: string; avatarKey: string | null };
   group: { slug: string; name: string } | null;
 }
@@ -51,7 +57,9 @@ export function CommunityFeed({
 
   const toggleSave = async (id: string) => {
     setItems((current) =>
-      current.map((post) => (post.id === id ? { ...post, savedByViewer: !post.savedByViewer } : post)),
+      current.map((post) =>
+        post.id === id ? { ...post, savedByViewer: !post.savedByViewer } : post,
+      ),
     );
     await fetch(`/api/v1/community/posts/${id}/save`, { method: 'POST' });
   };
@@ -74,10 +82,18 @@ export function CommunityFeed({
     const created = (await response.json()) as { id: string };
     setItems((current) => [
       {
-        id: created.id, kind: 'update', body, likeCount: 0, commentCount: 0,
-        createdAt: new Date().toISOString(), likedByViewer: false, savedByViewer: false,
+        id: created.id,
+        kind: 'update',
+        body,
+        likeCount: 0,
+        commentCount: 0,
+        createdAt: new Date().toISOString(),
+        likedByViewer: false,
+        savedByViewer: false,
         author: { id: 'me', firstName: 'You', lastName: '', avatarKey: null },
-        group: group ? { slug: group, name: groups.find((g) => g.slug === group)?.name ?? group } : null,
+        group: group
+          ? { slug: group, name: groups.find((g) => g.slug === group)?.name ?? group }
+          : null,
       },
       ...current,
     ]);
@@ -119,8 +135,12 @@ export function CommunityFeed({
                 hint="What you did, what you learned, or what you are stuck on."
               />
               <div className="flex gap-3">
-                <Button type="submit" disabled={posting}>{posting ? 'Posting…' : 'Post'}</Button>
-                <Button type="button" variant="ghost" onClick={() => setComposing(false)}>Cancel</Button>
+                <Button type="submit" disabled={posting}>
+                  {posting ? 'Posting…' : 'Post'}
+                </Button>
+                <Button type="button" variant="ghost" onClick={() => setComposing(false)}>
+                  Cancel
+                </Button>
               </div>
             </form>
           </Card>
@@ -133,7 +153,11 @@ export function CommunityFeed({
 
       {visible.length === 0 ? (
         <div className="mt-6">
-          <EmptyState icon="◎" title="Nothing here yet" body="Be the first to post in this group." />
+          <EmptyState
+            icon="◎"
+            title="Nothing here yet"
+            body="Be the first to post in this group."
+          />
         </div>
       ) : (
         <ul className="mt-6 space-y-5">
@@ -145,7 +169,8 @@ export function CommunityFeed({
                     aria-hidden
                     className="dark-surface grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
                   >
-                    {post.author.firstName.charAt(0)}{post.author.lastName.charAt(0)}
+                    {post.author.firstName.charAt(0)}
+                    {post.author.lastName.charAt(0)}
                   </span>
 
                   <div className="min-w-0 flex-1">
@@ -156,16 +181,30 @@ export function CommunityFeed({
                       </span>
                       {post.group && (
                         <>
-                          <span aria-hidden className="opacity-30">·</span>
+                          <span aria-hidden className="opacity-30">
+                            ·
+                          </span>
                           <span className="text-muted">{post.group.name}</span>
                         </>
                       )}
-                      <span aria-hidden className="opacity-30">·</span>
-                      <span className="text-xs text-muted"><TimeAgo iso={post.createdAt} /></span>
+                      <span aria-hidden className="opacity-30">
+                        ·
+                      </span>
+                      <span className="text-xs text-muted">
+                        <TimeAgo iso={post.createdAt} />
+                      </span>
                     </div>
 
-                    {post.kind === 'personal-record' && <div className="mt-3"><Badge>Personal record</Badge></div>}
-                    {post.kind === 'question' && <div className="mt-3"><Chip size="sm">Question</Chip></div>}
+                    {post.kind === 'personal-record' && (
+                      <div className="mt-3">
+                        <Badge>Personal record</Badge>
+                      </div>
+                    )}
+                    {post.kind === 'question' && (
+                      <div className="mt-3">
+                        <Chip size="sm">Question</Chip>
+                      </div>
+                    )}
 
                     <p className="mt-3 leading-relaxed opacity-85">{post.body}</p>
 
@@ -213,6 +252,8 @@ export function CommunityFeed({
 function chipClass(active: boolean): string {
   return clsx(
     'min-h-[40px] rounded-pill border px-4 text-xs font-medium transition-all duration-200',
-    active ? 'dark-surface border-ink-900 bg-ink-900 text-bone-100' : 'border-ink-900/15 hover:border-ink-900/40',
+    active
+      ? 'dark-surface border-ink-900 bg-ink-900 text-bone-100'
+      : 'border-ink-900/15 hover:border-ink-900/40',
   );
 }

@@ -7,13 +7,7 @@ import {
 } from './exercises.js';
 import type { Program, ProgramSession } from './programs.js';
 import type { ExercisePrescription } from './progression.js';
-import type {
-  Equipment,
-  ExperienceLevel,
-  Goal,
-  PhaseKey,
-  SessionKind,
-} from './types.js';
+import type { Equipment, ExperienceLevel, Goal, PhaseKey, SessionKind } from './types.js';
 import { clamp, percent, roundToPlate } from './units.js';
 
 /**
@@ -164,7 +158,9 @@ export function buildRoadmap(input: RoadmapInput, phaseFocus: Record<PhaseKey, s
       startDate: weekStart,
       endDate: addDays(weekStart, 6),
       deload,
-      sessionCount: template.filter((s) => s.kind !== 'recovery' || input.recoveryPriority !== 'low').length,
+      sessionCount: template.filter(
+        (s) => s.kind !== 'recovery' || input.recoveryPriority !== 'low',
+      ).length,
       nutritionGoal: weekNutritionGoal(input.nutritionGoal, phase.key, deload),
       recoveryTarget: weekRecoveryTarget(input.recoveryPriority, deload),
       coachCheckIn: input.coached && weekNumber % 1 === 0,
@@ -196,8 +192,12 @@ export function selectSessions(
   recoveryPriority: 'low' | 'medium' | 'high',
 ): ProgramSession[] {
   const target = clamp(sessionsPerWeek, 1, 7);
-  const trainingSessions = program.template.filter((s) => s.kind !== 'mobility' && s.kind !== 'recovery');
-  const softSessions = program.template.filter((s) => s.kind === 'mobility' || s.kind === 'recovery');
+  const trainingSessions = program.template.filter(
+    (s) => s.kind !== 'mobility' && s.kind !== 'recovery',
+  );
+  const softSessions = program.template.filter(
+    (s) => s.kind === 'mobility' || s.kind === 'recovery',
+  );
 
   const priority: Record<ProgramSession['kind'], number> = {
     strength: 0,
@@ -333,7 +333,10 @@ export interface SessionBuildInput {
 }
 
 /** Sets and reps per phase, by whether the movement anchors the session. */
-const SET_SCHEME: Record<PhaseKey, { compound: [number, number, number]; accessory: [number, number, number] }> = {
+const SET_SCHEME: Record<
+  PhaseKey,
+  { compound: [number, number, number]; accessory: [number, number, number] }
+> = {
   // [sets, reps, repsTop]
   foundation: { compound: [3, 8, 10], accessory: [3, 12, 15] },
   build: { compound: [4, 6, 8], accessory: [3, 10, 12] },
@@ -401,7 +404,9 @@ function pickForPattern(
 ): Exercise | undefined {
   const levelRank = { beginner: 0, intermediate: 1, advanced: 2 } as const;
   const candidates = pool
-    .filter((e) => e.pattern === pattern && !used.has(e.id) && levelRank[e.level] <= levelRank[level])
+    .filter(
+      (e) => e.pattern === pattern && !used.has(e.id) && levelRank[e.level] <= levelRank[level],
+    )
     .sort((a, b) => {
       // Prefer the most advanced movement the member can handle, and compounds
       // before isolation — that is what makes the session worth their hour.
@@ -468,14 +473,26 @@ export function estimateStartingLoad(
 function warmupFor(kind: ProgramSession['kind']): string[] {
   switch (kind) {
     case 'running':
-      return ['Five minutes easy jogging', 'Leg swings and ankle mobilisation', 'Four 20-second strides'];
+      return [
+        'Five minutes easy jogging',
+        'Leg swings and ankle mobilisation',
+        'Four 20-second strides',
+      ];
     case 'conditioning':
-      return ['Three minutes easy on your chosen machine', 'World’s greatest stretch, five each side', 'One easy round of the circuit'];
+      return [
+        'Three minutes easy on your chosen machine',
+        'World’s greatest stretch, five each side',
+        'One easy round of the circuit',
+      ];
     case 'mobility':
     case 'recovery':
       return ['Two minutes of nasal breathing', 'Cat-cow, ten slow reps'];
     default:
-      return ['Five minutes general warm-up', 'Cat-cow and hip openers', 'Two ramp-up sets on the first movement'];
+      return [
+        'Five minutes general warm-up',
+        'Cat-cow and hip openers',
+        'Two ramp-up sets on the first movement',
+      ];
   }
 }
 
@@ -551,7 +568,9 @@ export function roadmapProgress(
   );
   const completedWeeks = roadmap.weeks.filter((week) => {
     const sessions = week.days.filter((d) => d.kind !== 'rest').length;
-    return sessions > 0 && completedSessionCount >= sessionsBefore(roadmap, week.weekNumber) + sessions;
+    return (
+      sessions > 0 && completedSessionCount >= sessionsBefore(roadmap, week.weekNumber) + sessions
+    );
   }).length;
 
   return { percent: percent(completedSessionCount, totalSessions), completedWeeks, totalSessions };

@@ -11,7 +11,9 @@ import { TopNav, BottomNav } from '@/components/app/shell';
  */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
   const { data: profile } = await supabase
@@ -28,7 +30,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <TopNav displayName={profile.display_name || 'Athlete'} />
       {/* Bottom padding clears the mobile nav; min-w-0 stops a wide child
           scrolling the document sideways. */}
-      <main id="main" className="shell min-w-0 py-8 pb-28 md:pb-12">{children}</main>
+      <main id="main" className="shell min-w-0 py-8 pb-28 md:pb-12">
+        {children}
+      </main>
       <BottomNav />
     </div>
   );

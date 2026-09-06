@@ -20,33 +20,54 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </Link>
           <nav aria-label="Main" className="hidden gap-7 md:flex">
             {NAV.map((item) => (
-              <Link key={item.href} href={item.href} className="text-secondary muted transition-colors hover:text-bone-100">
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-secondary muted transition-colors hover:text-bone-100"
+              >
                 {item.label}
               </Link>
             ))}
           </nav>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-secondary muted transition-colors hover:text-bone-100">
+            <Link
+              href="/login"
+              className="text-secondary muted transition-colors hover:text-bone-100"
+            >
               Log in
             </Link>
-            <ButtonLink href="/signup" size="sm">Start free beta</ButtonLink>
+            <ButtonLink href="/signup" size="sm">
+              Start free beta
+            </ButtonLink>
           </div>
         </div>
       </header>
 
       {/* min-w-0 is load-bearing: without it a flex child refuses to shrink
           below its content and one wide table scrolls the whole document. */}
-      <main id="main" className="min-w-0 flex-1">{children}</main>
+      <main id="main" className="min-w-0 flex-1">
+        {children}
+      </main>
 
       <footer className="border-t border-ink-600/60 py-12">
         <div className="shell flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-display text-base font-bold tracking-[0.14em] text-bone-100">FORGE</p>
+            <p className="font-display text-base font-bold tracking-[0.14em] text-bone-100">
+              FORGE
+            </p>
             <p className="mt-1 text-secondary muted">Train. Track. Go further.</p>
           </div>
           <nav aria-label="Legal" className="flex flex-wrap gap-x-6 gap-y-2">
-            {[['/about', 'About'], ['/privacy', 'Privacy'], ['/terms', 'Terms']].map(([href, label]) => (
-              <Link key={href} href={href!} className="text-secondary muted transition-colors hover:text-bone-100">
+            {[
+              ['/about', 'About'],
+              ['/privacy', 'Privacy'],
+              ['/terms', 'Terms'],
+            ].map(([href, label]) => (
+              <Link
+                key={href}
+                href={href!}
+                className="text-secondary muted transition-colors hover:text-bone-100"
+              >
                 {label}
               </Link>
             ))}

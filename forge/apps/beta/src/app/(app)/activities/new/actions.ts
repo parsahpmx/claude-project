@@ -4,7 +4,10 @@ import { revalidatePath } from 'next/cache';
 import { activityCreateSchema } from '@forge/contracts';
 import { createClient } from '@/lib/supabase/server';
 
-export interface CreateResult { id?: string; error?: string }
+export interface CreateResult {
+  id?: string;
+  error?: string;
+}
 
 export async function createActivity(formData: FormData): Promise<CreateResult> {
   const movingMinutes = Number(formData.get('movingMinutes') ?? 0);
@@ -36,7 +39,9 @@ export async function createActivity(formData: FormData): Promise<CreateResult> 
   }
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { error: 'Your session expired. Log in and try again.' };
 
   const { data, error } = await supabase

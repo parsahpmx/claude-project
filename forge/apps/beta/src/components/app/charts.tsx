@@ -16,7 +16,9 @@ import { formatDuration } from '@/lib/format';
  */
 export function WeeklyVolumeChart({
   weeks,
-}: { weeks: readonly { week: string; minutes: number }[] }) {
+}: {
+  weeks: readonly { week: string; minutes: number }[];
+}) {
   if (weeks.length === 0) {
     return <p className="text-secondary muted">Not enough history to chart yet.</p>;
   }
@@ -27,7 +29,7 @@ export function WeeklyVolumeChart({
 
   const width = 100;
   const height = 44;
-  const gap = 2;                                   // 2px surface gap between bars
+  const gap = 2; // 2px surface gap between bars
   const barWidth = (width - gap * (weeks.length - 1)) / weeks.length;
 
   return (
@@ -36,13 +38,31 @@ export function WeeklyVolumeChart({
         Training time for each of the last {weeks.length} weeks, in minutes.
       </figcaption>
 
-      <svg viewBox={`0 0 ${width} ${height + 6}`} className="w-full" role="img"
-        aria-label={`Weekly training time. Peak ${formatDuration(peak.minutes * 60)} in the week of ${peak.week}. This week ${formatDuration(current.minutes * 60)}.`}>
+      <svg
+        viewBox={`0 0 ${width} ${height + 6}`}
+        className="w-full"
+        role="img"
+        aria-label={`Weekly training time. Peak ${formatDuration(peak.minutes * 60)} in the week of ${peak.week}. This week ${formatDuration(current.minutes * 60)}.`}
+      >
         {/* A single recessive gridline at the peak, rather than a full grid. */}
-        <line x1="0" y1="0.5" x2={width} y2="0.5" stroke="currentColor" strokeWidth="0.25"
-          className="text-ink-600" />
-        <line x1="0" y1={height} x2={width} y2={height} stroke="currentColor" strokeWidth="0.4"
-          className="text-ink-600" />
+        <line
+          x1="0"
+          y1="0.5"
+          x2={width}
+          y2="0.5"
+          stroke="currentColor"
+          strokeWidth="0.25"
+          className="text-ink-600"
+        />
+        <line
+          x1="0"
+          y1={height}
+          x2={width}
+          y2={height}
+          stroke="currentColor"
+          strokeWidth="0.4"
+          className="text-ink-600"
+        />
 
         {/* Rounded data-ends (rx), anchored to the baseline. */}
         {weeks.map((w, i) => {
@@ -68,10 +88,12 @@ export function WeeklyVolumeChart({
       {/* Selective direct labels: the peak and the current week, never all of them. */}
       <div className="mt-3 flex items-baseline justify-between text-caption">
         <span className="muted">
-          Peak <span className="tabular-nums text-bone-100">{formatDuration(peak.minutes * 60)}</span>
+          Peak{' '}
+          <span className="tabular-nums text-bone-100">{formatDuration(peak.minutes * 60)}</span>
         </span>
         <span className="muted">
-          This week <span className="tabular-nums text-bone-100">{formatDuration(current.minutes * 60)}</span>
+          This week{' '}
+          <span className="tabular-nums text-bone-100">{formatDuration(current.minutes * 60)}</span>
         </span>
       </div>
 
@@ -84,15 +106,21 @@ export function WeeklyVolumeChart({
           <caption className="sr-only">Weekly training time in minutes</caption>
           <thead>
             <tr className="border-b border-ink-600 text-left">
-              <th scope="col" className="py-2 eyebrow font-normal">Week beginning</th>
-              <th scope="col" className="py-2 eyebrow font-normal">Training time</th>
+              <th scope="col" className="py-2 eyebrow font-normal">
+                Week beginning
+              </th>
+              <th scope="col" className="py-2 eyebrow font-normal">
+                Training time
+              </th>
             </tr>
           </thead>
           <tbody>
             {weeks.map((w) => (
               <tr key={w.week} className="border-b border-ink-600 last:border-0">
                 <td className="py-2 tabular-nums">{w.week}</td>
-                <td className="py-2 tabular-nums text-bone-100">{formatDuration(w.minutes * 60)}</td>
+                <td className="py-2 tabular-nums text-bone-100">
+                  {formatDuration(w.minutes * 60)}
+                </td>
               </tr>
             ))}
           </tbody>

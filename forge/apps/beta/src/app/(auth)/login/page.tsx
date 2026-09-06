@@ -16,7 +16,10 @@ export default function LoginPage() {
       </div>
       <p className="mt-7 text-center text-secondary muted">
         New to FORGE?{' '}
-        <Link href="/signup" className="font-semibold text-signal hover:underline underline-offset-4">
+        <Link
+          href="/signup"
+          className="font-semibold text-signal hover:underline underline-offset-4"
+        >
           Create an account
         </Link>
       </p>

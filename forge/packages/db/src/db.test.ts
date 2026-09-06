@@ -35,7 +35,10 @@ describe('migrations and seed', () => {
     const [plan] = await handle.db.select().from(s.plans).limit(1);
     expect(plan).toBeDefined();
 
-    const weeks = await handle.db.select().from(s.planWeeks).where(eq(s.planWeeks.planId, plan!.id));
+    const weeks = await handle.db
+      .select()
+      .from(s.planWeeks)
+      .where(eq(s.planWeeks.planId, plan!.id));
     expect(weeks).toHaveLength(plan!.totalWeeks);
 
     const days = await handle.db
@@ -99,8 +102,11 @@ describe('constraints', () => {
     const [existing] = await handle.db.select().from(s.users).limit(1);
     await expect(
       handle.db.insert(s.users).values({
-        id: 'usr_duplicatecase', email: existing!.email.toUpperCase(),
-        passwordHash: 'x', firstName: 'Dup', lastName: 'User',
+        id: 'usr_duplicatecase',
+        email: existing!.email.toUpperCase(),
+        passwordHash: 'x',
+        firstName: 'Dup',
+        lastName: 'User',
       }),
     ).rejects.toThrow();
   });
@@ -109,7 +115,9 @@ describe('constraints', () => {
     const [like] = await handle.db.select().from(s.postLikes).limit(1);
     await expect(
       handle.db.insert(s.postLikes).values({
-        id: 'pst_duplicatelike', postId: like!.postId, userId: like!.userId,
+        id: 'pst_duplicatelike',
+        postId: like!.postId,
+        userId: like!.userId,
       }),
     ).rejects.toThrow();
   });
@@ -118,9 +126,16 @@ describe('constraints', () => {
     const [checkIn] = await handle.db.select().from(s.checkIns).limit(1);
     await expect(
       handle.db.insert(s.checkIns).values({
-        id: 'cin_duplicateweek', memberId: checkIn!.memberId, weekStart: checkIn!.weekStart,
-        energy: 3, sleepQuality: 3, stress: 3, nutritionAdherence: 3, trainingAdherence: 3,
-        score: 50, band: 'on-track',
+        id: 'cin_duplicateweek',
+        memberId: checkIn!.memberId,
+        weekStart: checkIn!.weekStart,
+        energy: 3,
+        sleepQuality: 3,
+        stress: 3,
+        nutritionAdherence: 3,
+        trainingAdherence: 3,
+        score: 50,
+        band: 'on-track',
       }),
     ).rejects.toThrow();
   });
@@ -129,18 +144,23 @@ describe('constraints', () => {
     // Deliberately not the demo account: later tests assert on alex@forge.fit,
     // and a destructive test must not depend on suite ordering to be safe.
     const [member] = await handle.db
-      .select().from(s.users).where(eq(s.users.email, 'sam@forge.fit')).limit(1);
+      .select()
+      .from(s.users)
+      .where(eq(s.users.email, 'sam@forge.fit'))
+      .limit(1);
     expect(member).toBeDefined();
     const before = await handle.db
       .select({ count: sql<number>`count(*)::int` })
-      .from(s.workoutLogs).where(eq(s.workoutLogs.userId, member!.id));
+      .from(s.workoutLogs)
+      .where(eq(s.workoutLogs.userId, member!.id));
     expect(before[0]!.count).toBeGreaterThan(0);
 
     await handle.db.delete(s.users).where(eq(s.users.id, member!.id));
 
     const after = await handle.db
       .select({ count: sql<number>`count(*)::int` })
-      .from(s.workoutLogs).where(eq(s.workoutLogs.userId, member!.id));
+      .from(s.workoutLogs)
+      .where(eq(s.workoutLogs.userId, member!.id));
     expect(after[0]!.count).toBe(0);
   });
 });
@@ -170,7 +190,10 @@ describe('password hashing', () => {
 
   it('verifies the seeded demo account', async () => {
     const [demo] = await handle.db
-      .select().from(s.users).where(eq(s.users.email, 'alex@forge.fit')).limit(1);
+      .select()
+      .from(s.users)
+      .where(eq(s.users.email, 'alex@forge.fit'))
+      .limit(1);
     expect(demo).toBeDefined();
     expect(await verifyPassword(DEMO_PASSWORD, demo!.passwordHash)).toBe(true);
   });
@@ -179,13 +202,20 @@ describe('password hashing', () => {
 describe('seeded data quality', () => {
   it('gives the demo member a coach, a thread and a check-in history', async () => {
     const [demo] = await handle.db
-      .select().from(s.users).where(eq(s.users.email, 'alex@forge.fit')).limit(1);
+      .select()
+      .from(s.users)
+      .where(eq(s.users.email, 'alex@forge.fit'))
+      .limit(1);
     const threads = await handle.db
-      .select().from(s.messageThreads).where(eq(s.messageThreads.memberId, demo!.id));
+      .select()
+      .from(s.messageThreads)
+      .where(eq(s.messageThreads.memberId, demo!.id));
     expect(threads).toHaveLength(1);
 
     const messages = await handle.db
-      .select().from(s.messages).where(eq(s.messages.threadId, threads[0]!.id));
+      .select()
+      .from(s.messages)
+      .where(eq(s.messages.threadId, threads[0]!.id));
     expect(messages.length).toBeGreaterThan(4);
     expect(messages.some((m) => m.kind === 'form-check')).toBe(true);
 
@@ -202,7 +232,9 @@ describe('seeded data quality', () => {
       ...recipes.map((r) => `${r.name} ${r.summary}`),
       ...articles.map((a) => `${a.title} ${a.excerpt} ${a.body}`),
       ...products.map((p) => `${p.name} ${p.description}`),
-    ].join(' ').toLowerCase();
+    ]
+      .join(' ')
+      .toLowerCase();
     expect(corpus).not.toContain('lorem');
     expect(corpus).not.toContain('ipsum');
     expect(corpus).not.toContain('placeholder');
@@ -222,7 +254,13 @@ describe('seeded data quality', () => {
     const stale = await handle.db
       .select({ count: sql<number>`count(*)::int` })
       .from(s.planDays)
-      .where(and(sql`${s.planDays.date} < '2026-09-04'`, eq(s.planDays.status, 'scheduled'), sql`${s.planDays.kind} <> 'rest'`));
+      .where(
+        and(
+          sql`${s.planDays.date} < '2026-09-04'`,
+          eq(s.planDays.status, 'scheduled'),
+          sql`${s.planDays.kind} <> 'rest'`,
+        ),
+      );
     expect(stale[0]!.count).toBe(0);
   });
 });

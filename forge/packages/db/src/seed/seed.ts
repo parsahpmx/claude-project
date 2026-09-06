@@ -75,7 +75,11 @@ async function insertAll<T>(
 ): Promise<void> {
   for (let i = 0; i < rows.length; i += CHUNK) {
     const slice = rows.slice(i, i + CHUNK);
-    if (slice.length > 0) await db.insert(table).values(slice as never).execute();
+    if (slice.length > 0)
+      await db
+        .insert(table)
+        .values(slice as never)
+        .execute();
   }
 }
 
@@ -97,18 +101,33 @@ export async function seedDatabase(
     const recipeId = nextId('recipe');
     recipeIdBySlug.set(recipe.slug, recipeId);
     recipeRows.push({
-      id: recipeId, slug: recipe.slug, name: recipe.name, summary: recipe.summary,
-      slot: recipe.slot, calories: recipe.calories, proteinGrams: recipe.protein,
-      carbGrams: recipe.carbs, fatGrams: recipe.fat, fibreGrams: recipe.fibre,
-      prepMinutes: recipe.prepMinutes, cookMinutes: recipe.cookMinutes,
-      difficulty: recipe.difficulty, servings: recipe.servings, tags: recipe.tags,
-      instructions: recipe.instructions, imageKey: recipe.imageKey,
+      id: recipeId,
+      slug: recipe.slug,
+      name: recipe.name,
+      summary: recipe.summary,
+      slot: recipe.slot,
+      calories: recipe.calories,
+      proteinGrams: recipe.protein,
+      carbGrams: recipe.carbs,
+      fatGrams: recipe.fat,
+      fibreGrams: recipe.fibre,
+      prepMinutes: recipe.prepMinutes,
+      cookMinutes: recipe.cookMinutes,
+      difficulty: recipe.difficulty,
+      servings: recipe.servings,
+      tags: recipe.tags,
+      instructions: recipe.instructions,
+      imageKey: recipe.imageKey,
     });
     recipe.ingredients.forEach((ingredient, index) => {
       ingredientRows.push({
-        id: nextId('recipe'), recipeId, name: ingredient.name,
+        id: nextId('recipe'),
+        recipeId,
+        name: ingredient.name,
         quantityCenti: Math.round(ingredient.quantity * 100),
-        unit: ingredient.unit, section: ingredient.section, position: index,
+        unit: ingredient.unit,
+        section: ingredient.section,
+        position: index,
       });
     });
   }
@@ -123,9 +142,16 @@ export async function seedDatabase(
       const id = nextId('workout');
       recoveryIdBySlug.set(session.slug, id);
       return {
-        id, slug: session.slug, name: session.name, category: session.category,
-        minutes: session.minutes, level: session.level, description: session.description,
-        coachSlug: session.coachSlug, imageKey: session.imageKey, hasCaptions: true,
+        id,
+        slug: session.slug,
+        name: session.name,
+        category: session.category,
+        minutes: session.minutes,
+        level: session.level,
+        description: session.description,
+        coachSlug: session.coachSlug,
+        imageKey: session.imageKey,
+        hasCaptions: true,
       };
     }),
   );
@@ -134,10 +160,18 @@ export async function seedDatabase(
     db,
     s.articles,
     ARTICLES.map((article) => ({
-      id: nextId('article'), slug: article.slug, title: article.title, category: article.category,
-      excerpt: article.excerpt, body: article.body, authorName: article.authorName,
-      authorRole: article.authorRole, readMinutes: article.readMinutes, featured: article.featured,
-      imageKey: article.imageKey, publishedOn: article.publishedOn,
+      id: nextId('article'),
+      slug: article.slug,
+      title: article.title,
+      category: article.category,
+      excerpt: article.excerpt,
+      body: article.body,
+      authorName: article.authorName,
+      authorRole: article.authorRole,
+      readMinutes: article.readMinutes,
+      featured: article.featured,
+      imageKey: article.imageKey,
+      publishedOn: article.publishedOn,
     })),
   );
 
@@ -145,10 +179,19 @@ export async function seedDatabase(
     db,
     s.successStories,
     SUCCESS_STORIES.map((story) => ({
-      id: nextId('story'), slug: story.slug, memberName: story.memberName, headline: story.headline,
-      startingGoal: story.startingGoal, programSlug: story.programSlug, programName: story.programName,
-      timePeriod: story.timePeriod, consistency: story.consistency, coachSlug: story.coachSlug,
-      story: story.story, outcomes: story.outcomes, imageKey: story.imageKey,
+      id: nextId('story'),
+      slug: story.slug,
+      memberName: story.memberName,
+      headline: story.headline,
+      startingGoal: story.startingGoal,
+      programSlug: story.programSlug,
+      programName: story.programName,
+      timePeriod: story.timePeriod,
+      consistency: story.consistency,
+      coachSlug: story.coachSlug,
+      story: story.story,
+      outcomes: story.outcomes,
+      imageKey: story.imageKey,
     })),
   );
 
@@ -160,32 +203,89 @@ export async function seedDatabase(
       const id = nextId('product');
       productIdBySlug.set(product.slug, id);
       return {
-        id, slug: product.slug, name: product.name, category: product.category,
-        summary: product.summary, description: product.description, priceCents: product.priceCents,
-        compareAtCents: product.compareAtCents, financingMonths: product.financingMonths,
-        ratingTenths: product.ratingTenths, reviewCount: product.reviewCount,
-        specs: JSON.stringify(product.specs), compatiblePrograms: product.compatiblePrograms,
-        goals: product.goals, warranty: product.warranty, shipping: product.shipping,
-        inStock: true, imageKey: product.imageKey,
+        id,
+        slug: product.slug,
+        name: product.name,
+        category: product.category,
+        summary: product.summary,
+        description: product.description,
+        priceCents: product.priceCents,
+        compareAtCents: product.compareAtCents,
+        financingMonths: product.financingMonths,
+        ratingTenths: product.ratingTenths,
+        reviewCount: product.reviewCount,
+        specs: JSON.stringify(product.specs),
+        compatiblePrograms: product.compatiblePrograms,
+        goals: product.goals,
+        warranty: product.warranty,
+        shipping: product.shipping,
+        inStock: true,
+        imageKey: product.imageKey,
       };
     }),
   );
 
   const GROUPS = [
-    { slug: 'strength', name: 'Strength', description: 'Barbell work, technique questions and PRs. Video welcome.', members: 18_420, imageKey: 'group-strength' },
-    { slug: 'running', name: 'Running', description: 'From first 5K to marathon builds. Pace talk encouraged.', members: 12_180, imageKey: 'group-running' },
-    { slug: 'fat-loss', name: 'Fat Loss', description: 'Composition change without losing the plot. Process over outcome.', members: 15_640, imageKey: 'group-fat-loss' },
-    { slug: 'beginners', name: 'Beginners', description: 'No question is too basic. Everyone here started here.', members: 22_910, imageKey: 'group-beginners' },
-    { slug: 'hybrid-athletes', name: 'Hybrid Athletes', description: 'Heavy and fast, in the same block. Sequencing talk.', members: 5_240, imageKey: 'group-hybrid' },
-    { slug: 'nutrition', name: 'Nutrition', description: 'Recipes, prep strategies and what actually fits a real week.', members: 14_070, imageKey: 'group-nutrition' },
-    { slug: 'mobility', name: 'Mobility', description: 'Positions, range and the accessory work nobody films.', members: 8_360, imageKey: 'group-mobility' },
+    {
+      slug: 'strength',
+      name: 'Strength',
+      description: 'Barbell work, technique questions and PRs. Video welcome.',
+      members: 18_420,
+      imageKey: 'group-strength',
+    },
+    {
+      slug: 'running',
+      name: 'Running',
+      description: 'From first 5K to marathon builds. Pace talk encouraged.',
+      members: 12_180,
+      imageKey: 'group-running',
+    },
+    {
+      slug: 'fat-loss',
+      name: 'Fat Loss',
+      description: 'Composition change without losing the plot. Process over outcome.',
+      members: 15_640,
+      imageKey: 'group-fat-loss',
+    },
+    {
+      slug: 'beginners',
+      name: 'Beginners',
+      description: 'No question is too basic. Everyone here started here.',
+      members: 22_910,
+      imageKey: 'group-beginners',
+    },
+    {
+      slug: 'hybrid-athletes',
+      name: 'Hybrid Athletes',
+      description: 'Heavy and fast, in the same block. Sequencing talk.',
+      members: 5_240,
+      imageKey: 'group-hybrid',
+    },
+    {
+      slug: 'nutrition',
+      name: 'Nutrition',
+      description: 'Recipes, prep strategies and what actually fits a real week.',
+      members: 14_070,
+      imageKey: 'group-nutrition',
+    },
+    {
+      slug: 'mobility',
+      name: 'Mobility',
+      description: 'Positions, range and the accessory work nobody films.',
+      members: 8_360,
+      imageKey: 'group-mobility',
+    },
   ];
   await insertAll(
     db,
     s.groups,
     GROUPS.map((g) => ({
-      id: nextId('post'), slug: g.slug, name: g.name, description: g.description,
-      memberCount: g.members, imageKey: g.imageKey,
+      id: nextId('post'),
+      slug: g.slug,
+      name: g.name,
+      description: g.description,
+      memberCount: g.members,
+      imageKey: g.imageKey,
     })),
   );
 
@@ -196,8 +296,14 @@ export async function seedDatabase(
   const coachUserIdBySlug = new Map<string, string>();
 
   userRows.push({
-    id: nextId('user'), email: 'admin@forge.fit', passwordHash, firstName: 'Robin',
-    lastName: 'Osei', role: 'admin', timezone: 'Europe/London', avatarKey: 'member-admin',
+    id: nextId('user'),
+    email: 'admin@forge.fit',
+    passwordHash,
+    firstName: 'Robin',
+    lastName: 'Osei',
+    role: 'admin',
+    timezone: 'Europe/London',
+    avatarKey: 'member-admin',
   });
 
   for (const coach of COACHES) {
@@ -206,17 +312,35 @@ export async function seedDatabase(
     coachIdBySlug.set(coach.slug, coachId);
     coachUserIdBySlug.set(coach.slug, userId);
     userRows.push({
-      id: userId, email: coach.email, passwordHash, firstName: coach.firstName,
-      lastName: coach.lastName, role: 'coach', timezone: 'Europe/London', avatarKey: coach.imageKey,
+      id: userId,
+      email: coach.email,
+      passwordHash,
+      firstName: coach.firstName,
+      lastName: coach.lastName,
+      role: 'coach',
+      timezone: 'Europe/London',
+      avatarKey: coach.imageKey,
     });
     coachRows.push({
-      id: coachId, userId, slug: coach.slug, headline: coach.headline, bio: coach.bio,
-      philosophy: coach.philosophy, specialties: coach.specialties, languages: coach.languages,
-      certifications: coach.certifications, yearsExperience: coach.yearsExperience,
-      ratingTenths: coach.ratingTenths, reviewCount: coach.reviewCount, clientCount: coach.clientCount,
-      availableSlotsThisWeek: coach.availableSlots, acceptingClients: coach.availableSlots > 0,
-      monthlyPriceCents: coach.monthlyPriceCents, consultationPriceCents: coach.consultationPriceCents,
-      sessionPriceCents: coach.sessionPriceCents, imageKey: coach.imageKey,
+      id: coachId,
+      userId,
+      slug: coach.slug,
+      headline: coach.headline,
+      bio: coach.bio,
+      philosophy: coach.philosophy,
+      specialties: coach.specialties,
+      languages: coach.languages,
+      certifications: coach.certifications,
+      yearsExperience: coach.yearsExperience,
+      ratingTenths: coach.ratingTenths,
+      reviewCount: coach.reviewCount,
+      clientCount: coach.clientCount,
+      availableSlotsThisWeek: coach.availableSlots,
+      acceptingClients: coach.availableSlots > 0,
+      monthlyPriceCents: coach.monthlyPriceCents,
+      consultationPriceCents: coach.consultationPriceCents,
+      sessionPriceCents: coach.sessionPriceCents,
+      imageKey: coach.imageKey,
     });
   }
 
@@ -227,9 +351,15 @@ export async function seedDatabase(
   }
   MEMBERS.forEach((member, index) => {
     userRows.push({
-      id: memberIds[index]!, email: member.email, passwordHash, firstName: member.firstName,
-      lastName: member.lastName, role: 'member', timezone: 'Europe/London',
-      avatarKey: member.avatarKey, marketingOptIn: index % 2 === 0,
+      id: memberIds[index]!,
+      email: member.email,
+      passwordHash,
+      firstName: member.firstName,
+      lastName: member.lastName,
+      role: 'member',
+      timezone: 'Europe/London',
+      avatarKey: member.avatarKey,
+      marketingOptIn: index % 2 === 0,
     });
   });
 
@@ -283,7 +413,8 @@ export async function seedDatabase(
       experience: member.experience,
       daysPerWeek: member.daysPerWeek,
       sessionMinutes: member.sessionMinutes,
-      location: member.equipment.includes('bodyweight') && member.equipment.length <= 2 ? 'home' : 'gym',
+      location:
+        member.equipment.includes('bodyweight') && member.equipment.length <= 2 ? 'home' : 'gym',
       equipment: member.equipment as Equipment[],
       diet: member.diet as AssessmentAnswers['diet'],
       coaching: member.coachSlug ? 'human-coach' : 'ai-assisted',
@@ -294,11 +425,20 @@ export async function seedDatabase(
 
     const profile = buildPerformanceProfile(answers);
     profileRows.push({
-      userId, primaryGoal: answers.primaryGoal, secondaryGoals: answers.secondaryGoals,
-      ageRange: answers.ageRange, experience: answers.experience, daysPerWeek: answers.daysPerWeek,
-      sessionMinutes: answers.sessionMinutes, trainingLocation: answers.location,
-      equipment: answers.equipment, diet: answers.diet, coachingPreference: answers.coaching,
-      heightCm: member.heightCm, weightKg: member.weightKg, sexAtBirth: member.sexAtBirth,
+      userId,
+      primaryGoal: answers.primaryGoal,
+      secondaryGoals: answers.secondaryGoals,
+      ageRange: answers.ageRange,
+      experience: answers.experience,
+      daysPerWeek: answers.daysPerWeek,
+      sessionMinutes: answers.sessionMinutes,
+      trainingLocation: answers.location,
+      equipment: answers.equipment,
+      diet: answers.diet,
+      coachingPreference: answers.coaching,
+      heightCm: member.heightCm,
+      weightKg: member.weightKg,
+      sexAtBirth: member.sexAtBirth,
       onboardedAt: new Date(`${addDays(today, -weeksElapsed * 7)}T09:00:00Z`),
     });
 
@@ -307,33 +447,55 @@ export async function seedDatabase(
     const pricing = planPricing(plan);
     const subscriptionId = nextId('subscription');
     subscriptionRows.push({
-      id: subscriptionId, userId, tier: member.tier, billingInterval: 'monthly',
-      status: 'active', priceCents: pricing.monthlyCents,
+      id: subscriptionId,
+      userId,
+      tier: member.tier,
+      billingInterval: 'monthly',
+      status: 'active',
+      priceCents: pricing.monthlyCents,
       currentPeriodEndsOn: addDays(today, 30 - memberIndex),
       trialEndsOn: addDays(today, -(weeksElapsed * 7) + 7),
     });
     paymentMethodRows.push({
-      id: nextId('subscription'), userId, kind: 'card', brand: memberIndex % 2 === 0 ? 'Visa' : 'Mastercard',
-      last4: String(4000 + memberIndex * 7).slice(0, 4), expiryMonth: 6, expiryYear: 2029, isDefault: true,
+      id: nextId('subscription'),
+      userId,
+      kind: 'card',
+      brand: memberIndex % 2 === 0 ? 'Visa' : 'Mastercard',
+      last4: String(4000 + memberIndex * 7).slice(0, 4),
+      expiryMonth: 6,
+      expiryYear: 2029,
+      isDefault: true,
     });
     for (let m = 0; m < Math.max(1, Math.floor(weeksElapsed / 4)); m += 1) {
       invoiceRows.push({
-        id: nextId('invoice'), userId, subscriptionId,
-        description: `${plan.name} — monthly subscription`, amountCents: pricing.monthlyCents,
-        status: 'paid', issuedOn: addDays(today, -(m * 30)),
+        id: nextId('invoice'),
+        userId,
+        subscriptionId,
+        description: `${plan.name} — monthly subscription`,
+        amountCents: pricing.monthlyCents,
+        status: 'paid',
+        issuedOn: addDays(today, -(m * 30)),
         paidAt: new Date(`${addDays(today, -(m * 30))}T09:12:00Z`),
       });
     }
 
     // ---- nutrition targets
     const macros = computeMacroTargets({
-      weightKg: member.weightKg, heightCm: member.heightCm,
-      ageRange: answers.ageRange, sexAtBirth: member.sexAtBirth,
-      goal: answers.primaryGoal, trainingDaysPerWeek: profile.suggestedFrequency, diet: answers.diet,
+      weightKg: member.weightKg,
+      heightCm: member.heightCm,
+      ageRange: answers.ageRange,
+      sexAtBirth: member.sexAtBirth,
+      goal: answers.primaryGoal,
+      trainingDaysPerWeek: profile.suggestedFrequency,
+      diet: answers.diet,
     });
     targetRows.push({
-      userId, calories: macros.calories, proteinGrams: macros.proteinGrams,
-      carbGrams: macros.carbGrams, fatGrams: macros.fatGrams, fibreGrams: macros.fibreGrams,
+      userId,
+      calories: macros.calories,
+      proteinGrams: macros.proteinGrams,
+      carbGrams: macros.carbGrams,
+      fatGrams: macros.fatGrams,
+      fibreGrams: macros.fibreGrams,
       waterMl: Math.round(macros.waterLitres * 1000),
     });
 
@@ -342,20 +504,32 @@ export async function seedDatabase(
     const planStart = startOfWeek(addDays(today, -weeksElapsed * 7));
     const roadmap = buildRoadmap(
       {
-        program, goal: answers.primaryGoal, level: profile.trainingLevel,
-        sessionsPerWeek: profile.suggestedFrequency, sessionMinutes: profile.sessionMinutes,
-        startDate: planStart, coached: member.coachSlug !== null,
-        nutritionGoal: profile.nutritionGoal, recoveryPriority: profile.recoveryPriority,
+        program,
+        goal: answers.primaryGoal,
+        level: profile.trainingLevel,
+        sessionsPerWeek: profile.suggestedFrequency,
+        sessionMinutes: profile.sessionMinutes,
+        startDate: planStart,
+        coached: member.coachSlug !== null,
+        nutritionGoal: profile.nutritionGoal,
+        recoveryPriority: profile.recoveryPriority,
       },
       profile.phaseEmphasis,
     );
 
     const planId = nextId('plan');
     planRows.push({
-      id: planId, userId, programSlug: program.slug, programName: program.name,
-      goal: answers.primaryGoal, startDate: roadmap.startDate, totalWeeks: roadmap.totalWeeks,
-      sessionsPerWeek: profile.suggestedFrequency, sessionMinutes: profile.sessionMinutes,
-      status: 'active', phases: JSON.stringify(roadmap.phases),
+      id: planId,
+      userId,
+      programSlug: program.slug,
+      programName: program.name,
+      goal: answers.primaryGoal,
+      startDate: roadmap.startDate,
+      totalWeeks: roadmap.totalWeeks,
+      sessionsPerWeek: profile.suggestedFrequency,
+      sessionMinutes: profile.sessionMinutes,
+      status: 'active',
+      phases: JSON.stringify(roadmap.phases),
     });
 
     // Working loads, carried forward session to session by the real engine.
@@ -366,10 +540,17 @@ export async function seedDatabase(
     for (const week of roadmap.weeks) {
       const weekId = nextId('planWeek');
       planWeekRows.push({
-        id: weekId, planId, weekNumber: week.weekNumber, phase: week.phase,
-        startDate: week.startDate, endDate: week.endDate, deload: week.deload,
-        nutritionGoal: week.nutritionGoal, recoveryTarget: week.recoveryTarget,
-        coachCheckIn: week.coachCheckIn, milestone: week.milestone,
+        id: weekId,
+        planId,
+        weekNumber: week.weekNumber,
+        phase: week.phase,
+        startDate: week.startDate,
+        endDate: week.endDate,
+        deload: week.deload,
+        nutritionGoal: week.nutritionGoal,
+        recoveryTarget: week.recoveryTarget,
+        coachCheckIn: week.coachCheckIn,
+        milestone: week.milestone,
       });
 
       for (const day of week.days) {
@@ -379,29 +560,55 @@ export async function seedDatabase(
 
         // Adherence is realistic, not perfect: the demo member misses roughly
         // one session in eight, which is what makes the analytics worth having.
-        const missed = inPast && day.kind !== 'rest' && (week.weekNumber * 7 + day.dayOfWeek) % 8 === 3;
-        const status = day.kind === 'rest' ? 'scheduled' : inPast ? (missed ? 'skipped' : 'completed') : 'scheduled';
+        const missed =
+          inPast && day.kind !== 'rest' && (week.weekNumber * 7 + day.dayOfWeek) % 8 === 3;
+        const status =
+          day.kind === 'rest'
+            ? 'scheduled'
+            : inPast
+              ? missed
+                ? 'skipped'
+                : 'completed'
+              : 'scheduled';
 
         const built = day.sessionTemplate
           ? buildSession({
-              session: day.sessionTemplate, equipment: answers.equipment, level: profile.trainingLevel,
-              phase, deload: week.deload, minutes: day.minutes,
-              knownLoads: Object.fromEntries(workingLoads), bodyweightKg: member.weightKg,
+              session: day.sessionTemplate,
+              equipment: answers.equipment,
+              level: profile.trainingLevel,
+              phase,
+              deload: week.deload,
+              minutes: day.minutes,
+              knownLoads: Object.fromEntries(workingLoads),
+              bodyweightKg: member.weightKg,
             })
           : null;
 
         planDayRows.push({
-          id: dayId, planWeekId: weekId, userId, date: day.date, dayOfWeek: day.dayOfWeek,
-          kind: day.kind, title: day.title, focus: day.focus, minutes: day.minutes,
-          patterns: day.patterns, status,
+          id: dayId,
+          planWeekId: weekId,
+          userId,
+          date: day.date,
+          dayOfWeek: day.dayOfWeek,
+          kind: day.kind,
+          title: day.title,
+          focus: day.focus,
+          minutes: day.minutes,
+          patterns: day.patterns,
+          status,
           sessionTemplate: built ? JSON.stringify(built) : null,
         });
 
         if (built && day.kind !== 'rest' && day.kind !== 'recovery') {
           calendarRows.push({
-            id: nextId('event'), userId, kind: 'workout', title: day.title, date: day.date,
+            id: nextId('event'),
+            userId,
+            kind: 'workout',
+            title: day.title,
+            date: day.date,
             startMinutes: day.kind === 'running' ? 7 * 60 : 17 * 60 + 30,
-            durationMinutes: day.minutes, referenceId: dayId,
+            durationMinutes: day.minutes,
+            referenceId: dayId,
             status: status === 'completed' ? 'completed' : 'scheduled',
           });
         }
@@ -430,9 +637,16 @@ export async function seedDatabase(
             rpes.push(rpe);
             volume += reps * prescribed.loadGrams;
             setRows.push({
-              id: nextId('setLog'), workoutLogId: workoutId, exerciseId: exercise.exerciseId,
-              exerciseName: exercise.name, setIndex: setIndex + 1, reps,
-              loadGrams: prescribed.loadGrams, rpe, completed: true, restSeconds: prescribed.restSeconds,
+              id: nextId('setLog'),
+              workoutLogId: workoutId,
+              exerciseId: exercise.exerciseId,
+              exerciseName: exercise.name,
+              setIndex: setIndex + 1,
+              reps,
+              loadGrams: prescribed.loadGrams,
+              rpe,
+              completed: true,
+              restSeconds: prescribed.restSeconds,
             });
           }
 
@@ -444,10 +658,16 @@ export async function seedDatabase(
           };
           for (const record of detectPersonalRecords(exercise.exerciseId, logs, history)) {
             prRows.push({
-              id: nextId('workoutLog'), userId, exerciseId: exercise.exerciseId,
-              exerciseName: exercise.name, kind: record.kind, valueGrams: record.value,
-              previousValueGrams: record.previousValue, reps: record.reps,
-              achievedOn: day.date, workoutLogId: workoutId,
+              id: nextId('workoutLog'),
+              userId,
+              exerciseId: exercise.exerciseId,
+              exerciseName: exercise.name,
+              kind: record.kind,
+              valueGrams: record.value,
+              previousValueGrams: record.previousValue,
+              reps: record.reps,
+              achievedOn: day.date,
+              workoutLogId: workoutId,
             });
           }
           const heaviest = logs.reduce((best, l) => Math.max(best, l.loadGrams), 0);
@@ -456,16 +676,22 @@ export async function seedDatabase(
             (best, l) => Math.max(best, estimateOneRepMax(l.loadGrams, l.reps) ?? 0),
             0,
           );
-          if (bestEstimate > history.bestEstimatedOneRepMax) bestOneRepMax.set(exercise.exerciseId, bestEstimate);
+          if (bestEstimate > history.bestEstimatedOneRepMax)
+            bestOneRepMax.set(exercise.exerciseId, bestEstimate);
 
           const decision = progressExercise(prescribed, logs, {
-            type: program.progression, level: profile.trainingLevel,
+            type: program.progression,
+            level: profile.trainingLevel,
             plateGrams: definition?.plateGrams ?? 2500,
           });
           // Store the bias-free working load: the prescription is 85–105% of
           // it depending on the phase, and folding that back in would make the
           // demo member get weaker over twelve weeks of perfect sessions.
-          const nextWorking = workingLoadFrom(decision.next, prescribed, definition?.plateGrams ?? 2500);
+          const nextWorking = workingLoadFrom(
+            decision.next,
+            prescribed,
+            definition?.plateGrams ?? 2500,
+          );
           if (nextWorking > 0) workingLoads.set(exercise.exerciseId, nextWorking);
           else if (definition && definition.plateGrams > 0) {
             workingLoads.set(
@@ -475,17 +701,29 @@ export async function seedDatabase(
           }
         });
 
-        const averageRpe = rpes.length > 0 ? Math.round(rpes.reduce((a, b) => a + b, 0) / rpes.length) : 7;
+        const averageRpe =
+          rpes.length > 0 ? Math.round(rpes.reduce((a, b) => a + b, 0) / rpes.length) : 7;
         const durationMinutes = day.minutes + ((week.weekNumber + day.dayOfWeek) % 7) - 3;
         workoutRows.push({
-          id: workoutId, userId, planDayId: dayId, title: day.title, kind: day.kind, date: day.date,
+          id: workoutId,
+          userId,
+          planDayId: dayId,
+          title: day.title,
+          kind: day.kind,
+          date: day.date,
           startedAt: new Date(`${day.date}T17:30:00Z`),
-          completedAt: new Date(`${day.date}T${String(17 + Math.floor((30 + durationMinutes) / 60)).padStart(2, '0')}:${String((30 + durationMinutes) % 60).padStart(2, '0')}:00Z`),
-          durationSeconds: durationMinutes * 60, volumeGrams: volume,
-          calories: Math.round(durationMinutes * 8.4), averageHeartRate: 128 + (day.dayOfWeek % 5) * 4,
-          maxHeartRate: 162 + (day.dayOfWeek % 4) * 3, averageRpe,
+          completedAt: new Date(
+            `${day.date}T${String(17 + Math.floor((30 + durationMinutes) / 60)).padStart(2, '0')}:${String((30 + durationMinutes) % 60).padStart(2, '0')}:00Z`,
+          ),
+          durationSeconds: durationMinutes * 60,
+          volumeGrams: volume,
+          calories: Math.round(durationMinutes * 8.4),
+          averageHeartRate: 128 + (day.dayOfWeek % 5) * 4,
+          maxHeartRate: 162 + (day.dayOfWeek % 4) * 3,
+          averageRpe,
           sessionLoad: sessionLoad(durationMinutes, averageRpe),
-          difficultyFeedback: averageRpe >= 9 ? 'too-hard' : averageRpe <= 6 ? 'too-easy' : 'perfect',
+          difficultyFeedback:
+            averageRpe >= 9 ? 'too-hard' : averageRpe <= 6 ? 'too-easy' : 'perfect',
           muscleGroups: [...muscleGroups],
         });
       }
@@ -493,7 +731,10 @@ export async function seedDatabase(
 
     for (const [exerciseId, loadGrams] of workingLoads) {
       loadRows.push({
-        id: nextId('exercise'), userId, exerciseId, workingLoadGrams: loadGrams,
+        id: nextId('exercise'),
+        userId,
+        exerciseId,
+        workingLoadGrams: loadGrams,
         bestLoadGrams: bestLoads.get(exerciseId) ?? 0,
         bestEstimatedOneRepMax: bestOneRepMax.get(exerciseId) ?? 0,
       });
@@ -514,18 +755,29 @@ export async function seedDatabase(
         { sleepMinutes: 450, hrvMs: 62, restingHeartRate: 58 },
       );
       metricRows.push({
-        id: nextId('event'), userId, date, sleepMinutes, hrvMs, restingHeartRate,
-        steps: 6200 + ((offset * 311) % 5400), waterMl: 1800 + ((offset * 97) % 1400),
-        soreness, stress, readinessScore: readiness.score,
+        id: nextId('event'),
+        userId,
+        date,
+        sleepMinutes,
+        hrvMs,
+        restingHeartRate,
+        steps: 6200 + ((offset * 311) % 5400),
+        waterMl: 1800 + ((offset * 97) % 1400),
+        soreness,
+        stress,
+        readinessScore: readiness.score,
         recoveryScore: computeRecoveryScore(readiness.score, 1, 2, 78),
         source: member.tier === 'forge' ? 'manual' : 'wearable',
       });
 
       if (offset % 7 === 0) {
         measurementRows.push({
-          id: nextId('event'), userId, date,
+          id: nextId('event'),
+          userId,
+          date,
           // A believable trend with real week-to-week noise, not a straight line.
-          weightGrams: member.weightKg * 1000 + (offset - metricDays / 2) * 40 + ((offset * 53) % 700) - 350,
+          weightGrams:
+            member.weightKg * 1000 + (offset - metricDays / 2) * 40 + ((offset * 53) % 700) - 350,
           bodyFatPercent: 18 + ((offset * 3) % 4),
         });
       }
@@ -534,25 +786,42 @@ export async function seedDatabase(
     // ---- nutrition: a planned and logged week
     const weekStart = startOfWeek(today);
     const dietRecipes = RECIPES.filter((r) =>
-      member.diet === 'balanced' ? true : r.tags.includes(member.diet) || r.tags.includes('high-protein'),
+      member.diet === 'balanced'
+        ? true
+        : r.tags.includes(member.diet) || r.tags.includes('high-protein'),
     );
     const pool = dietRecipes.length >= 4 ? dietRecipes : RECIPES;
     for (let dayOffset = 0; dayOffset < 7; dayOffset += 1) {
       const date = addDays(weekStart, dayOffset);
       MEAL_SLOTS.forEach((slot, slotIndex) => {
         const bySlot = pool.filter((r) => r.slot === slot);
-        const chosen = (bySlot.length > 0 ? bySlot : pool)[(dayOffset + slotIndex + memberIndex) % (bySlot.length || pool.length)]!;
+        const chosen = (bySlot.length > 0 ? bySlot : pool)[
+          (dayOffset + slotIndex + memberIndex) % (bySlot.length || pool.length)
+        ]!;
         const recipeId = recipeIdBySlug.get(chosen.slug)!;
         mealPlanRows.push({
-          id: nextId('meal'), userId, date, slot, recipeId,
+          id: nextId('meal'),
+          userId,
+          date,
+          slot,
+          recipeId,
           status: date < today ? 'logged' : 'planned',
         });
         if (date < today) {
           mealLogRows.push({
-            id: nextId('mealLog'), userId, date, slot, name: chosen.name, recipeId,
-            calories: chosen.calories, proteinGrams: chosen.protein,
-            carbGrams: chosen.carbs, fatGrams: chosen.fat,
-            loggedAt: new Date(`${date}T${slot === 'breakfast' ? '07' : slot === 'lunch' ? '12' : slot === 'snack' ? '16' : '19'}:20:00Z`),
+            id: nextId('mealLog'),
+            userId,
+            date,
+            slot,
+            name: chosen.name,
+            recipeId,
+            calories: chosen.calories,
+            proteinGrams: chosen.protein,
+            carbGrams: chosen.carbs,
+            fatGrams: chosen.fat,
+            loggedAt: new Date(
+              `${date}T${slot === 'breakfast' ? '07' : slot === 'lunch' ? '12' : slot === 'snack' ? '16' : '19'}:20:00Z`,
+            ),
           });
         }
       });
@@ -562,16 +831,25 @@ export async function seedDatabase(
       .filter((entry) => entry.userId === userId)
       .map((entry) => RECIPES.find((r) => recipeIdBySlug.get(r.slug) === entry.recipeId))
       .filter((r): r is (typeof RECIPES)[number] => r !== undefined);
-    for (const item of buildShoppingList(weekRecipes.map((r) => ({ ingredients: r.ingredients, servings: r.servings })), 1)) {
+    for (const item of buildShoppingList(
+      weekRecipes.map((r) => ({ ingredients: r.ingredients, servings: r.servings })),
+      1,
+    )) {
       shoppingRows.push({
-        id: nextId('meal'), userId, weekStart, name: item.name,
-        quantityCenti: Math.round(item.quantity * 100), unit: item.unit,
-        section: item.section, recipeCount: item.recipeCount,
+        id: nextId('meal'),
+        userId,
+        weekStart,
+        name: item.name,
+        quantityCenti: Math.round(item.quantity * 100),
+        unit: item.unit,
+        section: item.section,
+        recipeCount: item.recipeCount,
         checked: item.section === 'pantry' && item.name.length % 3 === 0,
       });
     }
     favouriteRows.push({
-      id: nextId('meal'), userId,
+      id: nextId('meal'),
+      userId,
       recipeId: recipeIdBySlug.get(pool[memberIndex % pool.length]!.slug)!,
     });
 
@@ -579,18 +857,35 @@ export async function seedDatabase(
     for (let offset = 21; offset >= 0; offset -= 3) {
       const session = RECOVERY_SESSIONS[(offset + memberIndex) % RECOVERY_SESSIONS.length]!;
       recoveryLogRows.push({
-        id: nextId('workout'), userId,
+        id: nextId('workout'),
+        userId,
         recoverySessionId: recoveryIdBySlug.get(session.slug)!,
-        date: addDays(today, -offset), minutes: session.minutes,
+        date: addDays(today, -offset),
+        minutes: session.minutes,
       });
     }
 
-    const providers = ['apple-health', 'apple-watch', 'garmin', 'whoop', 'fitbit', 'google-health-connect', 'oura', 'strava'];
+    const providers = [
+      'apple-health',
+      'apple-watch',
+      'garmin',
+      'whoop',
+      'fitbit',
+      'google-health-connect',
+      'oura',
+      'strava',
+    ];
     providers.forEach((provider, providerIndex) => {
       const connected = member.tier !== 'forge' && providerIndex < 2 + (memberIndex % 2);
       deviceRows.push({
-        id: nextId('device'), userId, provider,
-        status: connected ? (providerIndex === 1 && isDemo ? 'syncing' : 'connected') : 'not-connected',
+        id: nextId('device'),
+        userId,
+        provider,
+        status: connected
+          ? providerIndex === 1 && isDemo
+            ? 'syncing'
+            : 'connected'
+          : 'not-connected',
         permissions: connected ? ['workouts', 'heart-rate', 'sleep', 'steps'] : [],
         lastSyncedAt: connected ? new Date(`${today}T06:15:00Z`) : null,
       });
@@ -598,13 +893,19 @@ export async function seedDatabase(
 
     notificationRows.push(
       {
-        id: nextId('notification'), userId, kind: 'plan',
-        title: 'This week is live', body: `Week ${weeksElapsed + 1} of ${program.name} is ready. Three sessions and a mobility day.`,
+        id: nextId('notification'),
+        userId,
+        kind: 'plan',
+        title: 'This week is live',
+        body: `Week ${weeksElapsed + 1} of ${program.name} is ready. Three sessions and a mobility day.`,
         href: '/app/plan',
       },
       {
-        id: nextId('notification'), userId, kind: 'progress',
-        title: 'New personal record', body: 'You added 5kg to your working squat this week.',
+        id: nextId('notification'),
+        userId,
+        kind: 'progress',
+        title: 'New personal record',
+        body: 'You added 5kg to your working squat this week.',
         href: '/app/progress',
         readAt: new Date(`${addDays(today, -1)}T20:00:00Z`),
       },
@@ -614,8 +915,12 @@ export async function seedDatabase(
     CHALLENGES.forEach((challenge, challengeIndex) => {
       if ((memberIndex + challengeIndex) % 3 === 0) {
         participantRows.push({
-          id: nextId('challenge'), challengeSlug: challenge.slug, userId,
-          value: Math.round(challenge.target * (0.35 + ((memberIndex * 13 + challengeIndex * 7) % 55) / 100)),
+          id: nextId('challenge'),
+          challengeSlug: challenge.slug,
+          userId,
+          value: Math.round(
+            challenge.target * (0.35 + ((memberIndex * 13 + challengeIndex * 7) % 55) / 100),
+          ),
           startedOn: addDays(today, -Math.min(challenge.durationDays - 1, 12)),
           visible: memberIndex !== 6,
         });
@@ -627,7 +932,10 @@ export async function seedDatabase(
       const coachId = coachIdBySlug.get(member.coachSlug)!;
       const coachUserId = coachUserIdBySlug.get(member.coachSlug)!;
       coachClientRows.push({
-        id: nextId('coach'), coachId, memberId: userId, status: 'active',
+        id: nextId('coach'),
+        coachId,
+        memberId: userId,
+        status: 'active',
         startedOn: addDays(today, -weeksElapsed * 7),
       });
 
@@ -639,61 +947,149 @@ export async function seedDatabase(
           nutritionAdherence: 3 + ((week * 3) % 3),
           trainingAdherence: 4 + (week % 2),
           weightKg: member.weightKg,
-          painNotes: week === 2 && isDemo ? 'Left shoulder feels tight at the bottom of the bench press. Not painful, just tight.' : undefined,
-          questionsForCoach: week === 1 && isDemo ? 'Should I keep pushing the squat or hold at 100kg for another week?' : undefined,
+          painNotes:
+            week === 2 && isDemo
+              ? 'Left shoulder feels tight at the bottom of the bench press. Not painful, just tight.'
+              : undefined,
+          questionsForCoach:
+            week === 1 && isDemo
+              ? 'Should I keep pushing the squat or hold at 100kg for another week?'
+              : undefined,
         };
         const scored = scoreCheckIn(submission);
         checkInRows.push({
-          id: nextId('checkIn'), memberId: userId, coachId,
+          id: nextId('checkIn'),
+          memberId: userId,
+          coachId,
           weekStart: startOfWeek(addDays(today, -week * 7)),
-          energy: submission.energy, sleepQuality: submission.sleepQuality, stress: submission.stress,
-          nutritionAdherence: submission.nutritionAdherence, trainingAdherence: submission.trainingAdherence,
-          weightGrams: member.weightKg * 1000, painNotes: submission.painNotes ?? null,
+          energy: submission.energy,
+          sleepQuality: submission.sleepQuality,
+          stress: submission.stress,
+          nutritionAdherence: submission.nutritionAdherence,
+          trainingAdherence: submission.trainingAdherence,
+          weightGrams: member.weightKg * 1000,
+          painNotes: submission.painNotes ?? null,
           questions: submission.questionsForCoach ?? null,
           progressPhotoCount: week % 2 === 0 ? 2 : 0,
-          score: scored.overall, band: scored.band, flags: scored.flags,
-          coachResponse: week > 1
-            ? 'Good week. Holding volume where it is and adding the third set on the row from Monday — your bar speed on the top set says there is room.'
-            : null,
-          respondedAt: week > 1 ? new Date(`${startOfWeek(addDays(today, -week * 7 + 1))}T10:00:00Z`) : null,
+          score: scored.overall,
+          band: scored.band,
+          flags: scored.flags,
+          coachResponse:
+            week > 1
+              ? 'Good week. Holding volume where it is and adding the third set on the row from Monday — your bar speed on the top set says there is room.'
+              : null,
+          respondedAt:
+            week > 1 ? new Date(`${startOfWeek(addDays(today, -week * 7 + 1))}T10:00:00Z`) : null,
           submittedAt: new Date(`${startOfWeek(addDays(today, -week * 7))}T08:00:00Z`),
         });
       }
 
       const threadId = nextId('thread');
       threadRows.push({
-        id: threadId, memberId: userId, coachId, subject: 'Coaching',
+        id: threadId,
+        memberId: userId,
+        coachId,
+        subject: 'Coaching',
         lastMessageAt: new Date(`${addDays(today, -1)}T18:42:00Z`),
       });
 
-      const conversation: { sender: string; kind: string; body: string; offset: number; mediaKey?: string; exerciseId?: string; duration?: number }[] = [
-        { sender: coachUserId, kind: 'text', body: `Welcome aboard, ${member.firstName}. I have read your assessment — before we touch load, I want to see your squat and bench from the side. Film one working set of each this week.`, offset: weeksElapsed * 7 },
-        { sender: userId, kind: 'text', body: 'Will do. Squat is Monday, bench Tuesday.', offset: weeksElapsed * 7 - 1 },
-        { sender: userId, kind: 'form-check', body: 'Squat, top set of 8 at 92.5kg.', offset: weeksElapsed * 7 - 3, mediaKey: 'form-check-squat', exerciseId: 'barbell-back-squat', duration: 24 },
-        { sender: coachUserId, kind: 'text', body: 'That is a strong set. Two notes on the video — see the timestamps. Nothing structural, both are bracing.', offset: weeksElapsed * 7 - 3 },
-        { sender: userId, kind: 'voice', body: null as unknown as string, offset: 4, mediaKey: 'voice-note-1', duration: 38 },
-        { sender: coachUserId, kind: 'text', body: 'Understood — if the week is that busy, run Monday and Thursday only and drop the Wednesday conditioning. Two good sessions beat four rushed ones.', offset: 4 },
-        { sender: userId, kind: 'text', body: 'That helps. Squat felt heavy today but it moved.', offset: 1 },
-        { sender: coachUserId, kind: 'text', body: 'Heavy and moving is exactly where week five should feel. Hold 100kg one more session, then we step to 102.5kg.', offset: 1 },
+      const conversation: {
+        sender: string;
+        kind: string;
+        body: string;
+        offset: number;
+        mediaKey?: string;
+        exerciseId?: string;
+        duration?: number;
+      }[] = [
+        {
+          sender: coachUserId,
+          kind: 'text',
+          body: `Welcome aboard, ${member.firstName}. I have read your assessment — before we touch load, I want to see your squat and bench from the side. Film one working set of each this week.`,
+          offset: weeksElapsed * 7,
+        },
+        {
+          sender: userId,
+          kind: 'text',
+          body: 'Will do. Squat is Monday, bench Tuesday.',
+          offset: weeksElapsed * 7 - 1,
+        },
+        {
+          sender: userId,
+          kind: 'form-check',
+          body: 'Squat, top set of 8 at 92.5kg.',
+          offset: weeksElapsed * 7 - 3,
+          mediaKey: 'form-check-squat',
+          exerciseId: 'barbell-back-squat',
+          duration: 24,
+        },
+        {
+          sender: coachUserId,
+          kind: 'text',
+          body: 'That is a strong set. Two notes on the video — see the timestamps. Nothing structural, both are bracing.',
+          offset: weeksElapsed * 7 - 3,
+        },
+        {
+          sender: userId,
+          kind: 'voice',
+          body: null as unknown as string,
+          offset: 4,
+          mediaKey: 'voice-note-1',
+          duration: 38,
+        },
+        {
+          sender: coachUserId,
+          kind: 'text',
+          body: 'Understood — if the week is that busy, run Monday and Thursday only and drop the Wednesday conditioning. Two good sessions beat four rushed ones.',
+          offset: 4,
+        },
+        {
+          sender: userId,
+          kind: 'text',
+          body: 'That helps. Squat felt heavy today but it moved.',
+          offset: 1,
+        },
+        {
+          sender: coachUserId,
+          kind: 'text',
+          body: 'Heavy and moving is exactly where week five should feel. Hold 100kg one more session, then we step to 102.5kg.',
+          offset: 1,
+        },
       ];
 
       conversation.forEach((entry, entryIndex) => {
         const messageId = nextId('message');
         messageRows.push({
-          id: messageId, threadId, senderId: entry.sender, kind: entry.kind,
-          body: entry.body ?? null, mediaKey: entry.mediaKey ?? null,
-          durationSeconds: entry.duration ?? null, exerciseId: entry.exerciseId ?? null,
-          readAt: entryIndex < conversation.length - 1 ? new Date(`${addDays(today, -entry.offset)}T19:00:00Z`) : null,
-          createdAt: new Date(`${addDays(today, -entry.offset)}T18:${String(30 + entryIndex).padStart(2, '0')}:00Z`),
+          id: messageId,
+          threadId,
+          senderId: entry.sender,
+          kind: entry.kind,
+          body: entry.body ?? null,
+          mediaKey: entry.mediaKey ?? null,
+          durationSeconds: entry.duration ?? null,
+          exerciseId: entry.exerciseId ?? null,
+          readAt:
+            entryIndex < conversation.length - 1
+              ? new Date(`${addDays(today, -entry.offset)}T19:00:00Z`)
+              : null,
+          createdAt: new Date(
+            `${addDays(today, -entry.offset)}T18:${String(30 + entryIndex).padStart(2, '0')}:00Z`,
+          ),
         });
         if (entry.kind === 'form-check') {
           formCheckRows.push(
             {
-              id: nextId('comment'), messageId, authorId: coachUserId, timestampSeconds: 7,
+              id: nextId('comment'),
+              messageId,
+              authorId: coachUserId,
+              timestampSeconds: 7,
               body: 'Your knees are collapsing slightly inward here. Think about screwing your feet into the floor before you descend.',
             },
             {
-              id: nextId('comment'), messageId, authorId: coachUserId, timestampSeconds: 14,
+              id: nextId('comment'),
+              messageId,
+              authorId: coachUserId,
+              timestampSeconds: 14,
               body: 'Brace is released a fraction early on the way up. Hold the air until the bar is past the sticking point.',
             },
           );
@@ -701,20 +1097,30 @@ export async function seedDatabase(
       });
 
       coachNoteRows.push({
-        id: nextId('coach'), coachId, memberId: userId,
+        id: nextId('coach'),
+        coachId,
+        memberId: userId,
         body: 'Responds well to being given a reason. Do not just give the number — give the why and adherence goes up. Watch the left shoulder on pressing volume.',
         visibility: 'private',
       });
 
       bookingRows.push({
-        id: nextId('booking'), coachId, memberId: userId, kind: '60-minute-coaching',
-        startsAt: new Date(`${addDays(today, 2 + memberIndex)}T18:00:00Z`), durationMinutes: 60,
-        status: 'confirmed', priceCents: 0,
+        id: nextId('booking'),
+        coachId,
+        memberId: userId,
+        kind: '60-minute-coaching',
+        startsAt: new Date(`${addDays(today, 2 + memberIndex)}T18:00:00Z`),
+        durationMinutes: 60,
+        status: 'confirmed',
+        priceCents: 0,
         agenda: 'Review block one, retest the main lifts and set targets for the Build phase.',
       });
 
       reviewRows.push({
-        id: nextId('coach'), coachId, memberId: userId, rating: 5,
+        id: nextId('coach'),
+        coachId,
+        memberId: userId,
+        rating: 5,
         body: 'Actually reads the check-ins. Adjusted my week twice when work got in the way instead of telling me to try harder.',
       });
     }
@@ -722,7 +1128,9 @@ export async function seedDatabase(
 
   // Assessments, stored so an anonymous funnel can be resumed after signup.
   const assessmentRows: (typeof s.assessments.$inferInsert)[] = MEMBERS.map((member, index) => ({
-    id: nextId('profile'), userId: memberIds[index]!, anonymousKey: null,
+    id: nextId('profile'),
+    userId: memberIds[index]!,
+    anonymousKey: null,
     answers: JSON.stringify({ primaryGoal: member.goal, experience: member.experience }),
     profile: JSON.stringify({ recommendedProgramSlug: member.goal }),
     completedAt: new Date(`${addDays(today, -30)}T09:00:00Z`),
@@ -767,44 +1175,93 @@ export async function seedDatabase(
   const likeRows: (typeof s.postLikes.$inferInsert)[] = [];
   const followRows: (typeof s.follows.$inferInsert)[] = [];
 
-  const FEED: { author: number; group: string; kind: string; body: string; offsetHours: number; likes: number; comments: string[] }[] = [
+  const FEED: {
+    author: number;
+    group: string;
+    kind: string;
+    body: string;
+    offsetHours: number;
+    likes: number;
+    comments: string[];
+  }[] = [
     {
-      author: 1, group: 'strength', kind: 'personal-record', offsetHours: 3, likes: 84,
+      author: 1,
+      group: 'strength',
+      kind: 'personal-record',
+      offsetHours: 3,
+      likes: 84,
       body: 'Three strict pull-ups. Sixteen weeks ago I could not hold a dead hang for ten seconds. The band work I kept wanting to skip is the reason.',
-      comments: ['This is the post I needed today, thank you.', 'Congratulations — the accessory work always looks pointless until it is not.'],
+      comments: [
+        'This is the post I needed today, thank you.',
+        'Congratulations — the accessory work always looks pointless until it is not.',
+      ],
     },
     {
-      author: 4, group: 'hybrid-athletes', kind: 'workout', offsetHours: 7, likes: 46,
+      author: 4,
+      group: 'hybrid-athletes',
+      kind: 'workout',
+      offsetHours: 7,
+      likes: 46,
       body: '140kg × 3 this morning and a 22:48 5K on Saturday. Two years of doing both badly on the same day, fixed by moving the run 48 hours.',
       comments: ['Sequencing is genuinely the whole thing.'],
     },
     {
-      author: 2, group: 'running', kind: 'update', offsetHours: 12, likes: 61,
+      author: 2,
+      group: 'running',
+      kind: 'update',
+      offsetHours: 12,
+      likes: 61,
       body: 'Week 8 time trial done. 3:41 faster than week 1 and my knee held up for the whole block. Booking the next one.',
-      comments: ['Huge improvement over eight weeks.', 'What did the strength day look like? Mine is the part I struggle to keep in.'],
+      comments: [
+        'Huge improvement over eight weeks.',
+        'What did the strength day look like? Mine is the part I struggle to keep in.',
+      ],
     },
     {
-      author: 6, group: 'beginners', kind: 'question', offsetHours: 20, likes: 18,
+      author: 6,
+      group: 'beginners',
+      kind: 'question',
+      offsetHours: 20,
+      likes: 18,
       body: 'Six weeks in and my sessions still feel awkward. Is that normal or am I doing something wrong?',
-      comments: ['Completely normal. Movement patterns take longer than fitness does.', 'Week six was my worst week. Week ten felt like a different body.'],
+      comments: [
+        'Completely normal. Movement patterns take longer than fitness does.',
+        'Week six was my worst week. Week ten felt like a different body.',
+      ],
     },
     {
-      author: 5, group: 'fat-loss', kind: 'update', offsetHours: 28, likes: 52,
+      author: 5,
+      group: 'fat-loss',
+      kind: 'update',
+      offsetHours: 28,
+      likes: 52,
       body: 'Kept my deadlift at 110kg through twelve weeks of a deficit. That was the actual goal and I nearly missed it chasing the scale.',
       comments: ['Holding strength in a deficit is the hard part. Well done.'],
     },
     {
-      author: 3, group: 'mobility', kind: 'update', offsetHours: 36, likes: 27,
+      author: 3,
+      group: 'mobility',
+      kind: 'update',
+      offsetHours: 36,
+      likes: 27,
       body: 'Twenty-one days of the ten-minute mobility session. My squat depth is genuinely different and I have stopped waking up stiff.',
       comments: ['Adding this to my mornings.'],
     },
     {
-      author: 7, group: 'nutrition', kind: 'update', offsetHours: 44, likes: 39,
+      author: 7,
+      group: 'nutrition',
+      kind: 'update',
+      offsetHours: 44,
+      likes: 39,
       body: 'Batch-cooked the turkey chilli on Sunday. Six portions, forty minutes, and I have not thought about lunch since.',
       comments: ['It genuinely is better on day two.', 'Doubling this next week.'],
     },
     {
-      author: 0, group: 'strength', kind: 'workout', offsetHours: 2, likes: 31,
+      author: 0,
+      group: 'strength',
+      kind: 'workout',
+      offsetHours: 2,
+      likes: 31,
       body: 'Week 5, Upper Body Strength. 100kg on the bench for a top set of 8 at RPE 8. Maya was right about holding the load one more session.',
       comments: ['Clean set. What is the plan for week six?'],
     },
@@ -814,13 +1271,19 @@ export async function seedDatabase(
     const postId = nextId('post');
     const authorId = memberIds[entry.author % memberIds.length]!;
     postRows.push({
-      id: postId, authorId, groupSlug: entry.group, kind: entry.kind, body: entry.body,
-      likeCount: entry.likes, commentCount: entry.comments.length,
+      id: postId,
+      authorId,
+      groupSlug: entry.group,
+      kind: entry.kind,
+      body: entry.body,
+      likeCount: entry.likes,
+      commentCount: entry.comments.length,
       createdAt: new Date(Date.parse(`${today}T09:00:00Z`) - entry.offsetHours * 3_600_000),
     });
     entry.comments.forEach((body, commentIndex) => {
       commentRows.push({
-        id: nextId('comment'), postId,
+        id: nextId('comment'),
+        postId,
         authorId: memberIds[(entry.author + commentIndex + 1) % memberIds.length]!,
         body,
         createdAt: new Date(Date.parse(`${today}T09:00:00Z`) - (entry.offsetHours - 1) * 3_600_000),
@@ -851,16 +1314,28 @@ export async function seedDatabase(
   // Product reviews, written by real seeded members so the names resolve.
   const productReviewRows: (typeof s.productReviews.$inferInsert)[] = [];
   const REVIEW_COPY = [
-    { title: 'Replaced my entire rack of dumbbells', body: 'The 2.5kg increment is the thing that matters — my plan asks for 2.5kg jumps and now I can actually make them.' },
-    { title: 'Solid, quiet, quick to change', body: 'Six weeks of daily use. The dial has not slipped once and the tray keeps the spare room usable.' },
-    { title: 'Worth the money', body: 'I bought the cheap version first and returned it. This one does not rattle at the top of a press.' },
+    {
+      title: 'Replaced my entire rack of dumbbells',
+      body: 'The 2.5kg increment is the thing that matters — my plan asks for 2.5kg jumps and now I can actually make them.',
+    },
+    {
+      title: 'Solid, quiet, quick to change',
+      body: 'Six weeks of daily use. The dial has not slipped once and the tray keeps the spare room usable.',
+    },
+    {
+      title: 'Worth the money',
+      body: 'I bought the cheap version first and returned it. This one does not rattle at the top of a press.',
+    },
   ];
   PRODUCTS.slice(0, 6).forEach((product, productIndex) => {
     REVIEW_COPY.forEach((review, reviewIndex) => {
       productReviewRows.push({
-        id: nextId('product'), productId: productIdBySlug.get(product.slug)!,
+        id: nextId('product'),
+        productId: productIdBySlug.get(product.slug)!,
         userId: memberIds[(productIndex + reviewIndex) % memberIds.length]!,
-        rating: 5 - (reviewIndex % 2), title: review.title, body: review.body,
+        rating: 5 - (reviewIndex % 2),
+        title: review.title,
+        body: review.body,
       });
     });
   });
@@ -872,7 +1347,12 @@ export async function seedDatabase(
     consistency,
     participantRows
       .filter((row) => row.challengeSlug === consistency.slug)
-      .map((row) => ({ userId: row.userId, displayName: 'Member', value: row.value ?? 0, visible: row.visible ?? true })),
+      .map((row) => ({
+        userId: row.userId,
+        displayName: 'Member',
+        value: row.value ?? 0,
+        visible: row.visible ?? true,
+      })),
   );
 
   return {

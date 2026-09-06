@@ -40,7 +40,7 @@ export function PrivacyForm({ settings, zoneCount }: { settings: Settings; zoneC
       const result = await updatePrivacy(patch);
       if (result.error) {
         setError(result.error);
-        setState(state);            // put the control back where it was
+        setState(state); // put the control back where it was
       } else {
         setSaved(true);
       }
@@ -56,7 +56,10 @@ export function PrivacyForm({ settings, zoneCount }: { settings: Settings; zoneC
       </p>
 
       {error && (
-        <p role="alert" className="rounded-control border border-state-bad/40 bg-state-bad/10 px-4 py-3 text-secondary text-state-bad">
+        <p
+          role="alert"
+          className="rounded-control border border-state-bad/40 bg-state-bad/10 px-4 py-3 text-secondary text-state-bad"
+        >
           {error}
         </p>
       )}
@@ -100,7 +103,11 @@ export function PrivacyForm({ settings, zoneCount }: { settings: Settings; zoneC
                 How much to trim
               </label>
               <input
-                id="radius" type="range" min={0} max={1000} step={50}
+                id="radius"
+                type="range"
+                min={0}
+                max={1000}
+                step={50}
                 value={state.hideRadiusM}
                 onChange={(e) => setState({ ...state, hideRadiusM: Number(e.target.value) })}
                 onMouseUp={() => commit({ hideRadiusM: state.hideRadiusM })}
@@ -113,9 +120,9 @@ export function PrivacyForm({ settings, zoneCount }: { settings: Settings; zoneC
             </div>
           )}
           <p className="text-secondary muted">
-            Private zones: <span className="text-bone-100">{zoneCount}</span>. Anything
-            inside a zone is removed from shared maps wherever it falls in the activity,
-            not just at the ends.
+            Private zones: <span className="text-bone-100">{zoneCount}</span>. Anything inside a
+            zone is removed from shared maps wherever it falls in the activity, not just at the
+            ends.
           </p>
         </div>
       </Card>
@@ -138,18 +145,30 @@ export function PrivacyForm({ settings, zoneCount }: { settings: Settings; zoneC
           Each of these is a separate decision. None of them is on unless you switch it on.
         </p>
         <div className="mt-5 space-y-5">
-          <Toggle label="Share my training with a coach"
+          <Toggle
+            label="Share my training with a coach"
             hint="Lets a coach you are connected to see your activities and plan."
-            checked={state.coachSharing} onChange={(v) => commit({ coachSharing: v })} />
-          <Toggle label="Contribute to aggregated route popularity"
+            checked={state.coachSharing}
+            onChange={(v) => commit({ coachSharing: v })}
+          />
+          <Toggle
+            label="Contribute to aggregated route popularity"
             hint="Not used yet. Turning it on now changes nothing until the feature ships."
-            checked={state.aggregateContribution} onChange={(v) => commit({ aggregateContribution: v })} />
-          <Toggle label="Product analytics"
+            checked={state.aggregateContribution}
+            onChange={(v) => commit({ aggregateContribution: v })}
+          />
+          <Toggle
+            label="Product analytics"
             hint="Which screens get used. Never your location or your health data."
-            checked={state.analyticsConsent} onChange={(v) => commit({ analyticsConsent: v })} />
-          <Toggle label="Use my training to improve FORGE's suggestions"
+            checked={state.analyticsConsent}
+            onChange={(v) => commit({ analyticsConsent: v })}
+          />
+          <Toggle
+            label="Use my training to improve FORGE's suggestions"
             hint="Not used yet. Off by default."
-            checked={state.aiConsent} onChange={(v) => commit({ aiConsent: v })} />
+            checked={state.aiConsent}
+            onChange={(v) => commit({ aiConsent: v })}
+          />
         </div>
       </Card>
     </div>
@@ -157,8 +176,16 @@ export function PrivacyForm({ settings, zoneCount }: { settings: Settings; zoneC
 }
 
 function Choice({
-  legend, hint, value, onChange,
-}: { legend: string; hint: string; value: Visibility; onChange: (v: Visibility) => void }) {
+  legend,
+  hint,
+  value,
+  onChange,
+}: {
+  legend: string;
+  hint: string;
+  value: Visibility;
+  onChange: (v: Visibility) => void;
+}) {
   return (
     <fieldset>
       <legend className="text-secondary font-medium text-bone-200">{legend}</legend>
@@ -186,8 +213,16 @@ function Choice({
 }
 
 function Toggle({
-  label, hint, checked, onChange,
-}: { label: string; hint: string; checked: boolean; onChange: (v: boolean) => void }) {
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <div className="flex items-start justify-between gap-5">
       <div className="min-w-0">

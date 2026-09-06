@@ -26,7 +26,9 @@ export default async function AppProgramsPage() {
         title="WHAT DO YOU WANT TO TRAIN?"
         lead="Starting a new programme archives your current plan — your history, records and progress stay exactly where they are."
       />
-      <div className="mt-8"><StartProgramNotice /></div>
+      <div className="mt-8">
+        <StartProgramNotice />
+      </div>
       <div className="mt-10">
         <ProgramFilters programs={programs} facets={facets} />
       </div>

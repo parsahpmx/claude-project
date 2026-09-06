@@ -45,7 +45,11 @@ export function MarketingFooter() {
       <div className="shell py-16 sm:py-20">
         <div className="grid gap-12 lg:grid-cols-[1.4fr_2fr]">
           <div>
-            <p className="display text-display-sm">BUILD YOUR<br />STRONGEST SELF.</p>
+            <p className="display text-display-sm">
+              BUILD YOUR
+              <br />
+              STRONGEST SELF.
+            </p>
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-bone-200/60">
               Training, nutrition, recovery and real coaching — personalised around you.
             </p>
@@ -81,11 +85,13 @@ export function MarketingFooter() {
         <div className="rule my-12" />
 
         <div className="flex flex-col gap-4 text-xs text-muted md:flex-row md:items-center md:justify-between">
-          <p>© 2026 FORGE. A demonstration product. Not affiliated with any existing fitness company.</p>
+          <p>
+            © 2026 FORGE. A demonstration product. Not affiliated with any existing fitness company.
+          </p>
           <p className="max-w-xl">
-            FORGE is not a medical service. Training, nutrition and recovery guidance is general in nature —
-            speak to a qualified healthcare professional before starting any programme, and about any injury or
-            medical condition.
+            FORGE is not a medical service. Training, nutrition and recovery guidance is general in
+            nature — speak to a qualified healthcare professional before starting any programme, and
+            about any injury or medical condition.
           </p>
         </div>
       </div>

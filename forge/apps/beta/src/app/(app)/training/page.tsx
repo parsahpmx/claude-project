@@ -18,12 +18,18 @@ export default async function TrainingPage() {
   const weekStart = startOfWeek(today);
 
   const [{ data: plan }, days, { data: programs }] = await Promise.all([
-    supabase.from('plans').select('id, name, program_slug, start_date, weeks, status')
-      .eq('status', 'active').maybeSingle(),
+    supabase
+      .from('plans')
+      .select('id, name, program_slug, start_date, weeks, status')
+      .eq('status', 'active')
+      .maybeSingle(),
     getUpcomingPlanDays(weekStart, addDays(weekStart, 13)),
-    supabase.from('programs')
+    supabase
+      .from('programs')
       .select('slug, name, tagline, sport, weeks, sessions_per_week, difficulty')
-      .eq('published', true).order('name').limit(12),
+      .eq('published', true)
+      .order('name')
+      .limit(12),
   ]);
 
   const thisWeek = days.filter((d) => d.date >= weekStart && d.date <= addDays(weekStart, 6));
@@ -38,7 +44,9 @@ export default async function TrainingPage() {
 
       {plan ? (
         <section aria-labelledby="plan-heading">
-          <h2 id="plan-heading" className="eyebrow mb-4">Current plan</h2>
+          <h2 id="plan-heading" className="eyebrow mb-4">
+            Current plan
+          </h2>
           <Card>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
@@ -47,7 +55,9 @@ export default async function TrainingPage() {
                   {plan.weeks} weeks from {formatDate(plan.start_date)}
                 </p>
               </div>
-              {adherence !== null && <Badge tone={adherence >= 70 ? 'good' : 'warn'}>{adherence}% this week</Badge>}
+              {adherence !== null && (
+                <Badge tone={adherence >= 70 ? 'good' : 'warn'}>{adherence}% this week</Badge>
+              )}
             </div>
           </Card>
 
@@ -86,8 +96,13 @@ export default async function TrainingPage() {
 
       <section aria-labelledby="catalogue-heading">
         <div className="mb-4 flex items-baseline justify-between gap-4">
-          <h2 id="catalogue-heading" className="eyebrow">Programmes</h2>
-          <Link href="/programs" className="text-secondary font-semibold text-signal hover:underline underline-offset-4">
+          <h2 id="catalogue-heading" className="eyebrow">
+            Programmes
+          </h2>
+          <Link
+            href="/programs"
+            className="text-secondary font-semibold text-signal hover:underline underline-offset-4"
+          >
             All programmes →
           </Link>
         </div>

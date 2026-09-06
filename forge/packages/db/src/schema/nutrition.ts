@@ -1,6 +1,15 @@
 import { sql } from 'drizzle-orm';
 import {
-  boolean, date, index, integer, pgTable, smallint, text, timestamp, uniqueIndex, varchar,
+  boolean,
+  date,
+  index,
+  integer,
+  pgTable,
+  smallint,
+  text,
+  timestamp,
+  uniqueIndex,
+  varchar,
 } from 'drizzle-orm/pg-core';
 import { id, timestamps } from './_shared.js';
 import { users } from './identity.js';
@@ -22,8 +31,14 @@ export const recipes = pgTable(
     cookMinutes: smallint('cook_minutes').notNull().default(0),
     difficulty: varchar('difficulty', { length: 16 }).notNull().default('easy'),
     servings: smallint('servings').notNull().default(1),
-    tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
-    instructions: text('instructions').array().notNull().default(sql`'{}'::text[]`),
+    tags: text('tags')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    instructions: text('instructions')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     imageKey: varchar('image_key', { length: 64 }).notNull(),
     ...timestamps,
   },
@@ -34,7 +49,9 @@ export const recipeIngredients = pgTable(
   'recipe_ingredients',
   {
     id: id().primaryKey(),
-    recipeId: id('recipe_id').notNull().references(() => recipes.id, { onDelete: 'cascade' }),
+    recipeId: id('recipe_id')
+      .notNull()
+      .references(() => recipes.id, { onDelete: 'cascade' }),
     name: varchar('name', { length: 120 }).notNull(),
     // Quantities are stored ×100 as integers, so 1.5 tbsp is 150 and no
     // shopping list ever shows "0.30000000000000004 kg".
@@ -47,7 +64,9 @@ export const recipeIngredients = pgTable(
 );
 
 export const nutritionTargets = pgTable('nutrition_targets', {
-  userId: id('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  userId: id('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
   calories: integer('calories').notNull(),
   proteinGrams: smallint('protein_grams').notNull(),
   carbGrams: smallint('carb_grams').notNull(),
@@ -61,21 +80,29 @@ export const mealPlanEntries = pgTable(
   'meal_plan_entries',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     date: date('date').notNull(),
     slot: varchar('slot', { length: 16 }).notNull(),
-    recipeId: id('recipe_id').notNull().references(() => recipes.id, { onDelete: 'cascade' }),
+    recipeId: id('recipe_id')
+      .notNull()
+      .references(() => recipes.id, { onDelete: 'cascade' }),
     status: varchar('status', { length: 16 }).notNull().default('planned'),
     ...timestamps,
   },
-  (table) => [uniqueIndex('meal_plan_user_date_slot_unique').on(table.userId, table.date, table.slot)],
+  (table) => [
+    uniqueIndex('meal_plan_user_date_slot_unique').on(table.userId, table.date, table.slot),
+  ],
 );
 
 export const mealLogs = pgTable(
   'meal_logs',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     date: date('date').notNull(),
     slot: varchar('slot', { length: 16 }).notNull(),
     name: varchar('name', { length: 140 }).notNull(),
@@ -84,7 +111,9 @@ export const mealLogs = pgTable(
     proteinGrams: smallint('protein_grams').notNull(),
     carbGrams: smallint('carb_grams').notNull(),
     fatGrams: smallint('fat_grams').notNull(),
-    loggedAt: timestamp('logged_at', { withTimezone: true }).notNull().default(sql`now()`),
+    loggedAt: timestamp('logged_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
   },
   (table) => [index('meal_logs_user_date_idx').on(table.userId, table.date)],
 );
@@ -93,9 +122,15 @@ export const recipeFavourites = pgTable(
   'recipe_favourites',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-    recipeId: id('recipe_id').notNull().references(() => recipes.id, { onDelete: 'cascade' }),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    recipeId: id('recipe_id')
+      .notNull()
+      .references(() => recipes.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
   },
   (table) => [uniqueIndex('recipe_favourites_unique').on(table.userId, table.recipeId)],
 );
@@ -104,7 +139,9 @@ export const shoppingListItems = pgTable(
   'shopping_list_items',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     weekStart: date('week_start').notNull(),
     name: varchar('name', { length: 120 }).notNull(),
     quantityCenti: integer('quantity_centi').notNull(),

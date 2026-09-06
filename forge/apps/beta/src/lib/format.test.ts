@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
-  formatNumber, formatDistance, formatDuration, formatPace, formatElevation,
-  formatDate, formatTime, formatLoadG, isoDate, addDays, startOfWeek,
+  formatNumber,
+  formatDistance,
+  formatDuration,
+  formatPace,
+  formatElevation,
+  formatDate,
+  formatTime,
+  formatLoadG,
+  isoDate,
+  addDays,
+  startOfWeek,
 } from './format';
 
 /**
@@ -63,13 +72,15 @@ describe('pace', () => {
 describe('dates', () => {
   it('formats without Intl and without the current year', () => {
     // A Sunday, deliberately: the weekday index must not be off by one.
-    expect(formatDate('2026-09-06T10:00:00.000Z', new Date('2026-01-01T00:00:00Z')))
-      .toBe('Sun 6 Sep');
+    expect(formatDate('2026-09-06T10:00:00.000Z', new Date('2026-01-01T00:00:00Z'))).toBe(
+      'Sun 6 Sep',
+    );
   });
 
   it('adds the year when it is not the current one', () => {
-    expect(formatDate('2025-03-04T10:00:00.000Z', new Date('2026-01-01T00:00:00Z')))
-      .toBe('Tue 4 Mar 2025');
+    expect(formatDate('2025-03-04T10:00:00.000Z', new Date('2026-01-01T00:00:00Z'))).toBe(
+      'Tue 4 Mar 2025',
+    );
   });
 
   it('returns a dash for an unparseable value rather than "Invalid Date"', () => {

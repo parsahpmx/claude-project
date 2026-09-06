@@ -11,7 +11,9 @@ export const dynamic = 'force-dynamic';
  */
 export default async function ActivitiesPage({
   searchParams,
-}: { searchParams: Promise<{ before?: string }> }) {
+}: {
+  searchParams: Promise<{ before?: string }>;
+}) {
   const { before } = await searchParams;
   const [profile, activities] = await Promise.all([
     getSessionProfile(),
@@ -26,7 +28,9 @@ export default async function ActivitiesPage({
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-page-title font-display text-bone-100">Activities</h1>
-          <p className="mt-2 text-secondary muted">Everything you have recorded, most recent first.</p>
+          <p className="mt-2 text-secondary muted">
+            Everything you have recorded, most recent first.
+          </p>
         </div>
         <ButtonLink href="/activities/new">Record an activity</ButtonLink>
       </header>
@@ -34,12 +38,20 @@ export default async function ActivitiesPage({
       {activities.length === 0 ? (
         <EmptyState
           title={before ? 'Nothing further back' : 'No activities yet'}
-          body={before
-            ? 'You have reached the end of your history.'
-            : 'Record your first session and it will appear here with its splits, map and records.'}
-          action={before
-            ? <ButtonLink href="/activities" variant="secondary">Back to the start</ButtonLink>
-            : <ButtonLink href="/activities/new">Record an activity</ButtonLink>}
+          body={
+            before
+              ? 'You have reached the end of your history.'
+              : 'Record your first session and it will appear here with its splits, map and records.'
+          }
+          action={
+            before ? (
+              <ButtonLink href="/activities" variant="secondary">
+                Back to the start
+              </ButtonLink>
+            ) : (
+              <ButtonLink href="/activities/new">Record an activity</ButtonLink>
+            )
+          }
         />
       ) : (
         <>
@@ -50,7 +62,10 @@ export default async function ActivitiesPage({
           </ul>
           {activities.length === 20 && last && (
             <div className="flex justify-center pt-2">
-              <ButtonLink href={`/activities?before=${encodeURIComponent(last.startedAt)}`} variant="secondary">
+              <ButtonLink
+                href={`/activities?before=${encodeURIComponent(last.startedAt)}`}
+                variant="secondary"
+              >
                 Load older activities
               </ButtonLink>
             </div>

@@ -10,9 +10,15 @@ export const dynamic = 'force-dynamic';
 export default async function CoachProgramsPage() {
   const [{ programs }, { exercises }] = await Promise.all([
     apiPublic<{ programs: Program[] }>('/v1/catalog/programs'),
-    apiPublic<{ exercises: { id: string; name: string; pattern: string; compound: boolean; requires: string[] }[] }>(
-      '/v1/catalog/exercises',
-    ),
+    apiPublic<{
+      exercises: {
+        id: string;
+        name: string;
+        pattern: string;
+        compound: boolean;
+        requires: string[];
+      }[];
+    }>('/v1/catalog/exercises'),
   ]);
 
   return (

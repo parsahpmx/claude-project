@@ -18,7 +18,11 @@ import type { Program } from '@/lib/types';
  */
 
 interface ExerciseOption {
-  id: string; name: string; pattern: string; compound: boolean; requires: string[];
+  id: string;
+  name: string;
+  pattern: string;
+  compound: boolean;
+  requires: string[];
 }
 
 interface Entry {
@@ -52,10 +56,7 @@ export function ProgramBuilder({
   const [dragging, setDragging] = useState<string | null>(null);
   const [selected, setSelected] = useState<{ day: string; key: string } | null>(null);
 
-  const patterns = useMemo(
-    () => ['all', ...new Set(exercises.map((e) => e.pattern))],
-    [exercises],
-  );
+  const patterns = useMemo(() => ['all', ...new Set(exercises.map((e) => e.pattern))], [exercises]);
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -87,14 +88,19 @@ export function ProgramBuilder({
   };
 
   const removeEntry = (day: string, key: string) => {
-    setWeek((current) => ({ ...current, [day]: (current[day] ?? []).filter((e) => e.key !== key) }));
+    setWeek((current) => ({
+      ...current,
+      [day]: (current[day] ?? []).filter((e) => e.key !== key),
+    }));
     if (selected?.key === key) setSelected(null);
   };
 
   const updateEntry = (day: string, key: string, patch: Partial<Entry>) => {
     setWeek((current) => ({
       ...current,
-      [day]: (current[day] ?? []).map((entry) => (entry.key === key ? { ...entry, ...patch } : entry)),
+      [day]: (current[day] ?? []).map((entry) =>
+        entry.key === key ? { ...entry, ...patch } : entry,
+      ),
     }));
   };
 
@@ -131,7 +137,9 @@ export function ProgramBuilder({
   };
 
   const totalEntries = Object.values(week).reduce((total, entries) => total + entries.length, 0);
-  const active = selected ? week[selected.day]?.find((e) => e.key === selected.key) ?? null : null;
+  const active = selected
+    ? (week[selected.day]?.find((e) => e.key === selected.key) ?? null)
+    : null;
 
   return (
     <div className="grid gap-6 xl:grid-cols-[260px_1fr_300px]">
@@ -141,7 +149,10 @@ export function ProgramBuilder({
           <h2 className="eyebrow mb-4">Start from a template</h2>
           <Select
             label="FORGE programme"
-            options={[{ value: '', label: 'Blank week' }, ...templates.map((t) => ({ value: t.slug, label: t.name }))]}
+            options={[
+              { value: '', label: 'Blank week' },
+              ...templates.map((t) => ({ value: t.slug, label: t.name })),
+            ]}
             onChange={(event) => loadTemplate(event.target.value)}
           />
         </Card>
@@ -149,16 +160,28 @@ export function ProgramBuilder({
         <Card padded={false}>
           <div className="space-y-4 p-5">
             <p className="eyebrow">Movement library</p>
-            <SearchInput value={search} onChange={setSearch} label="Search exercises" placeholder="Search" />
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              label="Search exercises"
+              placeholder="Search"
+            />
             <Select
               label="Pattern"
               value={pattern}
               onChange={(event) => setPattern(event.target.value)}
-              options={patterns.map((p) => ({ value: p, label: p === 'all' ? 'All patterns' : p.replace(/-/g, ' ') }))}
+              options={patterns.map((p) => ({
+                value: p,
+                label: p === 'all' ? 'All patterns' : p.replace(/-/g, ' '),
+              }))}
             />
           </div>
 
-          <ul className="max-h-[420px] overflow-y-auto border-t border-ink-900/10" tabIndex={0} aria-label="Movement library">
+          <ul
+            className="max-h-[420px] overflow-y-auto border-t border-ink-900/10"
+            tabIndex={0}
+            aria-label="Movement library"
+          >
             {filtered.map((exercise) => (
               <li key={exercise.id}>
                 <div
@@ -183,7 +206,8 @@ export function ProgramBuilder({
       <div>
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-muted">
-            <span className="font-semibold text-ink-900">{totalEntries}</span> exercises across the week
+            <span className="font-semibold text-ink-900">{totalEntries}</span> exercises across the
+            week
           </p>
           <div className="flex gap-2">
             <Button
@@ -193,7 +217,9 @@ export function ProgramBuilder({
             >
               Clear week
             </Button>
-            <Button size="sm" disabled={totalEntries === 0}>Save Program</Button>
+            <Button size="sm" disabled={totalEntries === 0}>
+              Save Program
+            </Button>
           </div>
         </div>
 
@@ -232,23 +258,39 @@ export function ProgramBuilder({
 
               <div className="grid grid-cols-2 gap-4">
                 <NumberField
-                  label="Sets" value={active.sets} min={1} max={10}
+                  label="Sets"
+                  value={active.sets}
+                  min={1}
+                  max={10}
                   onChange={(v) => updateEntry(selected.day, active.key, { sets: v })}
                 />
                 <NumberField
-                  label="Reps" value={active.reps} min={1} max={50}
+                  label="Reps"
+                  value={active.reps}
+                  min={1}
+                  max={50}
                   onChange={(v) => updateEntry(selected.day, active.key, { reps: v })}
                 />
                 <NumberField
-                  label="Load (kg)" value={Math.round(active.loadGrams / 1000)} min={0} max={400}
+                  label="Load (kg)"
+                  value={Math.round(active.loadGrams / 1000)}
+                  min={0}
+                  max={400}
                   onChange={(v) => updateEntry(selected.day, active.key, { loadGrams: v * 1000 })}
                 />
                 <NumberField
-                  label="RPE" value={active.rpe} min={5} max={10}
+                  label="RPE"
+                  value={active.rpe}
+                  min={5}
+                  max={10}
                   onChange={(v) => updateEntry(selected.day, active.key, { rpe: v })}
                 />
                 <NumberField
-                  label="Rest (s)" value={active.restSeconds} min={0} max={600} step={15}
+                  label="Rest (s)"
+                  value={active.restSeconds}
+                  min={0}
+                  max={600}
+                  step={15}
                   onChange={(v) => updateEntry(selected.day, active.key, { restSeconds: v })}
                 />
                 <div>
@@ -257,7 +299,9 @@ export function ProgramBuilder({
                   </label>
                   <input
                     value={active.tempo}
-                    onChange={(event) => updateEntry(selected.day, active.key, { tempo: event.target.value })}
+                    onChange={(event) =>
+                      updateEntry(selected.day, active.key, { tempo: event.target.value })
+                    }
                     className="min-h-[44px] w-full rounded-[8px] border border-ink-900/15 px-3 text-sm focus:border-ember"
                   />
                 </div>
@@ -269,7 +313,9 @@ export function ProgramBuilder({
                 </label>
                 <textarea
                   value={active.note}
-                  onChange={(event) => updateEntry(selected.day, active.key, { note: event.target.value })}
+                  onChange={(event) =>
+                    updateEntry(selected.day, active.key, { note: event.target.value })
+                  }
                   rows={3}
                   placeholder="What to focus on, and what to do if it feels wrong."
                   className="w-full rounded-[8px] border border-ink-900/15 p-3 text-sm leading-relaxed focus:border-ember"
@@ -282,7 +328,9 @@ export function ProgramBuilder({
                 </label>
                 <input
                   value={active.videoKey}
-                  onChange={(event) => updateEntry(selected.day, active.key, { videoKey: event.target.value })}
+                  onChange={(event) =>
+                    updateEntry(selected.day, active.key, { videoKey: event.target.value })
+                  }
                   placeholder="Demo clip identifier"
                   className="min-h-[44px] w-full rounded-[8px] border border-ink-900/15 px-3 text-sm focus:border-ember"
                 />
@@ -291,12 +339,17 @@ export function ProgramBuilder({
               <div className="rounded-[8px] border border-ink-900/10 bg-ink-900/[0.02] p-4 text-xs">
                 <p className="font-semibold">Client sees</p>
                 <p className="mt-1.5 text-muted">
-                  {active.sets} × {active.reps} @ {formatLoad(active.loadGrams)} · RPE {active.rpe} · tempo{' '}
-                  {active.tempo} · {active.restSeconds}s rest
+                  {active.sets} × {active.reps} @ {formatLoad(active.loadGrams)} · RPE {active.rpe}{' '}
+                  · tempo {active.tempo} · {active.restSeconds}s rest
                 </p>
               </div>
 
-              <Button variant="ghost" size="sm" block onClick={() => removeEntry(selected.day, active.key)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                block
+                onClick={() => removeEntry(selected.day, active.key)}
+              >
                 Remove from week
               </Button>
             </div>
@@ -308,7 +361,13 @@ export function ProgramBuilder({
 }
 
 function DayColumn({
-  day, entries, onDrop, onSelect, onRemove, dragging, selectedKey,
+  day,
+  entries,
+  onDrop,
+  onSelect,
+  onRemove,
+  dragging,
+  selectedKey,
 }: {
   day: string;
   entries: Entry[];
@@ -334,11 +393,15 @@ function DayColumn({
       }}
       className={clsx(
         'min-h-[180px] rounded-card border p-3 transition-colors',
-        over ? 'accent-tint border-ember bg-ember/[0.06]' : 'light-surface border-ink-900/10 bg-bone-100',
+        over
+          ? 'accent-tint border-ember bg-ember/[0.06]'
+          : 'light-surface border-ink-900/10 bg-bone-100',
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">{day.slice(0, 3)}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">
+          {day.slice(0, 3)}
+        </p>
         {entries.length > 0 && <Chip size="sm">{entries.length}</Chip>}
       </div>
 
@@ -351,10 +414,16 @@ function DayColumn({
               <div
                 className={clsx(
                   'rounded-[8px] border p-2.5 text-xs transition-colors',
-                  selectedKey === entry.key ? 'accent-tint border-ember bg-ember/[0.07]' : 'border-ink-900/10',
+                  selectedKey === entry.key
+                    ? 'accent-tint border-ember bg-ember/[0.07]'
+                    : 'border-ink-900/10',
                 )}
               >
-                <button type="button" onClick={() => onSelect(entry.key)} className="w-full text-left">
+                <button
+                  type="button"
+                  onClick={() => onSelect(entry.key)}
+                  className="w-full text-left"
+                >
                   <span className="flex items-start justify-between gap-2">
                     <span className="font-medium leading-snug">
                       {index + 1}. {entry.name}
@@ -381,11 +450,25 @@ function DayColumn({
 }
 
 function NumberField({
-  label, value, min, max, step = 1, onChange,
-}: { label: string; value: number; min: number; max: number; step?: number; onChange: (value: number) => void }) {
+  label,
+  value,
+  min,
+  max,
+  step = 1,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  onChange: (value: number) => void;
+}) {
   return (
     <div>
-      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.1em] opacity-70">{label}</label>
+      <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.1em] opacity-70">
+        {label}
+      </label>
       <input
         type="number"
         value={value}

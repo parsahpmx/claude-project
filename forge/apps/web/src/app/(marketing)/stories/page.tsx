@@ -10,9 +10,18 @@ export const metadata = {
 };
 
 interface Story {
-  slug: string; memberName: string; headline: string; startingGoal: string;
-  programSlug: string; programName: string; timePeriod: string; consistency: string;
-  coachSlug: string | null; story: string; outcomes: string[]; imageKey: string;
+  slug: string;
+  memberName: string;
+  headline: string;
+  startingGoal: string;
+  programSlug: string;
+  programName: string;
+  timePeriod: string;
+  consistency: string;
+  coachSlug: string | null;
+  story: string;
+  outcomes: string[];
+  imageKey: string;
 }
 
 export default async function StoriesPage() {
@@ -23,10 +32,12 @@ export default async function StoriesPage() {
       <Section tone="dark" size="lg">
         <div className="max-w-4xl pt-16">
           <p className="eyebrow mb-6">Success stories</p>
-          <h1 className="display text-display-lg text-balance">WHAT PROGRESS ACTUALLY LOOKS LIKE.</h1>
+          <h1 className="display text-display-lg text-balance">
+            WHAT PROGRESS ACTUALLY LOOKS LIKE.
+          </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-bone-200/70">
-            Real timeframes, real adherence numbers, and outcomes stated as what somebody can now do. No
-            before-and-after photos, no twelve-week transformations that took two years.
+            Real timeframes, real adherence numbers, and outcomes stated as what somebody can now
+            do. No before-and-after photos, no twelve-week transformations that took two years.
           </p>
         </div>
       </Section>
@@ -35,10 +46,14 @@ export default async function StoriesPage() {
         <div className="space-y-8">
           {stories.map((story, index) => (
             <Card key={story.slug} padded={false}>
-              <div className={`grid gap-0 lg:grid-cols-2 ${index % 2 === 1 ? 'lg:[&>*:first-child]:order-2' : ''}`}>
+              <div
+                className={`grid gap-0 lg:grid-cols-2 ${index % 2 === 1 ? 'lg:[&>*:first-child]:order-2' : ''}`}
+              >
                 <Media imageKey={story.imageKey} ratio="4/3" rounded={false} alt={story.headline} />
                 <div className="p-7 sm:p-10">
-                  <p className="eyebrow">{story.memberName} · {story.timePeriod}</p>
+                  <p className="eyebrow">
+                    {story.memberName} · {story.timePeriod}
+                  </p>
                   <h2 className="display mt-3 text-display-sm text-balance">{story.headline}</h2>
 
                   <dl className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -49,13 +64,17 @@ export default async function StoriesPage() {
                   </dl>
 
                   <blockquote className="mt-6 border-l-2 border-ember pl-5">
-                    <p className="text-sm italic leading-relaxed opacity-80">&ldquo;{story.story}&rdquo;</p>
+                    <p className="text-sm italic leading-relaxed opacity-80">
+                      &ldquo;{story.story}&rdquo;
+                    </p>
                   </blockquote>
 
                   <ul className="mt-6 space-y-2">
                     {story.outcomes.map((outcome) => (
                       <li key={outcome} className="flex gap-3 text-sm">
-                        <span aria-hidden className="text-accent">→</span>
+                        <span aria-hidden className="text-accent">
+                          →
+                        </span>
                         <span className="text-muted">{outcome}</span>
                       </li>
                     ))}
@@ -88,7 +107,9 @@ export default async function StoriesPage() {
         <div className="mx-auto max-w-3xl text-center">
           <SectionHeading eyebrow="Your turn" title="BUILT AROUND YOU." align="center" />
           <div className="mt-8 flex justify-center">
-            <ButtonLink href="/assessment" size="lg">Take the Assessment</ButtonLink>
+            <ButtonLink href="/assessment" size="lg">
+              Take the Assessment
+            </ButtonLink>
           </div>
         </div>
       </Section>

@@ -75,7 +75,9 @@ export function MarketingHeader() {
                     )}
                   >
                     {item.label}
-                    {active && <span aria-hidden className="absolute inset-x-3 -bottom-0.5 h-px bg-ember" />}
+                    {active && (
+                      <span aria-hidden className="absolute inset-x-3 -bottom-0.5 h-px bg-ember" />
+                    )}
                   </Link>
                 </li>
               );
@@ -111,13 +113,19 @@ export function MarketingHeader() {
             className="grid h-11 w-11 place-items-center rounded-[8px] text-bone-100 transition-colors hover:bg-bone-200/10 xl:hidden"
           >
             <span className="sr-only">{open ? 'Close menu' : 'Open menu'}</span>
-            <span aria-hidden className="text-lg">{open ? '✕' : '☰'}</span>
+            <span aria-hidden className="text-lg">
+              {open ? '✕' : '☰'}
+            </span>
           </button>
         </div>
       </div>
 
       {open && (
-        <nav id="mobile-nav" aria-label="Primary mobile" className="border-t border-bone-200/10 xl:hidden">
+        <nav
+          id="mobile-nav"
+          aria-label="Primary mobile"
+          className="border-t border-bone-200/10 xl:hidden"
+        >
           <ul className="shell grid gap-1 py-4">
             {NAV.map((item) => (
               <li key={item.href}>
@@ -130,10 +138,16 @@ export function MarketingHeader() {
               </li>
             ))}
             <li className="mt-3 grid gap-2 sm:hidden">
-              <Link href="/signin" className="flex min-h-[48px] items-center justify-center rounded-[8px] border border-bone-200/20 text-sm text-bone-100">
+              <Link
+                href="/signin"
+                className="flex min-h-[48px] items-center justify-center rounded-[8px] border border-bone-200/20 text-sm text-bone-100"
+              >
                 Sign In
               </Link>
-              <Link href="/assessment" className="flex min-h-[48px] items-center justify-center rounded-[8px] bg-ember-600 text-xs font-semibold uppercase tracking-[0.1em] text-bone-100">
+              <Link
+                href="/assessment"
+                className="flex min-h-[48px] items-center justify-center rounded-[8px] bg-ember-600 text-xs font-semibold uppercase tracking-[0.1em] text-bone-100"
+              >
                 Start Free Trial
               </Link>
             </li>

@@ -53,7 +53,11 @@ export default async function PlanPage() {
         eyebrow="My plan"
         title="YOUR ROADMAP"
         lead={`${plan.programName} · ${plan.totalWeeks} weeks · ${plan.sessionsPerWeek} sessions a week`}
-        action={<ButtonLink href="/app/programs" variant="ghost">Change Programme</ButtonLink>}
+        action={
+          <ButtonLink href="/app/programs" variant="ghost">
+            Change Programme
+          </ButtonLink>
+        }
       />
 
       {/* ------------------------------------------------------ summary */}
@@ -96,12 +100,20 @@ export default async function PlanPage() {
                 <ul className="mt-4 space-y-1.5">
                   {phase.focus.map((item) => (
                     <li key={item} className="flex gap-2 text-xs text-muted">
-                      <span aria-hidden className="text-accent">·</span>
+                      <span aria-hidden className="text-accent">
+                        ·
+                      </span>
                       {item}
                     </li>
                   ))}
                 </ul>
-                {active && <div className="mt-4"><Chip tone="accent" size="sm">Current phase</Chip></div>}
+                {active && (
+                  <div className="mt-4">
+                    <Chip tone="accent" size="sm">
+                      Current phase
+                    </Chip>
+                  </div>
+                )}
               </Card>
             );
           })}
@@ -121,16 +133,24 @@ export default async function PlanPage() {
                 <a href={`#week-${week.weekNumber}`} className="group block">
                   <div
                     className={`h-1.5 rounded-pill transition-colors ${
-                      current ? 'bg-ember' : done === total && total > 0 ? 'bg-signal-good' : 'bg-ink-900/12'
+                      current
+                        ? 'bg-ember'
+                        : done === total && total > 0
+                          ? 'bg-signal-good'
+                          : 'bg-ink-900/12'
                     }`}
                   />
-                  <p className={`mt-2 text-xs font-semibold ${current ? 'text-accent' : 'opacity-60'}`}>
+                  <p
+                    className={`mt-2 text-xs font-semibold ${current ? 'text-accent' : 'opacity-60'}`}
+                  >
                     W{week.weekNumber}
                   </p>
                   <p className="mt-0.5 text-[0.625rem] uppercase tracking-[0.1em] text-muted">
                     {week.deload ? 'Deload' : PHASE_LABEL[week.phase]}
                   </p>
-                  <p className="mt-1 text-[0.625rem] tabular-nums text-muted">{done}/{total}</p>
+                  <p className="mt-1 text-[0.625rem] tabular-nums text-muted">
+                    {done}/{total}
+                  </p>
                 </a>
               </li>
             );
@@ -159,8 +179,14 @@ function WeekCard({ week, current }: { week: PlanWeek; current: boolean }) {
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <p className="display text-xl leading-none">Week {week.weekNumber}</p>
-              <Chip tone={current ? 'accent' : 'neutral'} size="sm">{PHASE_LABEL[week.phase]}</Chip>
-              {week.deload && <Chip tone="warn" size="sm">Deload</Chip>}
+              <Chip tone={current ? 'accent' : 'neutral'} size="sm">
+                {PHASE_LABEL[week.phase]}
+              </Chip>
+              {week.deload && (
+                <Chip tone="warn" size="sm">
+                  Deload
+                </Chip>
+              )}
               {week.coachCheckIn && <Chip size="sm">Coach check-in</Chip>}
             </div>
             <p className="mt-2 text-xs text-muted">
@@ -169,16 +195,24 @@ function WeekCard({ week, current }: { week: PlanWeek; current: boolean }) {
           </div>
 
           <div className="flex items-center gap-6">
-            <Stat label="Sessions" value={`${completed}/${sessions.length}`} tone={current ? 'dark' : 'light'} />
+            <Stat
+              label="Sessions"
+              value={`${completed}/${sessions.length}`}
+              tone={current ? 'dark' : 'light'}
+            />
           </div>
         </div>
 
         <div className="grid gap-px bg-current/10 sm:grid-cols-2">
-          <div className={`p-6 ${current ? 'dark-surface bg-ink-800' : 'light-surface bg-bone-100'}`}>
+          <div
+            className={`p-6 ${current ? 'dark-surface bg-ink-800' : 'light-surface bg-bone-100'}`}
+          >
             <p className="eyebrow mb-2">Nutrition goal</p>
             <p className="text-sm text-muted">{week.nutritionGoal}</p>
           </div>
-          <div className={`p-6 ${current ? 'dark-surface bg-ink-800' : 'light-surface bg-bone-100'}`}>
+          <div
+            className={`p-6 ${current ? 'dark-surface bg-ink-800' : 'light-surface bg-bone-100'}`}
+          >
             <p className="eyebrow mb-2">Recovery target</p>
             <p className="text-sm text-muted">{week.recoveryTarget}</p>
           </div>
@@ -217,7 +251,13 @@ function DayRow({ day, dark }: { day: PlanDay; dark: boolean }) {
                 : 'border-current/15'
           }`}
         >
-          {day.status === 'completed' ? '✓' : day.status === 'skipped' ? '×' : rest ? '–' : day.dayOfWeek}
+          {day.status === 'completed'
+            ? '✓'
+            : day.status === 'skipped'
+              ? '×'
+              : rest
+                ? '–'
+                : day.dayOfWeek}
         </span>
 
         <div className="min-w-0">

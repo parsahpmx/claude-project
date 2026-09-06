@@ -21,13 +21,22 @@ const SCALES = [
   { key: 'sleepQuality', label: 'Sleep quality', low: 'Poor', high: 'Excellent' },
   { key: 'stress', label: 'Stress', low: 'Calm', high: 'Overloaded' },
   { key: 'nutritionAdherence', label: 'Nutrition adherence', low: 'Off plan', high: 'On plan' },
-  { key: 'trainingAdherence', label: 'Training adherence', low: 'Missed most', high: 'Hit everything' },
+  {
+    key: 'trainingAdherence',
+    label: 'Training adherence',
+    low: 'Missed most',
+    high: 'Hit everything',
+  },
 ] as const;
 
 export function CheckInForm({ weekStart }: { weekStart: string }) {
   const router = useRouter();
   const [scores, setScores] = useState<Record<string, number>>({
-    energy: 3, sleepQuality: 3, stress: 3, nutritionAdherence: 3, trainingAdherence: 3,
+    energy: 3,
+    sleepQuality: 3,
+    stress: 3,
+    nutritionAdherence: 3,
+    trainingAdherence: 3,
   });
   const [state, setState] = useState<'idle' | 'pending' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -96,7 +105,15 @@ export function CheckInForm({ weekStart }: { weekStart: string }) {
         </fieldset>
       ))}
 
-      <TextInput label="Weight (kg)" name="weightKg" type="number" step="0.1" min={20} max={400} hint="Optional." />
+      <TextInput
+        label="Weight (kg)"
+        name="weightKg"
+        type="number"
+        step="0.1"
+        min={20}
+        max={400}
+        hint="Optional."
+      />
       <TextArea
         label="Pain or injury notes"
         name="painNotes"

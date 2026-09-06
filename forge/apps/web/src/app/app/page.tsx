@@ -20,15 +20,30 @@ interface Dashboard {
   recoveryScore: number;
   today: PlanDay | null;
   plan: { programName: string; totalWeeks: number; startDate: string; goal: string } | null;
-  week: { start: string; completed: number; scheduled: number; adherencePercent: number; days: PlanDay[] };
+  week: {
+    start: string;
+    completed: number;
+    scheduled: number;
+    adherencePercent: number;
+    days: PlanDay[];
+  };
   streak: { current: number; longest: number };
   load: { zone: string; message: string; ratio: number };
   metrics: {
-    steps: number | null; stepsTarget: number; sleepMinutes: number | null;
-    waterMl: number | null; waterTargetMl: number;
+    steps: number | null;
+    stepsTarget: number;
+    sleepMinutes: number | null;
+    waterMl: number | null;
+    waterTargetMl: number;
   };
   nutrition: {
-    targets: { calories: number; proteinGrams: number; carbGrams: number; fatGrams: number; waterMl: number };
+    targets: {
+      calories: number;
+      proteinGrams: number;
+      carbGrams: number;
+      fatGrams: number;
+      waterMl: number;
+    };
     consumedCalories: number;
     consumedProtein: number;
   } | null;
@@ -88,9 +103,15 @@ export default async function DashboardPage() {
                     <p className="eyebrow">Today&rsquo;s training</p>
                     <h2 className="display mt-3 text-display-sm text-bone-100">{today.title}</h2>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <Chip tone="inverse" size="sm">{formatMinutes(today.minutes)}</Chip>
-                      <Chip tone="inverse" size="sm">{today.focus}</Chip>
-                      <Chip tone="inverse" size="sm">{today.kind}</Chip>
+                      <Chip tone="inverse" size="sm">
+                        {formatMinutes(today.minutes)}
+                      </Chip>
+                      <Chip tone="inverse" size="sm">
+                        {today.focus}
+                      </Chip>
+                      <Chip tone="inverse" size="sm">
+                        {today.kind}
+                      </Chip>
                     </div>
                   </div>
                   <Status status={today.status} />
@@ -98,11 +119,17 @@ export default async function DashboardPage() {
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                   {today.status === 'completed' ? (
-                    <ButtonLink href="/app/progress" variant="inverse" size="lg">See Your Numbers</ButtonLink>
+                    <ButtonLink href="/app/progress" variant="inverse" size="lg">
+                      See Your Numbers
+                    </ButtonLink>
                   ) : (
                     <>
-                      <ButtonLink href={`/workout/${today.id}`} size="lg">Start Workout</ButtonLink>
-                      <ButtonLink href="/app/plan" variant="inverse" size="lg">Adjust Session</ButtonLink>
+                      <ButtonLink href={`/workout/${today.id}`} size="lg">
+                        Start Workout
+                      </ButtonLink>
+                      <ButtonLink href="/app/plan" variant="inverse" size="lg">
+                        Adjust Session
+                      </ButtonLink>
                     </>
                   )}
                 </div>
@@ -110,7 +137,11 @@ export default async function DashboardPage() {
 
               <div className="border-t border-bone-200/10 p-6 sm:px-8">
                 <p className="eyebrow mb-5">Your day</p>
-                <ol className="scroll-x scrollbar-none flex gap-4 pb-1" tabIndex={0} aria-label="This week at a glance">
+                <ol
+                  className="scroll-x scrollbar-none flex gap-4 pb-1"
+                  tabIndex={0}
+                  aria-label="This week at a glance"
+                >
                   {data.timeline.map((entry) => (
                     <li key={`${entry.time}-${entry.label}`} className="min-w-[124px] flex-1">
                       <div className="relative">
@@ -122,7 +153,9 @@ export default async function DashboardPage() {
                           }`}
                         />
                       </div>
-                      <p className="mt-3 text-xs font-semibold tabular-nums text-bone-100">{entry.time}</p>
+                      <p className="mt-3 text-xs font-semibold tabular-nums text-bone-100">
+                        {entry.time}
+                      </p>
                       <p className="mt-1 text-xs text-bone-200/55">{entry.label}</p>
                     </li>
                   ))}
@@ -134,12 +167,17 @@ export default async function DashboardPage() {
               <p className="eyebrow">Today</p>
               <h2 className="display mt-3 text-display-sm text-bone-100">REST DAY</h2>
               <p className="mt-3 max-w-prose text-sm leading-relaxed text-bone-200/65">
-                Nothing is scheduled, and that is deliberate — the adaptation from this week happens on days
-                like today. A fifteen-minute mobility session or an easy walk fits without touching recovery.
+                Nothing is scheduled, and that is deliberate — the adaptation from this week happens
+                on days like today. A fifteen-minute mobility session or an easy walk fits without
+                touching recovery.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <ButtonLink href="/app/recovery" size="lg">Open Recovery</ButtonLink>
-                <ButtonLink href="/app/plan" variant="inverse" size="lg">See This Week</ButtonLink>
+                <ButtonLink href="/app/recovery" size="lg">
+                  Open Recovery
+                </ButtonLink>
+                <ButtonLink href="/app/plan" variant="inverse" size="lg">
+                  See This Week
+                </ButtonLink>
               </div>
             </Card>
           )}
@@ -178,7 +216,13 @@ export default async function DashboardPage() {
                         }`}
                       >
                         <span aria-hidden>
-                          {day.status === 'completed' ? '✓' : day.status === 'skipped' ? '×' : rest ? '–' : '○'}
+                          {day.status === 'completed'
+                            ? '✓'
+                            : day.status === 'skipped'
+                              ? '×'
+                              : rest
+                                ? '–'
+                                : '○'}
                         </span>
                         <span className="sr-only">
                           {day.title}: {rest ? 'rest day' : day.status}
@@ -239,11 +283,16 @@ export default async function DashboardPage() {
             <Card>
               <div className="flex items-baseline justify-between gap-4">
                 <p className="eyebrow">Nutrition today</p>
-                <Link href="/app/nutrition" className="text-xs font-semibold text-accent">Open →</Link>
+                <Link href="/app/nutrition" className="text-xs font-semibold text-accent">
+                  Open →
+                </Link>
               </div>
               <p className="display mt-3 text-display-sm tabular-nums">
                 {formatNumber(data.nutrition.consumedCalories)}
-                <span className="text-base font-normal text-muted"> / {formatNumber(data.nutrition.targets.calories)} kcal</span>
+                <span className="text-base font-normal text-muted">
+                  {' '}
+                  / {formatNumber(data.nutrition.targets.calories)} kcal
+                </span>
               </p>
               <div className="mt-6 space-y-4">
                 <ProgressBar
@@ -267,7 +316,11 @@ export default async function DashboardPage() {
                 icon="◐"
                 title="No nutrition targets yet"
                 body="Add your height and weight and FORGE will calculate targets rather than guess them."
-                action={<ButtonLink href="/app/profile" size="sm">Complete Profile</ButtonLink>}
+                action={
+                  <ButtonLink href="/app/profile" size="sm">
+                    Complete Profile
+                  </ButtonLink>
+                }
               />
             </Card>
           )}
@@ -279,7 +332,9 @@ export default async function DashboardPage() {
                 <p className="display text-2xl leading-none tabular-nums">
                   {data.load.ratio > 0 ? data.load.ratio.toFixed(2) : '—'}
                 </p>
-                <p className="mt-1 text-[0.6875rem] uppercase tracking-[0.1em] text-muted">Acute : chronic</p>
+                <p className="mt-1 text-[0.6875rem] uppercase tracking-[0.1em] text-muted">
+                  Acute : chronic
+                </p>
               </div>
               <Chip tone={loadTone(data.load.zone)}>{data.load.zone.replace(/-/g, ' ')}</Chip>
             </div>
@@ -298,11 +353,16 @@ export default async function DashboardPage() {
                   <li key={component.key}>
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="text-sm">{component.label}</span>
-                      <span className="text-xs tabular-nums text-muted">{Math.round(component.score)}</span>
+                      <span className="text-xs tabular-nums text-muted">
+                        {Math.round(component.score)}
+                      </span>
                     </div>
                     <p className="mt-1 text-[0.6875rem] text-muted">{component.detail}</p>
                     <div className="mt-2">
-                      <ProgressBar value={component.score} tone={component.score >= 70 ? 'good' : 'warn'} />
+                      <ProgressBar
+                        value={component.score}
+                        tone={component.score >= 70 ? 'good' : 'warn'}
+                      />
                     </div>
                   </li>
                 ))}
@@ -315,11 +375,14 @@ export default async function DashboardPage() {
               <p className="eyebrow mb-3">Next up</p>
               <p className="font-semibold text-bone-100">{data.nextEvent.title}</p>
               <p className="mt-1 text-xs text-bone-200/55">
-                {data.nextEvent.date} · {String(Math.floor(data.nextEvent.startMinutes / 60)).padStart(2, '0')}:
+                {data.nextEvent.date} ·{' '}
+                {String(Math.floor(data.nextEvent.startMinutes / 60)).padStart(2, '0')}:
                 {String(data.nextEvent.startMinutes % 60).padStart(2, '0')}
               </p>
               <div className="mt-5">
-                <ButtonLink href="/app/calendar" variant="inverse" size="sm" block>Open Calendar</ButtonLink>
+                <ButtonLink href="/app/calendar" variant="inverse" size="sm" block>
+                  Open Calendar
+                </ButtonLink>
               </div>
             </Card>
           )}
@@ -327,18 +390,20 @@ export default async function DashboardPage() {
           <Card>
             <p className="eyebrow mb-4">Ask FORGE AI</p>
             <ul className="space-y-2">
-              {['What should I train today?', 'Why did my recovery score fall?', 'What should I eat after training?'].map(
-                (question) => (
-                  <li key={question}>
-                    <Link
-                      href={`/app/ai?q=${encodeURIComponent(question)}`}
-                      className="block rounded-[8px] border border-ink-900/10 px-4 py-3 text-sm transition-colors hover:border-ink-900/30 hover:bg-ink-900/[0.02]"
-                    >
-                      {question}
-                    </Link>
-                  </li>
-                ),
-              )}
+              {[
+                'What should I train today?',
+                'Why did my recovery score fall?',
+                'What should I eat after training?',
+              ].map((question) => (
+                <li key={question}>
+                  <Link
+                    href={`/app/ai?q=${encodeURIComponent(question)}`}
+                    className="block rounded-[8px] border border-ink-900/10 px-4 py-3 text-sm transition-colors hover:border-ink-900/30 hover:bg-ink-900/[0.02]"
+                  >
+                    {question}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </Card>
         </div>
@@ -348,8 +413,18 @@ export default async function DashboardPage() {
 }
 
 function MetricCard({
-  label, value, unit, hint, progress,
-}: { label: string; value: string; unit?: string; hint?: string; progress?: number }) {
+  label,
+  value,
+  unit,
+  hint,
+  progress,
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+  hint?: string;
+  progress?: number;
+}) {
   return (
     <Card>
       <p className="eyebrow">{label}</p>
@@ -359,7 +434,9 @@ function MetricCard({
       </p>
       {hint && <p className="mt-1.5 text-xs text-muted">{hint}</p>}
       {typeof progress === 'number' && (
-        <div className="mt-4"><ProgressBar value={progress} tone={progress >= 80 ? 'good' : 'accent'} /></div>
+        <div className="mt-4">
+          <ProgressBar value={progress} tone={progress >= 80 ? 'good' : 'accent'} />
+        </div>
       )}
     </Card>
   );

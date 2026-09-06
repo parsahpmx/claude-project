@@ -16,7 +16,11 @@ export interface ApiFailure {
 }
 
 export class ApiRequestError extends Error {
-  constructor(readonly status: number, readonly code: string, message: string) {
+  constructor(
+    readonly status: number,
+    readonly code: string,
+    message: string,
+  ) {
     super(message);
     this.name = 'ApiRequestError';
   }
@@ -47,7 +51,8 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
       ...(cookie ? { cookie } : {}),
     },
     ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
-    cache: options.revalidate === false || options.revalidate === undefined ? 'no-store' : 'force-cache',
+    cache:
+      options.revalidate === false || options.revalidate === undefined ? 'no-store' : 'force-cache',
     ...(typeof options.revalidate === 'number'
       ? { next: { revalidate: options.revalidate, tags: options.tags ?? [] } }
       : {}),
@@ -76,7 +81,10 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
  * pages render nothing and let the redirect win, instead of logging an error
  * for a perfectly ordinary mis-navigation.
  */
-export async function apiFetchOptional<T>(path: string, options?: RequestOptions): Promise<T | null> {
+export async function apiFetchOptional<T>(
+  path: string,
+  options?: RequestOptions,
+): Promise<T | null> {
   try {
     return await apiFetch<T>(path, options);
   } catch (error) {
@@ -92,7 +100,11 @@ export async function apiPublic<T>(path: string, revalidate = 300): Promise<T> {
     next: { revalidate },
   });
   if (!response.ok) {
-    throw new ApiRequestError(response.status, 'catalog_error', `Catalogue request failed: ${path}`);
+    throw new ApiRequestError(
+      response.status,
+      'catalog_error',
+      `Catalogue request failed: ${path}`,
+    );
   }
   return (await response.json()) as T;
 }

@@ -46,7 +46,8 @@ export function CoachMarketplace({ coaches }: { coaches: CoachCard[] }) {
     return coaches
       .filter((coach) => {
         if (wanted.size > 0 && !coach.specialties.some((s) => wanted.has(s))) return false;
-        if (languages.length > 0 && !languages.some((l) => coach.languages.includes(l))) return false;
+        if (languages.length > 0 && !languages.some((l) => coach.languages.includes(l)))
+          return false;
         if (availability.includes('this-week') && coach.availableSlotsThisWeek <= 0) return false;
         if (maxPrice !== null && coach.monthlyPriceCents > maxPrice) return false;
         if (minYears !== null && coach.yearsExperience < minYears) return false;
@@ -59,15 +60,25 @@ export function CoachMarketplace({ coaches }: { coaches: CoachCard[] }) {
         if (overlap.length > 0) {
           reasons.push(`Specialises in ${overlap.map((s) => s.replace(/-/g, ' ')).join(' and ')}`);
         }
-        if (coach.availableSlotsThisWeek > 0) reasons.push(`${coach.availableSlotsThisWeek} slots open this week`);
+        if (coach.availableSlotsThisWeek > 0)
+          reasons.push(`${coach.availableSlotsThisWeek} slots open this week`);
         return { ...coach, matchReasons: reasons };
       })
-      .sort((a, b) => (b.matchReasons?.length ?? 0) - (a.matchReasons?.length ?? 0) || b.ratingTenths - a.ratingTenths);
+      .sort(
+        (a, b) =>
+          (b.matchReasons?.length ?? 0) - (a.matchReasons?.length ?? 0) ||
+          b.ratingTenths - a.ratingTenths,
+      );
   }, [coaches, goals, languages, availability, price, experience]);
 
-  const activeCount = goals.length + languages.length + availability.length + price.length + experience.length;
+  const activeCount =
+    goals.length + languages.length + availability.length + price.length + experience.length;
   const clear = () => {
-    setGoals([]); setLanguages([]); setAvailability([]); setPrice([]); setExperience([]);
+    setGoals([]);
+    setLanguages([]);
+    setAvailability([]);
+    setPrice([]);
+    setExperience([]);
   };
 
   return (
@@ -125,7 +136,11 @@ export function CoachMarketplace({ coaches }: { coaches: CoachCard[] }) {
             icon="⌕"
             title="No coach matches every filter"
             body="Widening the price or availability filter usually opens things up — most coaches take new clients within a fortnight."
-            action={<Button variant="secondary" onClick={clear}>Clear filters</Button>}
+            action={
+              <Button variant="secondary" onClick={clear}>
+                Clear filters
+              </Button>
+            }
           />
         ) : (
           <div className="grid gap-5 xl:grid-cols-2">

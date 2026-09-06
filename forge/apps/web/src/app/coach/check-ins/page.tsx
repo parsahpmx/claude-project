@@ -12,18 +12,36 @@ export const dynamic = 'force-dynamic';
 
 interface CheckInRow {
   checkIn: {
-    id: string; weekStart: string; score: number; band: string; flags: string[];
-    energy: number; sleepQuality: number; stress: number;
-    nutritionAdherence: number; trainingAdherence: number;
-    painNotes: string | null; questions: string | null;
-    coachResponse: string | null; respondedAt: string | null; submittedAt: string;
+    id: string;
+    weekStart: string;
+    score: number;
+    band: string;
+    flags: string[];
+    energy: number;
+    sleepQuality: number;
+    stress: number;
+    nutritionAdherence: number;
+    trainingAdherence: number;
+    painNotes: string | null;
+    questions: string | null;
+    coachResponse: string | null;
+    respondedAt: string | null;
+    submittedAt: string;
   };
   member: { id: string; firstName: string; lastName: string; avatarKey: string | null };
-  scoring: { overall: number; band: string; headline: string; coachPrompts: string[]; flags: string[] };
+  scoring: {
+    overall: number;
+    band: string;
+    headline: string;
+    coachPrompts: string[];
+    flags: string[];
+  };
 }
 
 export default async function CoachCheckInsPage() {
-  const { checkIns } = await apiFetch<{ checkIns: CheckInRow[] }>('/v1/coach/check-ins?status=pending');
+  const { checkIns } = await apiFetch<{ checkIns: CheckInRow[] }>(
+    '/v1/coach/check-ins?status=pending',
+  );
 
   return (
     <AppSection>
@@ -61,7 +79,8 @@ export default async function CoachCheckInsPage() {
                           {row.member.firstName} {row.member.lastName}
                         </Link>
                         <p className="mt-0.5 text-xs text-muted">
-                          Week of {formatDateLabel(row.checkIn.weekStart)} · {relativeTime(row.checkIn.submittedAt)}
+                          Week of {formatDateLabel(row.checkIn.weekStart)} ·{' '}
+                          {relativeTime(row.checkIn.submittedAt)}
                         </p>
                       </div>
                     </div>
@@ -87,7 +106,8 @@ export default async function CoachCheckInsPage() {
                       )}
                       {row.checkIn.questions && (
                         <p className="mt-3 rounded-[8px] border border-ink-900/10 p-4 text-sm leading-relaxed">
-                          <span className="font-semibold">Their question:</span> {row.checkIn.questions}
+                          <span className="font-semibold">Their question:</span>{' '}
+                          {row.checkIn.questions}
                         </p>
                       )}
 
@@ -100,7 +120,8 @@ export default async function CoachCheckInsPage() {
                       <p className="eyebrow mb-4">Open with</p>
                       {row.scoring.coachPrompts.length === 0 ? (
                         <p className="text-sm text-muted">
-                          Nothing flagged. A short acknowledgement and one thing to focus on is enough.
+                          Nothing flagged. A short acknowledgement and one thing to focus on is
+                          enough.
                         </p>
                       ) : (
                         <ol className="space-y-3">
@@ -118,7 +139,11 @@ export default async function CoachCheckInsPage() {
                       {row.scoring.flags.length > 0 && (
                         <div className="mt-5 flex flex-wrap gap-1.5">
                           {row.scoring.flags.map((flag) => (
-                            <Chip key={flag} tone={flag === 'pain-reported' ? 'bad' : 'warn'} size="sm">
+                            <Chip
+                              key={flag}
+                              tone={flag === 'pain-reported' ? 'bad' : 'warn'}
+                              size="sm"
+                            >
                               {flag.replace(/-/g, ' ')}
                             </Chip>
                           ))}
@@ -142,7 +167,8 @@ function Score({ label, value, inverted }: { label: string; value: number; inver
     <div>
       <dt className="text-[0.625rem] uppercase tracking-[0.12em] text-muted">{label}</dt>
       <dd className={`mt-1 text-sm font-semibold tabular-nums ${bad ? 'text-status-warn' : ''}`}>
-        {value}<span className="font-normal text-muted">/5</span>
+        {value}
+        <span className="font-normal text-muted">/5</span>
       </dd>
     </div>
   );

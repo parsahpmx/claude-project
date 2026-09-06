@@ -17,7 +17,9 @@ const LINKS = [
 
 export default async function YouPage() {
   const [profile, privacy, activities] = await Promise.all([
-    getSessionProfile(), getPrivacySettings(), getMyActivities(50),
+    getSessionProfile(),
+    getPrivacySettings(),
+    getMyActivities(50),
   ]);
 
   const units = profile?.units ?? 'metric';
@@ -37,36 +39,63 @@ export default async function YouPage() {
           </p>
           {profile?.bio && <p className="mt-3 max-w-prose text-body muted">{profile.bio}</p>}
           <div className="mt-4 flex flex-wrap gap-2">
-            {profile?.primarySport && <Badge tone="accent">{SPORT_LABEL[profile.primarySport]}</Badge>}
+            {profile?.primarySport && (
+              <Badge tone="accent">{SPORT_LABEL[profile.primarySport]}</Badge>
+            )}
             {privacy && (
               <Badge>
-                Profile: {privacy.profileVisibility === 'private' ? 'Only me'
-                  : privacy.profileVisibility === 'followers' ? 'Followers' : 'Anyone'}
+                Profile:{' '}
+                {privacy.profileVisibility === 'private'
+                  ? 'Only me'
+                  : privacy.profileVisibility === 'followers'
+                    ? 'Followers'
+                    : 'Anyone'}
               </Badge>
             )}
           </div>
         </div>
         <form action={signOut}>
-          <Button variant="ghost" type="submit">Sign out</Button>
+          <Button variant="ghost" type="submit">
+            Sign out
+          </Button>
         </form>
       </header>
 
       <section aria-labelledby="totals-heading">
-        <h2 id="totals-heading" className="eyebrow mb-4">Recent totals</h2>
+        <h2 id="totals-heading" className="eyebrow mb-4">
+          Recent totals
+        </h2>
         <div className="grid gap-4 sm:grid-cols-3">
-          <Card><p className="eyebrow">Sessions</p><p className="mt-2 text-metric-l tabular-nums text-bone-100">{activities.length}</p></Card>
-          <Card><p className="eyebrow">Training time</p><p className="mt-2 text-metric-l tabular-nums text-bone-100">{formatDuration(totalMinutes * 60)}</p></Card>
-          <Card><p className="eyebrow">Distance</p><p className="mt-2 text-metric-l tabular-nums text-bone-100">{formatDistance(totalDistance, units)}</p></Card>
+          <Card>
+            <p className="eyebrow">Sessions</p>
+            <p className="mt-2 text-metric-l tabular-nums text-bone-100">{activities.length}</p>
+          </Card>
+          <Card>
+            <p className="eyebrow">Training time</p>
+            <p className="mt-2 text-metric-l tabular-nums text-bone-100">
+              {formatDuration(totalMinutes * 60)}
+            </p>
+          </Card>
+          <Card>
+            <p className="eyebrow">Distance</p>
+            <p className="mt-2 text-metric-l tabular-nums text-bone-100">
+              {formatDistance(totalDistance, units)}
+            </p>
+          </Card>
         </div>
       </section>
 
       <section aria-labelledby="links-heading">
-        <h2 id="links-heading" className="eyebrow mb-4">Your data</h2>
+        <h2 id="links-heading" className="eyebrow mb-4">
+          Your data
+        </h2>
         <ul className="grid gap-3 sm:grid-cols-2">
           {LINKS.map((link) => (
             <li key={link.href}>
-              <Link href={link.href}
-                className="block rounded-card border border-ink-600 bg-ink-800 p-5 transition-colors hover:border-smoke-400">
+              <Link
+                href={link.href}
+                className="block rounded-card border border-ink-600 bg-ink-800 p-5 transition-colors hover:border-smoke-400"
+              >
                 <p className="text-card-title text-bone-100">{link.label}</p>
                 <p className="mt-1 text-secondary muted">{link.hint}</p>
               </Link>

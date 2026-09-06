@@ -11,8 +11,15 @@ export const dynamic = 'force-dynamic';
 
 interface RecoveryResponse {
   sessions: {
-    id: string; slug: string; name: string; category: string; minutes: number;
-    level: string; description: string; imageKey: string; hasCaptions: boolean;
+    id: string;
+    slug: string;
+    name: string;
+    category: string;
+    minutes: number;
+    level: string;
+    description: string;
+    imageKey: string;
+    hasCaptions: boolean;
   }[];
   categories: string[];
   logs: {
@@ -25,9 +32,15 @@ interface RecoveryResponse {
 export default async function RecoveryPage() {
   const [recovery, dashboard] = await Promise.all([
     apiFetch<RecoveryResponse>('/v1/me/recovery'),
-    apiFetch<{ recoveryScore: number; readiness: { score: number | null; headline: string; guidance: string; components: { key: string; label: string; score: number; detail: string }[] } }>(
-      '/v1/me/dashboard',
-    ),
+    apiFetch<{
+      recoveryScore: number;
+      readiness: {
+        score: number | null;
+        headline: string;
+        guidance: string;
+        components: { key: string; label: string; score: number; detail: string }[];
+      };
+    }>('/v1/me/dashboard'),
   ]);
 
   return (
@@ -41,11 +54,20 @@ export default async function RecoveryPage() {
       <div className="mt-10 grid gap-6 lg:grid-cols-[1fr_1.4fr]">
         <Card tone="dark">
           <div className="flex items-center gap-7">
-            <ProgressRing value={dashboard.recoveryScore} size={112} sublabel="Recovery" tone="good" />
+            <ProgressRing
+              value={dashboard.recoveryScore}
+              size={112}
+              sublabel="Recovery"
+              tone="good"
+            />
             <div>
               <p className="eyebrow">Today</p>
-              <p className="mt-2 text-lg font-semibold text-bone-100">{dashboard.readiness.headline}</p>
-              <p className="mt-2 text-xs leading-relaxed text-bone-200/60">{dashboard.readiness.guidance}</p>
+              <p className="mt-2 text-lg font-semibold text-bone-100">
+                {dashboard.readiness.headline}
+              </p>
+              <p className="mt-2 text-xs leading-relaxed text-bone-200/60">
+                {dashboard.readiness.guidance}
+              </p>
             </div>
           </div>
 
@@ -70,7 +92,9 @@ export default async function RecoveryPage() {
                 <li key={component.key}>
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="font-medium">{component.label}</span>
-                    <span className="text-sm tabular-nums text-muted">{Math.round(component.score)}</span>
+                    <span className="text-sm tabular-nums text-muted">
+                      {Math.round(component.score)}
+                    </span>
                   </div>
                   <p className="mt-1 text-xs text-muted">{component.detail}</p>
                   <div className="mt-2 h-1 overflow-hidden rounded-pill bg-ink-900/10">
@@ -90,7 +114,11 @@ export default async function RecoveryPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="eyebrow">Recovery sessions</h2>
           <div className="flex flex-wrap gap-2">
-            {recovery.categories.map((category) => <Chip key={category} size="sm">{category}</Chip>)}
+            {recovery.categories.map((category) => (
+              <Chip key={category} size="sm">
+                {category}
+              </Chip>
+            ))}
           </div>
         </div>
 
@@ -134,7 +162,9 @@ export default async function RecoveryPage() {
                       {entry.session && ` · ${entry.session.category}`}
                     </p>
                   </div>
-                  <span className="text-sm tabular-nums text-muted">{formatMinutes(entry.log.minutes)}</span>
+                  <span className="text-sm tabular-nums text-muted">
+                    {formatMinutes(entry.log.minutes)}
+                  </span>
                 </li>
               ))}
             </ul>

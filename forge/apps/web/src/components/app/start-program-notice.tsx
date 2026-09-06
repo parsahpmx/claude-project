@@ -48,16 +48,21 @@ export function StartProgramNotice() {
   return (
     <Card>
       {state === 'error' && (
-        <div className="mb-5"><ErrorState title="Could not start programme" body={message} /></div>
+        <div className="mb-5">
+          <ErrorState title="Could not start programme" body={message} />
+        </div>
       )}
       <p className="eyebrow mb-3">Start a programme</p>
       <p className="text-sm leading-relaxed text-muted">
-        Paste a programme slug (for example <code className="font-mono">muscle-builder</code>) or open a
-        programme below and start it from there.
+        Paste a programme slug (for example <code className="font-mono">muscle-builder</code>) or
+        open a programme below and start it from there.
       </p>
       <div className="mt-5 flex flex-wrap items-end gap-3">
         <div className="min-w-[240px] flex-1">
-          <label htmlFor="program-slug" className="mb-2 block text-xs font-semibold uppercase tracking-[0.1em] opacity-70">
+          <label
+            htmlFor="program-slug"
+            className="mb-2 block text-xs font-semibold uppercase tracking-[0.1em] opacity-70"
+          >
             Programme slug
           </label>
           <input
@@ -68,7 +73,10 @@ export function StartProgramNotice() {
             className="min-h-[48px] w-full rounded-[8px] border border-ink-900/15 px-4 text-sm focus:border-ember"
           />
         </div>
-        <Button onClick={() => void start()} disabled={state === 'pending' || slug.trim().length === 0}>
+        <Button
+          onClick={() => void start()}
+          disabled={state === 'pending' || slug.trim().length === 0}
+        >
           {state === 'pending' ? 'Building…' : 'Start Programme'}
         </Button>
       </div>

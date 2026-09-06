@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { encodePolyline, decodePolyline, haversineM, pathLengthM, simplify } from './geo';
 import { sanitizeTrack, canView } from './privacy';
-import { loadBalance, loadBand, consistency, effortScore, estimateOneRepMax, sessionLoad, pacePerKm } from './metrics';
+import {
+  loadBalance,
+  loadBand,
+  consistency,
+  effortScore,
+  estimateOneRepMax,
+  sessionLoad,
+  pacePerKm,
+} from './metrics';
 import { isEnabled, parseDisabledFeatures } from './flags';
 import { activityCreateSchema, routeCreateSchema } from './validation';
 import type { LngLat } from './types';
@@ -13,7 +21,11 @@ function line(points: number): LngLat[] {
 
 describe('geo', () => {
   it('round-trips a polyline through encode and decode', () => {
-    const points: LngLat[] = [[-0.1276, 51.5074], [-0.1280, 51.5080], [-0.1290, 51.5090]];
+    const points: LngLat[] = [
+      [-0.1276, 51.5074],
+      [-0.128, 51.508],
+      [-0.129, 51.509],
+    ];
     const decoded = decodePolyline(encodePolyline(points));
     expect(decoded).toHaveLength(3);
     decoded.forEach((p, i) => {
@@ -52,7 +64,9 @@ describe('privacy: sanitizeTrack', () => {
     expect(out.length).toBeLessThan(points.length);
     // Nothing within the hide radius of either original endpoint survives.
     expect(haversineM(out[0]!, points[0]!)).toBeGreaterThan(settings.hideRadiusM);
-    expect(haversineM(out[out.length - 1]!, points[points.length - 1]!)).toBeGreaterThan(settings.hideRadiusM);
+    expect(haversineM(out[out.length - 1]!, points[points.length - 1]!)).toBeGreaterThan(
+      settings.hideRadiusM,
+    );
   });
 
   it('publishes nothing when trimming leaves too little to be a shape', () => {
@@ -77,15 +91,22 @@ describe('privacy: sanitizeTrack', () => {
   });
 
   it('never returns a two-point stub, which would be a location not a route', () => {
-    const points: LngLat[] = [[0, 0], [0.00001, 0], [0.00002, 0]];
+    const points: LngLat[] = [
+      [0, 0],
+      [0.00001, 0],
+      [0.00002, 0],
+    ];
     expect(sanitizeTrack(points, settings)).toEqual([]);
   });
 });
 
 describe('privacy: canView mirrors the SQL policy', () => {
   const base = {
-    viewerId: 'viewer', ownerId: 'owner', viewerFollowsOwner: false,
-    eitherHasBlocked: false, ownerProfileVisibility: 'public' as const,
+    viewerId: 'viewer',
+    ownerId: 'owner',
+    viewerFollowsOwner: false,
+    eitherHasBlocked: false,
+    ownerProfileVisibility: 'public' as const,
   };
 
   it('always shows an owner their own content', () => {
@@ -103,12 +124,16 @@ describe('privacy: canView mirrors the SQL policy', () => {
 
   it('lets a block override everything short of ownership', () => {
     expect(canView({ ...base, level: 'public', eitherHasBlocked: true })).toBe(false);
-    expect(canView({ ...base, level: 'followers', viewerFollowsOwner: true, eitherHasBlocked: true })).toBe(false);
+    expect(
+      canView({ ...base, level: 'followers', viewerFollowsOwner: true, eitherHasBlocked: true }),
+    ).toBe(false);
   });
 
   it('shows anonymous viewers only public content on a public profile', () => {
     expect(canView({ ...base, viewerId: null, level: 'public' })).toBe(true);
-    expect(canView({ ...base, viewerId: null, level: 'public', ownerProfileVisibility: 'followers' })).toBe(false);
+    expect(
+      canView({ ...base, viewerId: null, level: 'public', ownerProfileVisibility: 'followers' }),
+    ).toBe(false);
     expect(canView({ ...base, viewerId: null, level: 'followers' })).toBe(false);
   });
 });
@@ -176,8 +201,13 @@ describe('feature flags', () => {
 
 describe('validation', () => {
   const valid = {
-    sport: 'run', title: 'Morning run', startedAt: '2026-09-06T07:00:00.000Z',
-    elapsedS: 3600, movingS: 3500, distanceM: 10_000, elevationGainM: 50,
+    sport: 'run',
+    title: 'Morning run',
+    startedAt: '2026-09-06T07:00:00.000Z',
+    elapsedS: 3600,
+    movingS: 3500,
+    distanceM: 10_000,
+    elevationGainM: 50,
   };
 
   it('rejects moving time greater than elapsed time', () => {
@@ -195,10 +225,26 @@ describe('validation', () => {
 
   it('requires at least two points for a route', () => {
     expect(routeCreateSchema.safeParse({ name: 'Loop', path: [[0, 0]] }).success).toBe(false);
-    expect(routeCreateSchema.safeParse({ name: 'Loop', path: [[0, 0], [0.01, 0.01]] }).success).toBe(true);
+    expect(
+      routeCreateSchema.safeParse({
+        name: 'Loop',
+        path: [
+          [0, 0],
+          [0.01, 0.01],
+        ],
+      }).success,
+    ).toBe(true);
   });
 
   it('rejects coordinates outside the world', () => {
-    expect(routeCreateSchema.safeParse({ name: 'Loop', path: [[200, 0], [0, 0]] }).success).toBe(false);
+    expect(
+      routeCreateSchema.safeParse({
+        name: 'Loop',
+        path: [
+          [200, 0],
+          [0, 0],
+        ],
+      }).success,
+    ).toBe(false);
   });
 });

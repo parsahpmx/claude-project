@@ -13,19 +13,44 @@ export const dynamic = 'force-dynamic';
 
 interface ProfileResponse {
   user: {
-    id: string; email: string; firstName: string; lastName: string;
-    timezone: string; unitSystem: string; locale: string; marketingOptIn: boolean;
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    timezone: string;
+    unitSystem: string;
+    locale: string;
+    marketingOptIn: boolean;
   } | null;
   profile: MemberProfile | null;
-  devices: { id: string; provider: string; status: string; permissions: string[]; lastSyncedAt: string | null }[];
+  devices: {
+    id: string;
+    provider: string;
+    status: string;
+    permissions: string[];
+    lastSyncedAt: string | null;
+  }[];
 }
 
 interface BillingResponse {
   subscription: Subscription | null;
   plan: { name: string; tagline: string; features: string[] } | null;
   entitlements: string[];
-  invoices: { id: string; description: string; amountCents: number; status: string; issuedOn: string }[];
-  paymentMethods: { id: string; brand: string | null; last4: string | null; expiryMonth: number | null; expiryYear: number | null; isDefault: boolean }[];
+  invoices: {
+    id: string;
+    description: string;
+    amountCents: number;
+    status: string;
+    issuedOn: string;
+  }[];
+  paymentMethods: {
+    id: string;
+    brand: string | null;
+    last4: string | null;
+    expiryMonth: number | null;
+    expiryYear: number | null;
+    isDefault: boolean;
+  }[];
 }
 
 const PROVIDER_LABEL: Record<string, string> = {
@@ -40,9 +65,19 @@ const PROVIDER_LABEL: Record<string, string> = {
 };
 
 const SECTIONS = [
-  'Personal details', 'My goals', 'Training preferences', 'Nutrition preferences',
-  'My equipment', 'Wearables', 'Notifications', 'Language', 'Privacy',
-  'Billing', 'Subscription', 'Downloads', 'Security',
+  'Personal details',
+  'My goals',
+  'Training preferences',
+  'Nutrition preferences',
+  'My equipment',
+  'Wearables',
+  'Notifications',
+  'Language',
+  'Privacy',
+  'Billing',
+  'Subscription',
+  'Downloads',
+  'Security',
 ];
 
 export default async function ProfilePage() {
@@ -79,7 +114,9 @@ export default async function ProfilePage() {
               {profile.user && profile.profile ? (
                 <ProfileForm user={profile.user} profile={profile.profile} />
               ) : (
-                <p className="text-sm text-muted">Complete the assessment to set up your profile.</p>
+                <p className="text-sm text-muted">
+                  Complete the assessment to set up your profile.
+                </p>
               )}
             </Card>
           </section>
@@ -88,8 +125,8 @@ export default async function ProfilePage() {
             <Card>
               <p className="eyebrow mb-4">My equipment</p>
               <p className="text-sm leading-relaxed text-muted">
-                We only recommend workouts you can actually perform with your setup. Change this and your plan
-                re-checks every session in the block.
+                We only recommend workouts you can actually perform with your setup. Change this and
+                your plan re-checks every session in the block.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {(profile.profile?.equipment ?? []).map((item) => (
@@ -107,15 +144,20 @@ export default async function ProfilePage() {
               <div className="border-b border-ink-900/10 p-6">
                 <p className="eyebrow">Wearables</p>
                 <p className="mt-2 text-sm text-muted">
-                  Connected devices supply sleep, HRV, resting heart rate and steps. FORGE reads only what each
-                  permission below allows.
+                  Connected devices supply sleep, HRV, resting heart rate and steps. FORGE reads
+                  only what each permission below allows.
                 </p>
               </div>
               <ul className="divide-y divide-ink-900/8">
                 {profile.devices.map((device) => (
-                  <li key={device.id} className="flex flex-wrap items-center justify-between gap-4 p-5">
+                  <li
+                    key={device.id}
+                    className="flex flex-wrap items-center justify-between gap-4 p-5"
+                  >
                     <div>
-                      <p className="font-medium">{PROVIDER_LABEL[device.provider] ?? device.provider}</p>
+                      <p className="font-medium">
+                        {PROVIDER_LABEL[device.provider] ?? device.provider}
+                      </p>
                       {device.permissions.length > 0 ? (
                         <p className="mt-1 text-xs text-muted">
                           Reads: {device.permissions.map((p) => p.replace(/-/g, ' ')).join(', ')}
@@ -156,8 +198,14 @@ export default async function ProfilePage() {
                   <dl className="mt-6 space-y-3 text-sm">
                     <Row label="Status" value={billing.subscription.status} />
                     <Row label="Billing" value={billing.subscription.billingInterval} />
-                    <Row label="Price" value={`${formatCents(billing.subscription.priceCents)} / ${billing.subscription.billingInterval === 'yearly' ? 'year' : 'month'}`} />
-                    <Row label="Renews" value={formatDateLabel(billing.subscription.currentPeriodEndsOn)} />
+                    <Row
+                      label="Price"
+                      value={`${formatCents(billing.subscription.priceCents)} / ${billing.subscription.billingInterval === 'yearly' ? 'year' : 'month'}`}
+                    />
+                    <Row
+                      label="Renews"
+                      value={formatDateLabel(billing.subscription.currentPeriodEndsOn)}
+                    />
                   </dl>
                   {billing.subscription.cancelAtPeriodEnd && (
                     <p className="mt-5 rounded-[8px] border border-signal-warn/25 bg-signal-warn/[0.08] p-3 text-xs">
@@ -166,7 +214,9 @@ export default async function ProfilePage() {
                     </p>
                   )}
                   <div className="mt-6 flex flex-col gap-2">
-                    <ButtonLink href="/pricing" variant="inverse" size="sm" block>Change Plan</ButtonLink>
+                    <ButtonLink href="/pricing" variant="inverse" size="sm" block>
+                      Change Plan
+                    </ButtonLink>
                   </div>
                 </>
               ) : (

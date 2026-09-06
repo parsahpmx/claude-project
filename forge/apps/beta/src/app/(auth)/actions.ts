@@ -24,12 +24,15 @@ export interface AuthState {
  */
 function readableAuthError(message: string): string {
   const m = message.toLowerCase();
-  if (m.includes('invalid login credentials')) return 'That email and password do not match an account.';
-  if (m.includes('email not confirmed')) return 'Check your inbox and confirm your email address first.';
+  if (m.includes('invalid login credentials'))
+    return 'That email and password do not match an account.';
+  if (m.includes('email not confirmed'))
+    return 'Check your inbox and confirm your email address first.';
   if (m.includes('already registered') || m.includes('already been registered')) {
     return 'There is already an account with that email. Try logging in.';
   }
-  if (m.includes('rate limit') || m.includes('too many')) return 'Too many attempts. Wait a minute and try again.';
+  if (m.includes('rate limit') || m.includes('too many'))
+    return 'Too many attempts. Wait a minute and try again.';
   return 'We could not complete that. Try again in a moment.';
 }
 
@@ -76,7 +79,9 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     return { fieldErrors };
   }
 
-  const displayName = String(formData.get('displayName') ?? '').trim().slice(0, 60);
+  const displayName = String(formData.get('displayName') ?? '')
+    .trim()
+    .slice(0, 60);
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({

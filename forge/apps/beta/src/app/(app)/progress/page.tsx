@@ -3,7 +3,14 @@ import { Card, Metric, EmptyState, ButtonLink } from '@/components/ui/primitives
 import { WeeklyVolumeChart } from '@/components/app/charts';
 import { getMyActivities, getSessionProfile } from '@/lib/queries';
 import { createClient } from '@/lib/supabase/server';
-import { formatDistance, formatDuration, formatLoadG, isoDate, addDays, startOfWeek } from '@/lib/format';
+import {
+  formatDistance,
+  formatDuration,
+  formatLoadG,
+  isoDate,
+  addDays,
+  startOfWeek,
+} from '@/lib/format';
 
 export const metadata = { title: 'Progress' };
 export const dynamic = 'force-dynamic';
@@ -18,10 +25,7 @@ export const dynamic = 'force-dynamic';
  */
 export default async function ProgressPage() {
   const supabase = await createClient();
-  const [profile, activities] = await Promise.all([
-    getSessionProfile(),
-    getMyActivities(50),
-  ]);
+  const [profile, activities] = await Promise.all([getSessionProfile(), getMyActivities(50)]);
 
   const { data: prRows } = await supabase
     .from('exercise_prs')
@@ -64,14 +68,23 @@ export default async function ProgressPage() {
       </header>
 
       <section aria-labelledby="overview-heading">
-        <h2 id="overview-heading" className="eyebrow mb-4">Overview</h2>
+        <h2 id="overview-heading" className="eyebrow mb-4">
+          Overview
+        </h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Card><Metric label="Sessions" value={totalSessions} size="xl" /></Card>
-          <Card><Metric label="Training time" value={formatDuration(totalMinutes * 60)} size="xl" /></Card>
-          <Card><Metric label="Distance" value={formatDistance(totalDistance, units)} size="xl" /></Card>
+          <Card>
+            <Metric label="Sessions" value={totalSessions} size="xl" />
+          </Card>
+          <Card>
+            <Metric label="Training time" value={formatDuration(totalMinutes * 60)} size="xl" />
+          </Card>
+          <Card>
+            <Metric label="Distance" value={formatDistance(totalDistance, units)} size="xl" />
+          </Card>
           <Card>
             <Metric
-              label="Load balance" size="xl"
+              label="Load balance"
+              size="xl"
               value={balance === null ? '—' : balance.toFixed(2)}
               hint={band === null ? 'Needs two weeks of history' : LOAD_COPY[band]}
             />
@@ -80,14 +93,18 @@ export default async function ProgressPage() {
       </section>
 
       <section aria-labelledby="volume-heading">
-        <h2 id="volume-heading" className="eyebrow mb-4">Weekly training time</h2>
+        <h2 id="volume-heading" className="eyebrow mb-4">
+          Weekly training time
+        </h2>
         <Card>
           <WeeklyVolumeChart weeks={weeks} />
         </Card>
       </section>
 
       <section aria-labelledby="records-heading">
-        <h2 id="records-heading" className="eyebrow mb-4">Strength records</h2>
+        <h2 id="records-heading" className="eyebrow mb-4">
+          Strength records
+        </h2>
         {!prRows || prRows.length === 0 ? (
           <EmptyState
             title="No records yet"
@@ -113,29 +130,31 @@ export default async function ProgressPage() {
       </section>
 
       <section aria-labelledby="method-heading">
-        <h2 id="method-heading" className="eyebrow mb-4">How these are worked out</h2>
+        <h2 id="method-heading" className="eyebrow mb-4">
+          How these are worked out
+        </h2>
         <Card>
           <dl className="space-y-4 text-secondary">
             <div>
               <dt className="font-semibold text-bone-100">Load balance</dt>
               <dd className="mt-1 muted">
-                The last seven days of training load divided by the average week of the
-                last twenty-eight. Around 1.0 means this week looks like your recent
-                weeks. It stays blank until there are two weeks to compare.
+                The last seven days of training load divided by the average week of the last
+                twenty-eight. Around 1.0 means this week looks like your recent weeks. It stays
+                blank until there are two weeks to compare.
               </dd>
             </div>
             <div>
               <dt className="font-semibold text-bone-100">Training load</dt>
               <dd className="mt-1 muted">
-                Session minutes multiplied by perceived effort. A long easy run and a
-                short hard one can land in the same place, which is the point.
+                Session minutes multiplied by perceived effort. A long easy run and a short hard one
+                can land in the same place, which is the point.
               </dd>
             </div>
             <div>
               <dt className="font-semibold text-bone-100">Estimated 1RM</dt>
               <dd className="mt-1 muted">
-                Load × (1 + reps ÷ 30), from your heaviest qualifying set. Beyond twelve
-                reps the estimate stops meaning much, so FORGE does not show one.
+                Load × (1 + reps ÷ 30), from your heaviest qualifying set. Beyond twelve reps the
+                estimate stops meaning much, so FORGE does not show one.
               </dd>
             </div>
           </dl>
@@ -154,14 +173,18 @@ const LOAD_COPY = {
 
 function buildDaily(
   activities: readonly { startedAt: string; movingS: number; trainingLoad: number | null }[],
-  today: string, days: number,
+  today: string,
+  days: number,
 ): number[] {
   const buckets = new Map<string, number>();
   for (let i = days - 1; i >= 0; i -= 1) buckets.set(addDays(today, -i), 0);
   for (const a of activities) {
     const date = a.startedAt.slice(0, 10);
     if (buckets.has(date)) {
-      buckets.set(date, (buckets.get(date) ?? 0) + (a.trainingLoad ?? Math.round((a.movingS / 60) * 5)));
+      buckets.set(
+        date,
+        (buckets.get(date) ?? 0) + (a.trainingLoad ?? Math.round((a.movingS / 60) * 5)),
+      );
     }
   }
   return [...buckets.values()];
@@ -169,7 +192,8 @@ function buildDaily(
 
 function buildWeeks(
   activities: readonly { startedAt: string; movingS: number }[],
-  today: string, count: number,
+  today: string,
+  count: number,
 ): { week: string; minutes: number }[] {
   const start = startOfWeek(today);
   const weeks: { week: string; minutes: number }[] = [];

@@ -29,8 +29,8 @@ export default async function PrivacyPage() {
       <header>
         <h1 className="text-page-title font-display text-bone-100">Privacy</h1>
         <p className="mt-2 text-body muted">
-          FORGE starts closed and opens only where you say so. Everything here takes
-          effect immediately, including on activities you have already recorded.
+          FORGE starts closed and opens only where you say so. Everything here takes effect
+          immediately, including on activities you have already recorded.
         </p>
       </header>
 

@@ -26,7 +26,9 @@ export const plans = pgTable(
   'plans',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     programSlug: varchar('program_slug', { length: 64 }).notNull(),
     programName: varchar('program_name', { length: 120 }).notNull(),
     goal: varchar('goal', { length: 32 }).notNull(),
@@ -45,7 +47,9 @@ export const planWeeks = pgTable(
   'plan_weeks',
   {
     id: id().primaryKey(),
-    planId: id('plan_id').notNull().references(() => plans.id, { onDelete: 'cascade' }),
+    planId: id('plan_id')
+      .notNull()
+      .references(() => plans.id, { onDelete: 'cascade' }),
     weekNumber: smallint('week_number').notNull(),
     phase: varchar('phase', { length: 16 }).notNull(),
     startDate: date('start_date').notNull(),
@@ -64,15 +68,22 @@ export const planDays = pgTable(
   'plan_days',
   {
     id: id().primaryKey(),
-    planWeekId: id('plan_week_id').notNull().references(() => planWeeks.id, { onDelete: 'cascade' }),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    planWeekId: id('plan_week_id')
+      .notNull()
+      .references(() => planWeeks.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     date: date('date').notNull(),
     dayOfWeek: smallint('day_of_week').notNull(),
     kind: varchar('kind', { length: 16 }).notNull(),
     title: varchar('title', { length: 120 }).notNull(),
     focus: varchar('focus', { length: 120 }).notNull(),
     minutes: smallint('minutes').notNull(),
-    patterns: text('patterns').array().notNull().default(sql`'{}'::text[]`),
+    patterns: text('patterns')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     sessionTemplate: text('session_template'),
     status: varchar('status', { length: 16 }).notNull().default('scheduled'),
     /** Set when a member moves a session; the original date is never lost. */
@@ -89,7 +100,9 @@ export const workoutLogs = pgTable(
   'workout_logs',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     planDayId: id('plan_day_id').references(() => planDays.id, { onDelete: 'set null' }),
     title: varchar('title', { length: 120 }).notNull(),
     kind: varchar('kind', { length: 16 }).notNull(),
@@ -104,7 +117,10 @@ export const workoutLogs = pgTable(
     averageRpe: smallint('average_rpe'),
     sessionLoad: integer('session_load').notNull().default(0),
     difficultyFeedback: varchar('difficulty_feedback', { length: 16 }),
-    muscleGroups: text('muscle_groups').array().notNull().default(sql`'{}'::text[]`),
+    muscleGroups: text('muscle_groups')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     notes: text('notes'),
     ...timestamps,
   },
@@ -115,7 +131,9 @@ export const setLogs = pgTable(
   'set_logs',
   {
     id: id().primaryKey(),
-    workoutLogId: id('workout_log_id').notNull().references(() => workoutLogs.id, { onDelete: 'cascade' }),
+    workoutLogId: id('workout_log_id')
+      .notNull()
+      .references(() => workoutLogs.id, { onDelete: 'cascade' }),
     exerciseId: varchar('exercise_id', { length: 64 }).notNull(),
     exerciseName: varchar('exercise_name', { length: 120 }).notNull(),
     setIndex: smallint('set_index').notNull(),
@@ -124,10 +142,16 @@ export const setLogs = pgTable(
     rpe: smallint('rpe'),
     completed: boolean('completed').notNull().default(false),
     restSeconds: smallint('rest_seconds'),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
   },
   (table) => [
-    uniqueIndex('set_logs_workout_exercise_set_unique').on(table.workoutLogId, table.exerciseId, table.setIndex),
+    uniqueIndex('set_logs_workout_exercise_set_unique').on(
+      table.workoutLogId,
+      table.exerciseId,
+      table.setIndex,
+    ),
     index('set_logs_exercise_idx').on(table.exerciseId),
   ],
 );
@@ -143,7 +167,9 @@ export const exerciseLoads = pgTable(
   'exercise_loads',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     exerciseId: varchar('exercise_id', { length: 64 }).notNull(),
     workingLoadGrams: grams('working_load_grams').notNull(),
     lastReps: smallint('last_reps'),
@@ -152,14 +178,18 @@ export const exerciseLoads = pgTable(
     bestEstimatedOneRepMax: grams('best_estimated_one_rep_max').notNull().default(0),
     ...timestamps,
   },
-  (table) => [uniqueIndex('exercise_loads_user_exercise_unique').on(table.userId, table.exerciseId)],
+  (table) => [
+    uniqueIndex('exercise_loads_user_exercise_unique').on(table.userId, table.exerciseId),
+  ],
 );
 
 export const personalRecords = pgTable(
   'personal_records',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     exerciseId: varchar('exercise_id', { length: 64 }).notNull(),
     exerciseName: varchar('exercise_name', { length: 120 }).notNull(),
     kind: varchar('kind', { length: 24 }).notNull(),
@@ -168,7 +198,9 @@ export const personalRecords = pgTable(
     reps: smallint('reps').notNull().default(1),
     achievedOn: date('achieved_on').notNull(),
     workoutLogId: id('workout_log_id').references(() => workoutLogs.id, { onDelete: 'set null' }),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
   },
   (table) => [index('personal_records_user_exercise_idx').on(table.userId, table.exerciseId)],
 );
@@ -177,7 +209,9 @@ export const bodyMeasurements = pgTable(
   'body_measurements',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     date: date('date').notNull(),
     weightGrams: grams('weight_grams'),
     bodyFatPercent: smallint('body_fat_percent'),
@@ -209,11 +243,17 @@ export const recoveryLogs = pgTable(
   'recovery_logs',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-    recoverySessionId: id('recovery_session_id').references(() => recoverySessions.id, { onDelete: 'set null' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    recoverySessionId: id('recovery_session_id').references(() => recoverySessions.id, {
+      onDelete: 'set null',
+    }),
     date: date('date').notNull(),
     minutes: smallint('minutes').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
   },
   (table) => [index('recovery_logs_user_date_idx').on(table.userId, table.date)],
 );
@@ -222,7 +262,9 @@ export const calendarEvents = pgTable(
   'calendar_events',
   {
     id: id().primaryKey(),
-    userId: id('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
     kind: varchar('kind', { length: 24 }).notNull(),
     title: varchar('title', { length: 160 }).notNull(),
     date: date('date').notNull(),

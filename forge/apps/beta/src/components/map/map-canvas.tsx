@@ -111,7 +111,10 @@ export function MapCanvas({
               const lngs = all.map((p) => p[0]);
               const lats = all.map((p) => p[1]);
               instance.fitBounds(
-                [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
+                [
+                  [Math.min(...lngs), Math.min(...lats)],
+                  [Math.max(...lngs), Math.max(...lats)],
+                ],
                 { padding: 48, duration: 0 },
               );
             }
@@ -142,8 +145,8 @@ export function MapCanvas({
               <>
                 <p className="text-card-title text-bone-100">Map unavailable</p>
                 <p className="mt-2 text-secondary muted">
-                  Tiles could not be loaded. Route distance, elevation and splits are
-                  all still shown below.
+                  Tiles could not be loaded. Route distance, elevation and splits are all still
+                  shown below.
                 </p>
               </>
             )}

@@ -40,13 +40,27 @@ export function ProgressRing({
   return (
     <div className="inline-flex flex-col items-center gap-2">
       <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`${label ?? 'Progress'}: ${clamped}%`}>
+        <svg
+          width={size}
+          height={size}
+          viewBox={`0 0 ${size} ${size}`}
+          role="img"
+          aria-label={`${label ?? 'Progress'}: ${clamped}%`}
+        >
           <circle
-            cx={size / 2} cy={size / 2} r={radius} fill="none" strokeWidth={stroke}
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            strokeWidth={stroke}
             className="stroke-current opacity-10"
           />
           <circle
-            cx={size / 2} cy={size / 2} r={radius} fill="none" strokeWidth={stroke}
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            strokeWidth={stroke}
             strokeLinecap="round"
             strokeDasharray={`${dash} ${circumference - dash}`}
             transform={`rotate(-90 ${size / 2} ${size / 2})`}
@@ -55,10 +69,16 @@ export function ProgressRing({
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="display text-lg tabular-nums leading-none">{clamped}</span>
-          {sublabel && <span className="mt-0.5 text-[0.5625rem] uppercase tracking-[0.12em] text-muted">{sublabel}</span>}
+          {sublabel && (
+            <span className="mt-0.5 text-[0.5625rem] uppercase tracking-[0.12em] text-muted">
+              {sublabel}
+            </span>
+          )}
         </div>
       </div>
-      {label && <span className="text-[0.6875rem] uppercase tracking-[0.1em] text-muted">{label}</span>}
+      {label && (
+        <span className="text-[0.6875rem] uppercase tracking-[0.1em] text-muted">{label}</span>
+      )}
     </div>
   );
 }
@@ -78,8 +98,11 @@ export function ProgressBar({
 }) {
   const percent = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0;
   const colours = {
-    accent: 'bg-ember', good: 'bg-signal-good', warn: 'bg-signal-warn',
-    bad: 'bg-signal-bad', neutral: 'bg-smoke-500',
+    accent: 'bg-ember',
+    good: 'bg-signal-good',
+    warn: 'bg-signal-warn',
+    bad: 'bg-signal-bad',
+    neutral: 'bg-smoke-500',
   } as const;
 
   return (
@@ -99,7 +122,10 @@ export function ProgressBar({
         aria-label={label ?? 'Progress'}
       >
         <div
-          className={clsx('h-full rounded-pill transition-[width] duration-700 ease-forge', colours[tone])}
+          className={clsx(
+            'h-full rounded-pill transition-[width] duration-700 ease-forge',
+            colours[tone],
+          )}
           style={{ width: `${percent}%` }}
         />
       </div>
@@ -178,13 +204,23 @@ export function LineChart({
         />
         {comparison && comparison.length > 1 && (
           <path
-            d={toPath(comparison)} fill="none" strokeWidth={1.5} strokeDasharray="4 4"
+            d={toPath(comparison)}
+            fill="none"
+            strokeWidth={1.5}
+            strokeDasharray="4 4"
             className="stroke-current opacity-30"
           />
         )}
         <path
-          d={path} fill="none" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
-          className={clsx('animate-sweep-in origin-left', tone === 'accent' ? 'stroke-ember' : 'stroke-smoke-500')}
+          d={path}
+          fill="none"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={clsx(
+            'animate-sweep-in origin-left',
+            tone === 'accent' ? 'stroke-ember' : 'stroke-smoke-500',
+          )}
         />
       </svg>
       <figcaption className="mt-2 flex justify-between text-[0.6875rem] tabular-nums text-muted">
@@ -217,13 +253,20 @@ export function BarChart({
 
   return (
     <figure>
-      <div className="flex items-end gap-1.5" style={{ height }} role="img" aria-label={`${label} by week`}>
+      <div
+        className="flex items-end gap-1.5"
+        style={{ height }}
+        role="img"
+        aria-label={`${label} by week`}
+      >
         {points.map((point) => (
           <div key={point.date} className="group/bar relative flex flex-1 flex-col justify-end">
             <div
               className={clsx(
                 'w-full rounded-t-[3px] transition-all duration-500 ease-forge',
-                point.value === 0 ? 'bg-current/8' : 'accent-tint bg-ember/75 group-hover/bar:bg-ember',
+                point.value === 0
+                  ? 'bg-current/8'
+                  : 'accent-tint bg-ember/75 group-hover/bar:bg-ember',
               )}
               style={{ height: `${Math.max(2, (point.value / max) * 100)}%` }}
             />
@@ -249,7 +292,13 @@ export function Heatmap({
 }) {
   // Five steps, each with a distinct lightness as well as a distinct opacity,
   // so the ramp survives greyscale.
-  const shades = ['bg-current/[0.06]', 'accent-tint bg-ember/25', 'accent-tint bg-ember/45', 'accent-tint bg-ember/70', 'bg-ember'];
+  const shades = [
+    'bg-current/[0.06]',
+    'accent-tint bg-ember/25',
+    'accent-tint bg-ember/45',
+    'accent-tint bg-ember/70',
+    'bg-ember',
+  ];
 
   return (
     <figure>
@@ -259,7 +308,10 @@ export function Heatmap({
         role="img"
         aria-label={`${label}. ${cells.filter((c) => c.count > 0).length} active days of ${cells.length}.`}
       >
-        <div className="grid grid-flow-col grid-rows-7 gap-1" style={{ minWidth: `${Math.ceil(cells.length / 7) * 14}px` }}>
+        <div
+          className="grid grid-flow-col grid-rows-7 gap-1"
+          style={{ minWidth: `${Math.ceil(cells.length / 7) * 14}px` }}
+        >
           {cells.map((cell) => (
             <span
               key={cell.date}
@@ -311,7 +363,11 @@ export function DonutChart({
           const element = (
             <circle
               key={segment.label}
-              cx={size / 2} cy={size / 2} r={radius} fill="none" strokeWidth={stroke}
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              strokeWidth={stroke}
               strokeDasharray={`${dash} ${circumference - dash}`}
               strokeDashoffset={-offset}
               transform={`rotate(-90 ${size / 2} ${size / 2})`}
@@ -342,7 +398,13 @@ export function DonutChart({
   );
 }
 
-export function Sparkline({ values, tone = 'accent' }: { values: number[]; tone?: 'accent' | 'neutral' }) {
+export function Sparkline({
+  values,
+  tone = 'accent',
+}: {
+  values: number[];
+  tone?: 'accent' | 'neutral';
+}) {
   if (values.length < 2) return <span className="text-xs text-muted">—</span>;
   const width = 72;
   const height = 22;
@@ -358,9 +420,18 @@ export function Sparkline({ values, tone = 'accent' }: { values: number[]; tone?
     .join(' ');
 
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden className="overflow-visible">
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      aria-hidden
+      className="overflow-visible"
+    >
       <path
-        d={path} fill="none" strokeWidth={1.75} strokeLinecap="round"
+        d={path}
+        fill="none"
+        strokeWidth={1.75}
+        strokeLinecap="round"
         className={tone === 'accent' ? 'stroke-ember' : 'stroke-smoke-500'}
       />
     </svg>

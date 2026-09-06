@@ -32,22 +32,49 @@ function firstOf<T>(value: Embedded<T>): T | null {
 type AthleteRef = { display_name: string; username: string | null };
 
 type ActivityRow = {
-  id: string; user_id: string; sport: Sport; title: string; description: string;
-  started_at: string; timezone: string; elapsed_s: number; moving_s: number;
-  distance_m: number; elevation_gain_m: number; avg_hr: number | null; max_hr: number | null;
-  calories: number | null; training_load: number | null; visibility: Visibility;
-  source: Activity['source']; has_gps: boolean; map_polyline: string | null;
+  id: string;
+  user_id: string;
+  sport: Sport;
+  title: string;
+  description: string;
+  started_at: string;
+  timezone: string;
+  elapsed_s: number;
+  moving_s: number;
+  distance_m: number;
+  elevation_gain_m: number;
+  avg_hr: number | null;
+  max_hr: number | null;
+  calories: number | null;
+  training_load: number | null;
+  visibility: Visibility;
+  source: Activity['source'];
+  has_gps: boolean;
+  map_polyline: string | null;
   processed_at: string | null;
 };
 
 function toActivity(row: ActivityRow): Activity {
   return {
-    id: row.id, userId: row.user_id, sport: row.sport, title: row.title,
-    description: row.description, startedAt: row.started_at, timezone: row.timezone,
-    elapsedS: row.elapsed_s, movingS: row.moving_s, distanceM: row.distance_m,
-    elevationGainM: row.elevation_gain_m, avgHr: row.avg_hr, maxHr: row.max_hr,
-    calories: row.calories, trainingLoad: row.training_load, visibility: row.visibility,
-    source: row.source, hasGps: row.has_gps, mapPolyline: row.map_polyline,
+    id: row.id,
+    userId: row.user_id,
+    sport: row.sport,
+    title: row.title,
+    description: row.description,
+    startedAt: row.started_at,
+    timezone: row.timezone,
+    elapsedS: row.elapsed_s,
+    movingS: row.moving_s,
+    distanceM: row.distance_m,
+    elevationGainM: row.elevation_gain_m,
+    avgHr: row.avg_hr,
+    maxHr: row.max_hr,
+    calories: row.calories,
+    trainingLoad: row.training_load,
+    visibility: row.visibility,
+    source: row.source,
+    hasGps: row.has_gps,
+    mapPolyline: row.map_polyline,
     processedAt: row.processed_at,
   };
 }
@@ -55,12 +82,16 @@ function toActivity(row: ActivityRow): Activity {
 /** Deduplicated per request, so a layout and its page do not both fetch it. */
 export const getSessionProfile = cache(async () => {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return null;
 
   const { data } = await supabase
     .from('profiles')
-    .select('id, username, display_name, bio, avatar_path, primary_sport, location_name, units, onboarded_at')
+    .select(
+      'id, username, display_name, bio, avatar_path, primary_sport, location_name, units, onboarded_at',
+    )
     .eq('id', user.id)
     .maybeSingle();
 
@@ -80,7 +111,9 @@ export const getSessionProfile = cache(async () => {
 
 export async function getMyActivities(limit = 20, before?: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return [];
 
   let query = supabase
@@ -117,17 +150,16 @@ export async function getFeed(limit = 20, before?: string) {
   const { data, error } = await query;
   if (error) throw error;
 
-  return (data as unknown as (ActivityRow & { profiles: Embedded<AthleteRef> })[])
-    .map((row) => {
-      const athlete = firstOf(row.profiles);
-      return {
-        ...toActivity(row),
-        athlete: {
-          displayName: athlete?.display_name ?? 'Athlete',
-          username: athlete?.username ?? null,
-        },
-      };
-    });
+  return (data as unknown as (ActivityRow & { profiles: Embedded<AthleteRef> })[]).map((row) => {
+    const athlete = firstOf(row.profiles);
+    return {
+      ...toActivity(row),
+      athlete: {
+        displayName: athlete?.display_name ?? 'Athlete',
+        username: athlete?.username ?? null,
+      },
+    };
+  });
 }
 
 export async function getActivity(id: string) {
@@ -162,8 +194,11 @@ export async function getActivitySplits(activityId: string) {
     .order('idx');
   if (error) throw error;
   return (data ?? []).map((r) => ({
-    idx: r.idx, distanceM: r.distance_m, elapsedS: r.elapsed_s,
-    elevationM: r.elevation_m, avgHr: r.avg_hr,
+    idx: r.idx,
+    distanceM: r.distance_m,
+    elapsedS: r.elapsed_s,
+    elevationM: r.elevation_m,
+    avgHr: r.avg_hr,
   }));
 }
 
@@ -177,14 +212,21 @@ export async function getStrengthSets(activityId: string) {
     .order('set_index');
   if (error) throw error;
   return (data ?? []).map((r) => ({
-    id: r.id, exerciseSlug: r.exercise_slug, setIndex: r.set_index,
-    reps: r.reps, loadG: r.load_g, rpe: r.rpe, completed: r.completed,
+    id: r.id,
+    exerciseSlug: r.exercise_slug,
+    setIndex: r.set_index,
+    reps: r.reps,
+    loadG: r.load_g,
+    rpe: r.rpe,
+    completed: r.completed,
   }));
 }
 
 export async function getActiveGoals(): Promise<Goal[]> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return [];
 
   const { data, error } = await supabase
@@ -197,14 +239,22 @@ export async function getActiveGoals(): Promise<Goal[]> {
   if (error) throw error;
 
   return (data ?? []).map((r) => ({
-    id: r.id, kind: r.kind, sport: r.sport, target: Number(r.target),
-    unit: r.unit, periodStart: r.period_start, periodEnd: r.period_end, status: r.status,
+    id: r.id,
+    kind: r.kind,
+    sport: r.sport,
+    target: Number(r.target),
+    unit: r.unit,
+    periodStart: r.period_start,
+    periodEnd: r.period_end,
+    status: r.status,
   }));
 }
 
 export async function getUpcomingPlanDays(from: string, to: string): Promise<PlanDay[]> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return [];
 
   const { data, error } = await supabase
@@ -218,40 +268,62 @@ export async function getUpcomingPlanDays(from: string, to: string): Promise<Pla
   if (error) throw error;
 
   return (data ?? []).map((r) => ({
-    id: r.id, planId: r.plan_id, date: r.date, weekIndex: r.week_index,
-    phase: r.phase, title: r.title, sport: r.sport, kind: r.kind,
-    status: r.status, activityId: r.activity_id,
+    id: r.id,
+    planId: r.plan_id,
+    date: r.date,
+    weekIndex: r.week_index,
+    phase: r.phase,
+    title: r.title,
+    sport: r.sport,
+    kind: r.kind,
+    status: r.status,
+    activityId: r.activity_id,
   }));
 }
 
 export async function getMyRoutes(limit = 24) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return [];
 
   const { data, error } = await supabase
     .from('routes')
-    .select('id, user_id, name, description, sport, distance_m, elevation_gain_m, estimated_s, surface, visibility')
+    .select(
+      'id, user_id, name, description, sport, distance_m, elevation_gain_m, estimated_s, surface, visibility',
+    )
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(Math.min(limit, 50));
   if (error) throw error;
 
   return (data ?? []).map((r) => ({
-    id: r.id, userId: r.user_id, name: r.name, description: r.description,
-    sport: r.sport, distanceM: r.distance_m, elevationGainM: r.elevation_gain_m,
-    estimatedS: r.estimated_s, surface: r.surface, visibility: r.visibility,
+    id: r.id,
+    userId: r.user_id,
+    name: r.name,
+    description: r.description,
+    sport: r.sport,
+    distanceM: r.distance_m,
+    elevationGainM: r.elevation_gain_m,
+    estimatedS: r.estimated_s,
+    surface: r.surface,
+    visibility: r.visibility,
   }));
 }
 
 export async function getPrivacySettings() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return null;
 
   const { data } = await supabase
     .from('privacy_settings')
-    .select('user_id, profile_visibility, default_activity_visibility, route_visibility, require_follow_approval, hide_start_end, hide_radius_m, coach_sharing, aggregate_contribution, analytics_consent, ai_consent')
+    .select(
+      'user_id, profile_visibility, default_activity_visibility, route_visibility, require_follow_approval, hide_start_end, hide_radius_m, coach_sharing, aggregate_contribution, analytics_consent, ai_consent',
+    )
     .eq('user_id', user.id)
     .maybeSingle();
 
@@ -273,7 +345,9 @@ export async function getPrivacySettings() {
 
 export async function getPrivateZones() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return [];
   const { data, error } = await supabase
     .from('private_zones')

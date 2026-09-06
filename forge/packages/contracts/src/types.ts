@@ -6,7 +6,15 @@
  * so drift shows up as a failing test rather than as a type that quietly lies.
  */
 
-export const SPORTS = ['run', 'walk', 'hike', 'ride', 'strength', 'functional', 'mobility'] as const;
+export const SPORTS = [
+  'run',
+  'walk',
+  'hike',
+  'ride',
+  'strength',
+  'functional',
+  'mobility',
+] as const;
 export type Sport = (typeof SPORTS)[number];
 
 /** Sports whose sessions are distance-and-pace shaped rather than set-and-rep shaped. */
@@ -23,8 +31,12 @@ export type Surface = 'road' | 'trail' | 'mixed' | 'track' | 'unknown';
 export type ActivitySource = 'manual' | 'upload' | 'ios' | 'web';
 
 export type GoalKind =
-  | 'weekly_sessions' | 'weekly_minutes' | 'weekly_distance'
-  | 'strength_sessions' | 'program_completion' | 'race';
+  | 'weekly_sessions'
+  | 'weekly_minutes'
+  | 'weekly_distance'
+  | 'strength_sessions'
+  | 'program_completion'
+  | 'race';
 
 export interface Profile {
   id: string;

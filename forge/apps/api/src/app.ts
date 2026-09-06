@@ -99,7 +99,9 @@ export async function buildApp(options: BuildOptions = {}): Promise<FastifyInsta
   app.addHook('onRequest', async (request) => {
     const token = request.cookies[SESSION_COOKIE];
     const session = await resolveSession(ctx.db, token);
-    request.principal = session ? await loadPrincipal(ctx.db, session.userId, session.sessionId) : null;
+    request.principal = session
+      ? await loadPrincipal(ctx.db, session.userId, session.sessionId)
+      : null;
   });
 
   app.setErrorHandler((error, request, reply) => {

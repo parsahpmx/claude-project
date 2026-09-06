@@ -25,8 +25,16 @@ function hash(seed: string): () => number {
 }
 
 export function RouteGlyph({
-  seed, className, strokeWidth = 2.5, showMarkers = true,
-}: { seed: string; className?: string; strokeWidth?: number; showMarkers?: boolean }) {
+  seed,
+  className,
+  strokeWidth = 2.5,
+  showMarkers = true,
+}: {
+  seed: string;
+  className?: string;
+  strokeWidth?: number;
+  showMarkers?: boolean;
+}) {
   const rand = hash(seed);
   const steps = 26;
   const points: [number, number][] = [];
@@ -82,14 +90,34 @@ export function RouteGlyph({
           <line key={`v${v}`} x1={v} y1="0" x2={v} y2="100" />
         ))}
       </g>
-      <path d={d} fill="none" stroke="currentColor" strokeWidth={strokeWidth + 2.5} opacity="0.18"
-        strokeLinecap="round" strokeLinejoin="round" />
-      <path d={d} fill="none" stroke="currentColor" strokeWidth={strokeWidth}
-        strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d={d}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth + 2.5}
+        opacity="0.18"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d={d}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       {showMarkers && (
         <>
           <circle cx={start[0]} cy={start[1]} r="2.2" fill="currentColor" />
-          <circle cx={end[0]} cy={end[1]} r="3" fill="none" stroke="currentColor" strokeWidth="1.6" />
+          <circle
+            cx={end[0]}
+            cy={end[1]}
+            r="3"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+          />
         </>
       )}
     </svg>

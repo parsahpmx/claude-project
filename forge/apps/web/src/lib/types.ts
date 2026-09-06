@@ -168,7 +168,14 @@ export interface Program {
   memberCount: number;
   outcomes: string[];
   whoItIsFor: string[];
-  template: { day: number; name: string; kind: string; focus: string; minutes: number; patterns: string[] }[];
+  template: {
+    day: number;
+    name: string;
+    kind: string;
+    focus: string;
+    minutes: number;
+    patterns: string[];
+  }[];
   accentImage: string;
 }
 

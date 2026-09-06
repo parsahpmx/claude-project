@@ -101,14 +101,16 @@ export function progressExercise(
         next,
         loadDeltaPercent: deltaPercent(previous.loadGrams, next.loadGrams),
         action: 'deload',
-        reason: 'Reps fell well short of target. Resetting the load so the next block builds from a clean base.',
+        reason:
+          'Reps fell well short of target. Resetting the load so the next block builds from a clean base.',
       };
     }
     return {
       next: previous,
       loadDeltaPercent: 0,
       action: 'hold',
-      reason: 'Close, but not every rep landed. Repeating this load to own it before adding weight.',
+      reason:
+        'Close, but not every rep landed. Repeating this load to own it before adding weight.',
     };
   }
 
@@ -124,7 +126,11 @@ export function progressExercise(
           reason: `All sets completed. Adding a rep before adding load — target ${Math.min(top, previous.reps + 1)} of ${top}.`,
         };
       }
-      const next = withLoad(previous, previous.loadGrams * (1 + LEVEL_INCREMENT[options.level]), plate);
+      const next = withLoad(
+        previous,
+        previous.loadGrams * (1 + LEVEL_INCREMENT[options.level]),
+        plate,
+      );
       return {
         next: { ...next, reps: previous.repsTop ? previous.reps : previous.reps, repsTop: top },
         loadDeltaPercent: deltaPercent(previous.loadGrams, next.loadGrams),
@@ -134,15 +140,19 @@ export function progressExercise(
     }
 
     case 'linear-load': {
-      const step = meanRpe !== undefined && meanRpe <= 7 ? LEVEL_INCREMENT[options.level] * 1.5 : LEVEL_INCREMENT[options.level];
+      const step =
+        meanRpe !== undefined && meanRpe <= 7
+          ? LEVEL_INCREMENT[options.level] * 1.5
+          : LEVEL_INCREMENT[options.level];
       const next = withLoad(previous, previous.loadGrams * (1 + step), plate);
       return {
         next,
         loadDeltaPercent: deltaPercent(previous.loadGrams, next.loadGrams),
         action: 'increase-load',
-        reason: meanRpe !== undefined && meanRpe <= 7
-          ? `RPE ${meanRpe.toFixed(1)} — that had more in the tank, so this is a double step.`
-          : 'Session complete as written. Standard load increase.',
+        reason:
+          meanRpe !== undefined && meanRpe <= 7
+            ? `RPE ${meanRpe.toFixed(1)} — that had more in the tank, so this is a double step.`
+            : 'Session complete as written. Standard load increase.',
       };
     }
 
@@ -155,7 +165,11 @@ export function progressExercise(
           reason: `Adding a set — ${previous.sets + 1} total. Volume before intensity in this block.`,
         };
       }
-      const next = withLoad(previous, previous.loadGrams * (1 + LEVEL_INCREMENT[options.level]), plate);
+      const next = withLoad(
+        previous,
+        previous.loadGrams * (1 + LEVEL_INCREMENT[options.level]),
+        plate,
+      );
       return {
         next: { ...next, sets: 3 },
         loadDeltaPercent: deltaPercent(previous.loadGrams, next.loadGrams),
@@ -167,7 +181,12 @@ export function progressExercise(
     case 'rpe-autoregulated': {
       const target = previous.rpe ?? 8;
       if (meanRpe === undefined) {
-        return { next: previous, loadDeltaPercent: 0, action: 'hold', reason: 'Log RPE to let the plan autoregulate this lift.' };
+        return {
+          next: previous,
+          loadDeltaPercent: 0,
+          action: 'hold',
+          reason: 'Log RPE to let the plan autoregulate this lift.',
+        };
       }
       const gap = target - meanRpe;
       const adjust = clamp(gap * 0.03, -MAX_STEP, MAX_STEP);
@@ -199,7 +218,12 @@ export function progressExercise(
     }
 
     default:
-      return { next: previous, loadDeltaPercent: 0, action: 'hold', reason: 'No progression rule applies.' };
+      return {
+        next: previous,
+        loadDeltaPercent: 0,
+        action: 'hold',
+        reason: 'No progression rule applies.',
+      };
   }
 }
 
@@ -209,7 +233,11 @@ function missedBadly(previous: ExercisePrescription, logs: readonly SetLog[]): b
   return target > 0 && achieved < target * 0.75;
 }
 
-function withLoad(previous: ExercisePrescription, rawGrams: number, plate: number): ExercisePrescription {
+function withLoad(
+  previous: ExercisePrescription,
+  rawGrams: number,
+  plate: number,
+): ExercisePrescription {
   const bounded = clamp(
     rawGrams,
     previous.loadGrams * (1 - MAX_STEP),
@@ -269,7 +297,10 @@ export function detectPersonalRecords(
   const completed = logs.filter((l) => l.completed && l.loadGrams > 0);
   if (completed.length === 0) return records;
 
-  const heaviest = completed.reduce((best, l) => (l.loadGrams > best.loadGrams ? l : best), completed[0]!);
+  const heaviest = completed.reduce(
+    (best, l) => (l.loadGrams > best.loadGrams ? l : best),
+    completed[0]!,
+  );
   if (heaviest.loadGrams > history.bestLoadGrams) {
     records.push({
       exerciseId,

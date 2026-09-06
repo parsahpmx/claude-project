@@ -2,7 +2,15 @@
 
 import clsx from 'clsx';
 import { formatNumber } from '@/lib/format';
-import { useEffect, useId, useState, type ReactNode, type InputHTMLAttributes, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import {
+  useEffect,
+  useId,
+  useState,
+  type ReactNode,
+  type InputHTMLAttributes,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from 'react';
 
 /**
  * Form controls.
@@ -29,9 +37,16 @@ export function Field({
 }) {
   return (
     <div className="space-y-2">
-      <label htmlFor={htmlFor} className="block text-xs font-semibold uppercase tracking-[0.1em] opacity-70">
+      <label
+        htmlFor={htmlFor}
+        className="block text-xs font-semibold uppercase tracking-[0.1em] opacity-70"
+      >
         {label}
-        {required && <span aria-hidden className="ml-1 text-accent">*</span>}
+        {required && (
+          <span aria-hidden className="ml-1 text-accent">
+            *
+          </span>
+        )}
         {required && <span className="sr-only"> (required)</span>}
       </label>
       {children}
@@ -52,7 +67,10 @@ const CONTROL =
   'border-ink-900/15 hover:border-ink-900/30 focus:border-ember';
 
 export function TextInput({
-  label, hint, error, ...rest
+  label,
+  hint,
+  error,
+  ...rest
 }: InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string; error?: string }) {
   const id = useId();
   return (
@@ -68,7 +86,10 @@ export function TextInput({
 }
 
 export function TextArea({
-  label, hint, error, ...rest
+  label,
+  hint,
+  error,
+  ...rest
 }: TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; hint?: string; error?: string }) {
   const id = useId();
   return (
@@ -78,16 +99,26 @@ export function TextArea({
         rows={4}
         {...rest}
         aria-invalid={error ? true : undefined}
-        className={clsx(CONTROL, 'min-h-[120px] resize-y py-3 leading-relaxed', error && 'border-signal-bad')}
+        className={clsx(
+          CONTROL,
+          'min-h-[120px] resize-y py-3 leading-relaxed',
+          error && 'border-signal-bad',
+        )}
       />
     </Field>
   );
 }
 
 export function Select({
-  label, hint, error, options, ...rest
+  label,
+  hint,
+  error,
+  options,
+  ...rest
 }: SelectHTMLAttributes<HTMLSelectElement> & {
-  label: string; hint?: string; error?: string;
+  label: string;
+  hint?: string;
+  error?: string;
   options: { value: string; label: string }[];
 }) {
   const id = useId();
@@ -95,7 +126,9 @@ export function Select({
     <Field label={label} hint={hint} error={error} required={rest.required} htmlFor={id}>
       <select id={id} {...rest} className={clsx(CONTROL, 'appearance-none pr-10')}>
         {options.map((option) => (
-          <option key={option.value} value={option.value}>{option.label}</option>
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
         ))}
       </select>
     </Field>
@@ -142,7 +175,9 @@ export function ChoiceCard({
         checked && 'accent-tint border-ember bg-ember/[0.06] shadow-card',
         checked && dark && 'dark-surface',
         checked && !dark && 'light-surface',
-        !checked && dark && 'dark-surface border-bone-200/15 bg-ink-800 text-bone-200 hover:border-bone-200/35',
+        !checked &&
+          dark &&
+          'dark-surface border-bone-200/15 bg-ink-800 text-bone-200 hover:border-bone-200/35',
         !checked && !dark && 'light-surface border-ink-900/12 bg-bone-100 hover:border-ink-900/30',
       )}
     >
@@ -197,7 +232,9 @@ export function Toggle({
             onClick={() => onChange(index === 1)}
             className={clsx(
               'min-h-[40px] rounded-pill px-5 text-xs font-semibold uppercase tracking-[0.1em] transition-all duration-200',
-              active ? 'dark-surface bg-ink-900 text-bone-100 shadow-card' : 'text-muted hover:text-ink-900',
+              active
+                ? 'dark-surface bg-ink-900 text-bone-100 shadow-card'
+                : 'text-muted hover:text-ink-900',
             )}
           >
             {label}
@@ -300,8 +337,15 @@ export function SearchInput({
   const id = useId();
   return (
     <div className="relative">
-      <label htmlFor={id} className="sr-only">{label}</label>
-      <span aria-hidden className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 opacity-40">⌕</span>
+      <label htmlFor={id} className="sr-only">
+        {label}
+      </label>
+      <span
+        aria-hidden
+        className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 opacity-40"
+      >
+        ⌕
+      </span>
       <input
         id={id}
         type="search"
@@ -324,7 +368,10 @@ export function Tabs({
   onChange: (value: string) => void;
 }) {
   return (
-    <div role="tablist" className="scroll-x scrollbar-none -mb-px flex gap-1 border-b border-current/10">
+    <div
+      role="tablist"
+      className="scroll-x scrollbar-none -mb-px flex gap-1 border-b border-current/10"
+    >
       {tabs.map((tab) => {
         const selected = tab.value === active;
         return (
@@ -340,9 +387,13 @@ export function Tabs({
           >
             {tab.label}
             {typeof tab.count === 'number' && (
-              <span className="ml-2 rounded-pill bg-current/10 px-1.5 py-0.5 text-[0.625rem] tabular-nums">{tab.count}</span>
+              <span className="ml-2 rounded-pill bg-current/10 px-1.5 py-0.5 text-[0.625rem] tabular-nums">
+                {tab.count}
+              </span>
             )}
-            {selected && <span aria-hidden className="absolute inset-x-2 -bottom-px h-0.5 bg-ember" />}
+            {selected && (
+              <span aria-hidden className="absolute inset-x-2 -bottom-px h-0.5 bg-ember" />
+            )}
           </button>
         );
       })}
@@ -350,7 +401,15 @@ export function Tabs({
   );
 }
 
-export function Counter({ target, suffix = '', duration = 900 }: { target: number; suffix?: string; duration?: number }) {
+export function Counter({
+  target,
+  suffix = '',
+  duration = 900,
+}: {
+  target: number;
+  suffix?: string;
+  duration?: number;
+}) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {
@@ -370,5 +429,10 @@ export function Counter({ target, suffix = '', duration = 900 }: { target: numbe
     return () => cancelAnimationFrame(frame);
   }, [target, duration]);
 
-  return <span className="tabular-nums">{formatNumber(value)}{suffix}</span>;
+  return (
+    <span className="tabular-nums">
+      {formatNumber(value)}
+      {suffix}
+    </span>
+  );
 }

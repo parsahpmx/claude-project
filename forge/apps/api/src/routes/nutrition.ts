@@ -2,13 +2,28 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { and, asc, eq, gte, sql } from 'drizzle-orm';
 import {
-  addDays, buildShoppingList, computeMacroTargets, macroProgress, MEAL_SLOTS,
-  randomId, recipeMatchesDiet, splitMealTargets, startOfWeek,
-  type DietPreference, type RecipeIngredient, type ShoppingSection,
+  addDays,
+  buildShoppingList,
+  computeMacroTargets,
+  macroProgress,
+  MEAL_SLOTS,
+  randomId,
+  recipeMatchesDiet,
+  splitMealTargets,
+  startOfWeek,
+  type DietPreference,
+  type RecipeIngredient,
+  type ShoppingSection,
 } from '@forge/core';
 import {
-  mealLogs, mealPlanEntries, memberProfiles, nutritionTargets, recipeFavourites,
-  recipeIngredients, recipes, shoppingListItems,
+  mealLogs,
+  mealPlanEntries,
+  memberProfiles,
+  nutritionTargets,
+  recipeFavourites,
+  recipeIngredients,
+  recipes,
+  shoppingListItems,
 } from '@forge/db';
 import { badRequest, notFound } from '../lib/errors.js';
 import { parse } from '../lib/validate.js';
@@ -23,11 +38,16 @@ export async function registerNutritionRoutes(app: FastifyInstance): Promise<voi
     const date = query.date ?? today();
 
     const [targets] = await db
-      .select().from(nutritionTargets).where(eq(nutritionTargets.userId, principal.userId)).limit(1);
+      .select()
+      .from(nutritionTargets)
+      .where(eq(nutritionTargets.userId, principal.userId))
+      .limit(1);
 
     const planned = await db
       .select({
-        id: mealPlanEntries.id, slot: mealPlanEntries.slot, status: mealPlanEntries.status,
+        id: mealPlanEntries.id,
+        slot: mealPlanEntries.slot,
+        status: mealPlanEntries.status,
         recipe: recipes,
       })
       .from(mealPlanEntries)
@@ -35,7 +55,8 @@ export async function registerNutritionRoutes(app: FastifyInstance): Promise<voi
       .where(and(eq(mealPlanEntries.userId, principal.userId), eq(mealPlanEntries.date, date)));
 
     const logged = await db
-      .select().from(mealLogs)
+      .select()
+      .from(mealLogs)
       .where(and(eq(mealLogs.userId, principal.userId), eq(mealLogs.date, date)));
 
     const consumed = logged.reduce(
@@ -62,9 +83,12 @@ export async function registerNutritionRoutes(app: FastifyInstance): Promise<voi
       targets: targets ?? null,
       mealTargets: targets
         ? splitMealTargets({
-            calories: targets.calories, proteinGrams: targets.proteinGrams,
-            carbGrams: targets.carbGrams, fatGrams: targets.fatGrams,
-            fibreGrams: targets.fibreGrams, waterLitres: targets.waterMl / 1000,
+            calories: targets.calories,
+            proteinGrams: targets.proteinGrams,
+            carbGrams: targets.carbGrams,
+            fatGrams: targets.fatGrams,
+            fibreGrams: targets.fibreGrams,
+            waterLitres: targets.waterMl / 1000,
           })
         : [],
       macros,
@@ -81,7 +105,10 @@ export async function registerNutritionRoutes(app: FastifyInstance): Promise<voi
     const { db } = request.ctx;
 
     const [profile] = await db
-      .select().from(memberProfiles).where(eq(memberProfiles.userId, principal.userId)).limit(1);
+      .select()
+      .from(memberProfiles)
+      .where(eq(memberProfiles.userId, principal.userId))
+      .limit(1);
     if (!profile?.weightKg || !profile.heightCm) {
       throw badRequest(
         'missing_measurements',
@@ -90,24 +117,36 @@ export async function registerNutritionRoutes(app: FastifyInstance): Promise<voi
     }
 
     const macros = computeMacroTargets({
-      weightKg: profile.weightKg, heightCm: profile.heightCm,
-      ageRange: profile.ageRange as never, sexAtBirth: (profile.sexAtBirth ?? 'prefer-not-to-say') as never,
-      goal: profile.primaryGoal as never, trainingDaysPerWeek: profile.daysPerWeek,
+      weightKg: profile.weightKg,
+      heightCm: profile.heightCm,
+      ageRange: profile.ageRange as never,
+      sexAtBirth: (profile.sexAtBirth ?? 'prefer-not-to-say') as never,
+      goal: profile.primaryGoal as never,
+      trainingDaysPerWeek: profile.daysPerWeek,
       diet: profile.diet as DietPreference,
     });
 
     const values = {
-      calories: macros.calories, proteinGrams: macros.proteinGrams, carbGrams: macros.carbGrams,
-      fatGrams: macros.fatGrams, fibreGrams: macros.fibreGrams,
-      waterMl: Math.round(macros.waterLitres * 1000), updatedAt: new Date(),
+      calories: macros.calories,
+      proteinGrams: macros.proteinGrams,
+      carbGrams: macros.carbGrams,
+      fatGrams: macros.fatGrams,
+      fibreGrams: macros.fibreGrams,
+      waterMl: Math.round(macros.waterLitres * 1000),
+      updatedAt: new Date(),
     };
 
     const existing = await db
-      .select({ userId: nutritionTargets.userId }).from(nutritionTargets)
-      .where(eq(nutritionTargets.userId, principal.userId)).limit(1);
+      .select({ userId: nutritionTargets.userId })
+      .from(nutritionTargets)
+      .where(eq(nutritionTargets.userId, principal.userId))
+      .limit(1);
 
     if (existing.length > 0) {
-      await db.update(nutritionTargets).set(values).where(eq(nutritionTargets.userId, principal.userId));
+      await db
+        .update(nutritionTargets)
+        .set(values)
+        .where(eq(nutritionTargets.userId, principal.userId));
     } else {
       await db.insert(nutritionTargets).values({ userId: principal.userId, ...values });
     }
@@ -142,27 +181,42 @@ export async function registerNutritionRoutes(app: FastifyInstance): Promise<voi
     };
 
     if (body.recipeSlug) {
-      const [recipe] = await db.select().from(recipes).where(eq(recipes.slug, body.recipeSlug)).limit(1);
+      const [recipe] = await db
+        .select()
+        .from(recipes)
+        .where(eq(recipes.slug, body.recipeSlug))
+        .limit(1);
       if (!recipe) throw notFound('Recipe');
       payload = {
-        name: recipe.name, recipeId: recipe.id, calories: recipe.calories,
-        proteinGrams: recipe.proteinGrams, carbGrams: recipe.carbGrams, fatGrams: recipe.fatGrams,
+        name: recipe.name,
+        recipeId: recipe.id,
+        calories: recipe.calories,
+        proteinGrams: recipe.proteinGrams,
+        carbGrams: recipe.carbGrams,
+        fatGrams: recipe.fatGrams,
       };
     } else if (body.calories === undefined) {
       throw badRequest('missing_macros', 'Log a recipe, or give the calories and macros yourself.');
     }
 
     await db.insert(mealLogs).values({
-      id: randomId('mealLog'), userId: principal.userId, date, slot: body.slot, ...payload,
+      id: randomId('mealLog'),
+      userId: principal.userId,
+      date,
+      slot: body.slot,
+      ...payload,
     });
 
-    await db.update(mealPlanEntries)
+    await db
+      .update(mealPlanEntries)
       .set({ status: 'logged', updatedAt: new Date() })
-      .where(and(
-        eq(mealPlanEntries.userId, principal.userId),
-        eq(mealPlanEntries.date, date),
-        eq(mealPlanEntries.slot, body.slot),
-      ));
+      .where(
+        and(
+          eq(mealPlanEntries.userId, principal.userId),
+          eq(mealPlanEntries.date, date),
+          eq(mealPlanEntries.slot, body.slot),
+        ),
+      );
 
     return { ok: true };
   });
@@ -170,55 +224,82 @@ export async function registerNutritionRoutes(app: FastifyInstance): Promise<voi
   app.post('/me/nutrition/swap', async (request) => {
     const principal = requireMember(request.principal);
     const body = parse(
-      z.object({ date: isoDateSchema, slot: z.enum(MEAL_SLOTS), recipeSlug: z.string().max(80).optional() }),
+      z.object({
+        date: isoDateSchema,
+        slot: z.enum(MEAL_SLOTS),
+        recipeSlug: z.string().max(80).optional(),
+      }),
       request.body,
     );
     const { db } = request.ctx;
 
     const [profile] = await db
-      .select().from(memberProfiles).where(eq(memberProfiles.userId, principal.userId)).limit(1);
+      .select()
+      .from(memberProfiles)
+      .where(eq(memberProfiles.userId, principal.userId))
+      .limit(1);
     const diet = (profile?.diet ?? 'balanced') as DietPreference;
 
     let replacement;
     if (body.recipeSlug) {
-      [replacement] = await db.select().from(recipes).where(eq(recipes.slug, body.recipeSlug)).limit(1);
+      [replacement] = await db
+        .select()
+        .from(recipes)
+        .where(eq(recipes.slug, body.recipeSlug))
+        .limit(1);
       if (!replacement) throw notFound('Recipe');
       if (!recipeMatchesDiet(replacement.tags, diet)) {
-        throw badRequest('diet_mismatch', 'That recipe does not fit the diet preference on your profile.');
+        throw badRequest(
+          'diet_mismatch',
+          'That recipe does not fit the diet preference on your profile.',
+        );
       }
     } else {
       const [current] = await db
-        .select().from(mealPlanEntries)
-        .where(and(
-          eq(mealPlanEntries.userId, principal.userId),
-          eq(mealPlanEntries.date, body.date),
-          eq(mealPlanEntries.slot, body.slot),
-        ))
+        .select()
+        .from(mealPlanEntries)
+        .where(
+          and(
+            eq(mealPlanEntries.userId, principal.userId),
+            eq(mealPlanEntries.date, body.date),
+            eq(mealPlanEntries.slot, body.slot),
+          ),
+        )
         .limit(1);
 
-      const candidates = (await db.select().from(recipes).where(eq(recipes.slot, body.slot)))
-        .filter((recipe) => recipeMatchesDiet(recipe.tags, diet) && recipe.id !== current?.recipeId);
+      const candidates = (
+        await db.select().from(recipes).where(eq(recipes.slot, body.slot))
+      ).filter((recipe) => recipeMatchesDiet(recipe.tags, diet) && recipe.id !== current?.recipeId);
       replacement = candidates[0];
-      if (!replacement) throw badRequest('no_alternative', 'No alternative recipe fits your diet for that slot.');
+      if (!replacement)
+        throw badRequest('no_alternative', 'No alternative recipe fits your diet for that slot.');
     }
 
     const existing = await db
-      .select({ id: mealPlanEntries.id }).from(mealPlanEntries)
-      .where(and(
-        eq(mealPlanEntries.userId, principal.userId),
-        eq(mealPlanEntries.date, body.date),
-        eq(mealPlanEntries.slot, body.slot),
-      ))
+      .select({ id: mealPlanEntries.id })
+      .from(mealPlanEntries)
+      .where(
+        and(
+          eq(mealPlanEntries.userId, principal.userId),
+          eq(mealPlanEntries.date, body.date),
+          eq(mealPlanEntries.slot, body.slot),
+        ),
+      )
       .limit(1);
 
     if (existing[0]) {
-      await db.update(mealPlanEntries)
+      await db
+        .update(mealPlanEntries)
         .set({ recipeId: replacement.id, status: 'planned', updatedAt: new Date() })
         .where(eq(mealPlanEntries.id, existing[0].id));
     } else {
       await db.insert(mealPlanEntries).values({
-        id: randomId('meal'), userId: principal.userId, date: body.date,
-        slot: body.slot, recipeId: replacement.id, status: 'planned',
+        id: randomId('meal'),
+        userId: principal.userId,
+        date: body.date,
+        slot: body.slot,
+        recipeId: replacement.id,
+        status: 'planned',
       });
     }
 
@@ -232,14 +313,21 @@ export async function registerNutritionRoutes(app: FastifyInstance): Promise<voi
     const weekStart = query.weekStart ?? startOfWeek(today());
 
     const entries = await db
-      .select({ date: mealPlanEntries.date, slot: mealPlanEntries.slot, status: mealPlanEntries.status, recipe: recipes })
+      .select({
+        date: mealPlanEntries.date,
+        slot: mealPlanEntries.slot,
+        status: mealPlanEntries.status,
+        recipe: recipes,
+      })
       .from(mealPlanEntries)
       .innerJoin(recipes, eq(recipes.id, mealPlanEntries.recipeId))
-      .where(and(
-        eq(mealPlanEntries.userId, principal.userId),
-        gte(mealPlanEntries.date, weekStart),
-        sql`${mealPlanEntries.date} <= ${addDays(weekStart, 6)}`,
-      ))
+      .where(
+        and(
+          eq(mealPlanEntries.userId, principal.userId),
+          gte(mealPlanEntries.date, weekStart),
+          sql`${mealPlanEntries.date} <= ${addDays(weekStart, 6)}`,
+        ),
+      )
       .orderBy(mealPlanEntries.date);
 
     return {
@@ -258,8 +346,14 @@ export async function registerNutritionRoutes(app: FastifyInstance): Promise<voi
     const weekStart = query.weekStart ?? startOfWeek(today());
 
     const items = await db
-      .select().from(shoppingListItems)
-      .where(and(eq(shoppingListItems.userId, principal.userId), eq(shoppingListItems.weekStart, weekStart)))
+      .select()
+      .from(shoppingListItems)
+      .where(
+        and(
+          eq(shoppingListItems.userId, principal.userId),
+          eq(shoppingListItems.weekStart, weekStart),
+        ),
+      )
       .orderBy(asc(shoppingListItems.section), asc(shoppingListItems.name));
 
     return {
@@ -271,7 +365,10 @@ export async function registerNutritionRoutes(app: FastifyInstance): Promise<voi
   app.post('/me/nutrition/shopping-list/generate', async (request) => {
     const principal = requireMember(request.principal);
     const body = parse(
-      z.object({ weekStart: isoDateSchema.optional(), servings: z.number().int().min(1).max(8).default(1) }),
+      z.object({
+        weekStart: isoDateSchema.optional(),
+        servings: z.number().int().min(1).max(8).default(1),
+      }),
       request.body ?? {},
     );
     const { db, today } = request.ctx;
@@ -281,26 +378,31 @@ export async function registerNutritionRoutes(app: FastifyInstance): Promise<voi
       .select({ recipeId: mealPlanEntries.recipeId, servings: recipes.servings })
       .from(mealPlanEntries)
       .innerJoin(recipes, eq(recipes.id, mealPlanEntries.recipeId))
-      .where(and(
-        eq(mealPlanEntries.userId, principal.userId),
-        gte(mealPlanEntries.date, weekStart),
-        sql`${mealPlanEntries.date} <= ${addDays(weekStart, 6)}`,
-      ));
+      .where(
+        and(
+          eq(mealPlanEntries.userId, principal.userId),
+          gte(mealPlanEntries.date, weekStart),
+          sql`${mealPlanEntries.date} <= ${addDays(weekStart, 6)}`,
+        ),
+      );
 
     if (entries.length === 0) {
       throw badRequest('no_meal_plan', 'Plan some meals for that week before generating a list.');
     }
 
     const ingredientRows = await db
-      .select().from(recipeIngredients)
+      .select()
+      .from(recipeIngredients)
       .where(sql`${recipeIngredients.recipeId} in ${entries.map((e) => e.recipeId)}`);
 
     const byRecipe = new Map<string, RecipeIngredient[]>();
     for (const row of ingredientRows) {
       const list = byRecipe.get(row.recipeId) ?? [];
       list.push({
-        name: row.name, quantity: row.quantityCenti / 100,
-        unit: row.unit, section: row.section as ShoppingSection,
+        name: row.name,
+        quantity: row.quantityCenti / 100,
+        unit: row.unit,
+        section: row.section as ShoppingSection,
       });
       byRecipe.set(row.recipeId, list);
     }
@@ -315,17 +417,27 @@ export async function registerNutritionRoutes(app: FastifyInstance): Promise<voi
 
     // Regenerating replaces the week's list wholesale. Merging would silently
     // keep items for meals the member has since swapped out.
-    await db.delete(shoppingListItems).where(and(
-      eq(shoppingListItems.userId, principal.userId),
-      eq(shoppingListItems.weekStart, weekStart),
-    ));
+    await db
+      .delete(shoppingListItems)
+      .where(
+        and(
+          eq(shoppingListItems.userId, principal.userId),
+          eq(shoppingListItems.weekStart, weekStart),
+        ),
+      );
 
     if (list.length > 0) {
       await db.insert(shoppingListItems).values(
         list.map((item) => ({
-          id: randomId('meal'), userId: principal.userId, weekStart, name: item.name,
-          quantityCenti: Math.round(item.quantity * 100), unit: item.unit,
-          section: item.section, recipeCount: item.recipeCount, checked: false,
+          id: randomId('meal'),
+          userId: principal.userId,
+          weekStart,
+          name: item.name,
+          quantityCenti: Math.round(item.quantity * 100),
+          unit: item.unit,
+          section: item.section,
+          recipeCount: item.recipeCount,
+          checked: false,
         })),
       );
     }
@@ -366,12 +478,22 @@ export async function registerNutritionRoutes(app: FastifyInstance): Promise<voi
     const body = parse(z.object({ recipeSlug: z.string().max(80) }), request.body);
     const { db } = request.ctx;
 
-    const [recipe] = await db.select().from(recipes).where(eq(recipes.slug, body.recipeSlug)).limit(1);
+    const [recipe] = await db
+      .select()
+      .from(recipes)
+      .where(eq(recipes.slug, body.recipeSlug))
+      .limit(1);
     if (!recipe) throw notFound('Recipe');
 
     const existing = await db
-      .select({ id: recipeFavourites.id }).from(recipeFavourites)
-      .where(and(eq(recipeFavourites.userId, principal.userId), eq(recipeFavourites.recipeId, recipe.id)))
+      .select({ id: recipeFavourites.id })
+      .from(recipeFavourites)
+      .where(
+        and(
+          eq(recipeFavourites.userId, principal.userId),
+          eq(recipeFavourites.recipeId, recipe.id),
+        ),
+      )
       .limit(1);
 
     if (existing[0]) {
@@ -379,7 +501,9 @@ export async function registerNutritionRoutes(app: FastifyInstance): Promise<voi
       return { ok: true, favourited: false };
     }
     await db.insert(recipeFavourites).values({
-      id: randomId('meal'), userId: principal.userId, recipeId: recipe.id,
+      id: randomId('meal'),
+      userId: principal.userId,
+      recipeId: recipe.id,
     });
     return { ok: true, favourited: true };
   });

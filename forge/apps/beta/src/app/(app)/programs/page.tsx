@@ -9,7 +9,9 @@ export default async function ProgramsPage() {
   const supabase = await createClient();
   const { data: programs } = await supabase
     .from('programs')
-    .select('slug, name, tagline, summary, sport, goal, weeks, sessions_per_week, session_minutes, difficulty, equipment')
+    .select(
+      'slug, name, tagline, summary, sport, goal, weeks, sessions_per_week, session_minutes, difficulty, equipment',
+    )
     .eq('published', true)
     .order('sport')
     .order('name');
@@ -19,8 +21,8 @@ export default async function ProgramsPage() {
       <header>
         <h1 className="text-page-title font-display text-bone-100">Programmes</h1>
         <p className="mt-2 text-secondary muted">
-          Every programme carries a phase plan, a progression model and an equipment list
-          you can check before you start.
+          Every programme carries a phase plan, a progression model and an equipment list you can
+          check before you start.
         </p>
       </header>
 
@@ -38,12 +40,18 @@ export default async function ProgramsPage() {
                 <p className="mt-2 text-secondary muted">{p.tagline}</p>
                 <p className="mt-3 flex-1 text-secondary muted">{p.summary}</p>
                 <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-ink-600 pt-4 text-secondary">
-                  <div><dt className="text-caption muted">Weeks</dt>
-                    <dd className="mt-0.5 tabular-nums text-bone-100">{p.weeks}</dd></div>
-                  <div><dt className="text-caption muted">Per week</dt>
-                    <dd className="mt-0.5 tabular-nums text-bone-100">{p.sessions_per_week}</dd></div>
-                  <div><dt className="text-caption muted">Session</dt>
-                    <dd className="mt-0.5 tabular-nums text-bone-100">{p.session_minutes}m</dd></div>
+                  <div>
+                    <dt className="text-caption muted">Weeks</dt>
+                    <dd className="mt-0.5 tabular-nums text-bone-100">{p.weeks}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-caption muted">Per week</dt>
+                    <dd className="mt-0.5 tabular-nums text-bone-100">{p.sessions_per_week}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-caption muted">Session</dt>
+                    <dd className="mt-0.5 tabular-nums text-bone-100">{p.session_minutes}m</dd>
+                  </div>
                 </dl>
                 {p.equipment.length > 0 && (
                   <p className="mt-3 text-caption muted">Needs: {p.equipment.join(', ')}</p>

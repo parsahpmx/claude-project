@@ -34,10 +34,20 @@ interface LoggedSet {
 
 interface CompletionSummary {
   summary: {
-    durationSeconds: number; volumeGrams: number; calories: number;
-    setsCompleted: number; exercises: number; averageRpe: number | null;
+    durationSeconds: number;
+    volumeGrams: number;
+    calories: number;
+    setsCompleted: number;
+    exercises: number;
+    averageRpe: number | null;
   };
-  personalRecords: { exerciseName: string; kind: string; value: number; previousValue: number; reps: number }[];
+  personalRecords: {
+    exerciseName: string;
+    kind: string;
+    value: number;
+    previousValue: number;
+    reps: number;
+  }[];
   progression: { exerciseId: string; action: string; reason: string }[];
 }
 
@@ -78,7 +88,9 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
     return () => clearTimeout(timer);
   }, [rest]);
 
-  const [reps, setReps] = useState(exercise?.prescription.repsTop ?? exercise?.prescription.reps ?? 8);
+  const [reps, setReps] = useState(
+    exercise?.prescription.repsTop ?? exercise?.prescription.reps ?? 8,
+  );
   const [load, setLoad] = useState(exercise?.prescription.loadGrams ?? 0);
   const [rpe, setRpe] = useState(exercise?.prescription.rpe ?? 8);
 
@@ -161,20 +173,24 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
           <p className="eyebrow mb-4">Almost done</p>
           <h1 className="display text-display-md">HOW DIFFICULT WAS TODAY&rsquo;S WORKOUT?</h1>
           <p className="mt-4 text-sm text-bone-200/60">
-            This adjusts the next session of the same kind by up to five percent. It is the fastest way to keep
-            the plan honest.
+            This adjusts the next session of the same kind by up to five percent. It is the fastest
+            way to keep the plan honest.
           </p>
 
           {error && (
-            <div className="mt-8"><ErrorState title="Session not saved" body={error} /></div>
+            <div className="mt-8">
+              <ErrorState title="Session not saved" body={error} />
+            </div>
           )}
 
           <div className="mt-10 space-y-3">
-            {([
-              ['too-easy', 'Too Easy', 'I had several reps left on every set.'],
-              ['perfect', 'Perfect', 'Hard, but I finished every prescribed rep.'],
-              ['too-hard', 'Too Hard', 'I missed reps or had to cut the session short.'],
-            ] as const).map(([value, label, description]) => (
+            {(
+              [
+                ['too-easy', 'Too Easy', 'I had several reps left on every set.'],
+                ['perfect', 'Perfect', 'Hard, but I finished every prescribed rep.'],
+                ['too-hard', 'Too Hard', 'I missed reps or had to cut the session short.'],
+              ] as const
+            ).map(([value, label, description]) => (
               <button
                 key={value}
                 type="button"
@@ -193,7 +209,9 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
             ))}
           </div>
 
-          {pending && <p className="mt-6 text-center text-sm text-bone-200/55">Saving your session…</p>}
+          {pending && (
+            <p className="mt-6 text-center text-sm text-bone-200/55">Saving your session…</p>
+          )}
         </div>
       </div>
     );
@@ -209,7 +227,10 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
     <div className="dark-surface flex min-h-dvh flex-col bg-ink-900 text-bone-200">
       {/* ------------------------------------------------------- top bar */}
       <header className="flex items-center justify-between gap-4 border-b border-bone-200/10 px-5 py-4">
-        <Link href="/app/plan" className="text-xs uppercase tracking-[0.12em] text-muted hover:text-bone-100">
+        <Link
+          href="/app/plan"
+          className="text-xs uppercase tracking-[0.12em] text-muted hover:text-bone-100"
+        >
           ← Exit
         </Link>
         <div className="flex-1 px-4">
@@ -221,17 +242,30 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
       <div className="flex flex-1 flex-col lg:flex-row">
         {/* ----------------------------------------------------- stage */}
         <div className="relative isolate flex min-h-[42vh] flex-1 flex-col justify-end overflow-hidden p-6 sm:p-10">
-          <div aria-hidden className="grain absolute inset-0 -z-10" style={{ background: backdrop.background }} />
-          <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-ink-900 via-ink-900/60 to-ink-900/20" />
+          <div
+            aria-hidden
+            className="grain absolute inset-0 -z-10"
+            style={{ background: backdrop.background }}
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 -z-10 bg-gradient-to-t from-ink-900 via-ink-900/60 to-ink-900/20"
+          />
 
           {rest !== null && (
             <div className="absolute inset-0 z-10 grid place-items-center bg-ink-900/85 backdrop-blur-sm">
               <div className="text-center">
                 <p className="eyebrow mb-4">Rest</p>
-                <p className="display text-display-lg tabular-nums text-bone-100">{formatSeconds(rest)}</p>
+                <p className="display text-display-lg tabular-nums text-bone-100">
+                  {formatSeconds(rest)}
+                </p>
                 <div className="mt-8 flex justify-center gap-3">
-                  <Button variant="inverse" onClick={() => setRest(null)}>Skip Rest</Button>
-                  <Button variant="ghost" onClick={() => setRest(rest + 30)}>+30s</Button>
+                  <Button variant="inverse" onClick={() => setRest(null)}>
+                    Skip Rest
+                  </Button>
+                  <Button variant="ghost" onClick={() => setRest(rest + 30)}>
+                    +30s
+                  </Button>
                 </div>
               </div>
             </div>
@@ -239,17 +273,27 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
 
           <div>
             <p className="eyebrow mb-3">
-              Exercise {exercise.order} of {session.exercises.length} · {exercise.pattern.replace(/-/g, ' ')}
+              Exercise {exercise.order} of {session.exercises.length} ·{' '}
+              {exercise.pattern.replace(/-/g, ' ')}
             </p>
-            <h1 className="display text-display-md leading-none text-bone-100">{exercise.name.toUpperCase()}</h1>
+            <h1 className="display text-display-md leading-none text-bone-100">
+              {exercise.name.toUpperCase()}
+            </h1>
 
             <div className="mt-6 flex flex-wrap gap-x-8 gap-y-4">
               <Metric label="Set" value={`${setIndex} / ${exercise.prescription.sets}`} />
-              <Metric label="Reps" value={String(exercise.prescription.repsTop ?? exercise.prescription.reps)} />
+              <Metric
+                label="Reps"
+                value={String(exercise.prescription.repsTop ?? exercise.prescription.reps)}
+              />
               <Metric label="Target" value={formatLoad(exercise.prescription.loadGrams)} />
               <Metric
                 label="Previous"
-                value={previous ? `${formatLoad(previous.loadGrams)} × ${previous.reps ?? '—'}` : 'First time'}
+                value={
+                  previous
+                    ? `${formatLoad(previous.loadGrams)} × ${previous.reps ?? '—'}`
+                    : 'First time'
+                }
               />
               <Metric label="RPE" value={String(exercise.prescription.rpe ?? 8)} />
             </div>
@@ -269,12 +313,16 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setExerciseIndex(Math.min(session.exercises.length - 1, exerciseIndex + 1))}
+                onClick={() =>
+                  setExerciseIndex(Math.min(session.exercises.length - 1, exerciseIndex + 1))
+                }
                 disabled={exerciseIndex === session.exercises.length - 1}
               >
                 Next
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => setShowTechnique((v) => !v)}>Technique</Button>
+              <Button variant="ghost" size="sm" onClick={() => setShowTechnique((v) => !v)}>
+                Technique
+              </Button>
               <Button variant="ghost" size="sm" onClick={() => setShowSubstitutes((v) => !v)}>
                 Substitute
               </Button>
@@ -283,7 +331,9 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
             {showTechnique && (
               <div className="mt-6 max-w-lg rounded-card border border-bone-200/12 bg-ink-800/90 p-5">
                 <p className="eyebrow mb-2">Coach tip</p>
-                <p className="text-sm leading-relaxed text-bone-200/80">&ldquo;{exercise.cue}&rdquo;</p>
+                <p className="text-sm leading-relaxed text-bone-200/80">
+                  &ldquo;{exercise.cue}&rdquo;
+                </p>
                 {exercise.prescription.tempo && (
                   <p className="mt-3 text-xs text-muted">
                     Tempo {exercise.prescription.tempo} · Rest {exercise.prescription.restSeconds}s
@@ -308,7 +358,10 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
         </div>
 
         {/* ----------------------------------------------------- logging */}
-        <aside aria-label="Set logging" className="dark-surface w-full shrink-0 border-t border-bone-200/10 bg-ink-800 p-6 lg:w-[380px] lg:border-l lg:border-t-0">
+        <aside
+          aria-label="Set logging"
+          className="dark-surface w-full shrink-0 border-t border-bone-200/10 bg-ink-800 p-6 lg:w-[380px] lg:border-l lg:border-t-0"
+        >
           <p className="eyebrow mb-5">Log set {setIndex}</p>
 
           <div className="space-y-6">
@@ -326,7 +379,9 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
             />
             <div>
               <div className="mb-3 flex items-baseline justify-between">
-                <span className="text-xs font-semibold uppercase tracking-[0.1em] text-bone-200/70">RPE</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.1em] text-bone-200/70">
+                  RPE
+                </span>
                 <span className="text-sm tabular-nums text-bone-100">{rpe}</span>
               </div>
               <input
@@ -347,14 +402,19 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
           </div>
 
           <div className="mt-8">
-            <Button size="lg" block onClick={logSet}>Log Set &amp; Rest</Button>
+            <Button size="lg" block onClick={logSet}>
+              Log Set &amp; Rest
+            </Button>
           </div>
 
           <div className="mt-8">
             <p className="eyebrow mb-3">Session</p>
             <div className="grid grid-cols-3 gap-3 text-center">
               <SmallStat label="Sets" value={String(completedSets)} />
-              <SmallStat label="Volume" value={formatVolume(logged.reduce((t, s) => t + s.reps * s.loadGrams, 0))} />
+              <SmallStat
+                label="Volume"
+                value={formatVolume(logged.reduce((t, s) => t + s.reps * s.loadGrams, 0))}
+              />
               <SmallStat label="Time" value={formatSeconds(elapsed)} />
             </div>
           </div>
@@ -364,8 +424,13 @@ export function WorkoutPlayer({ day, session }: { day: PlanDay; session: BuiltSe
               <p className="eyebrow mb-3">Logged</p>
               <ul className="max-h-48 space-y-2 overflow-y-auto text-xs">
                 {logged.map((set) => (
-                  <li key={`${set.exerciseId}-${set.setIndex}`} className="flex justify-between gap-3 text-bone-200/60">
-                    <span className="truncate">{set.exerciseName} · set {set.setIndex}</span>
+                  <li
+                    key={`${set.exerciseId}-${set.setIndex}`}
+                    className="flex justify-between gap-3 text-bone-200/60"
+                  >
+                    <span className="truncate">
+                      {set.exerciseName} · set {set.setIndex}
+                    </span>
                     <span className="shrink-0 tabular-nums">
                       {set.reps} × {formatLoad(set.loadGrams)}
                     </span>
@@ -395,7 +460,11 @@ function SubstituteList({ dayId, exercise }: { dayId: string; exercise: SessionE
     await fetch(`/api/v1/me/plan/days/${dayId}`, {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ action: 'substitute', exerciseId: exercise.exerciseId, replacementId }),
+      body: JSON.stringify({
+        action: 'substitute',
+        exerciseId: exercise.exerciseId,
+        replacementId,
+      }),
     });
     setPending(false);
     router.refresh();
@@ -420,13 +489,22 @@ function SubstituteList({ dayId, exercise }: { dayId: string; exercise: SessionE
 }
 
 function WorkoutComplete({
-  day, result, feedback,
-}: { day: PlanDay; result: CompletionSummary; feedback: string | null }) {
+  day,
+  result,
+  feedback,
+}: {
+  day: PlanDay;
+  result: CompletionSummary;
+  feedback: string | null;
+}) {
   return (
     <div className="dark-surface min-h-dvh bg-ink-900 px-5 py-16 text-bone-200">
       <div className="mx-auto max-w-3xl animate-fade-up">
         <div className="flex justify-center">
-          <span aria-hidden className="relative grid h-20 w-20 place-items-center rounded-full bg-ember text-2xl">
+          <span
+            aria-hidden
+            className="relative grid h-20 w-20 place-items-center rounded-full bg-ember text-2xl"
+          >
             ✓
             <span className="absolute inset-0 animate-pulse-ring rounded-full border-2 border-ember" />
           </span>
@@ -436,31 +514,44 @@ function WorkoutComplete({
         <p className="mt-3 text-center text-bone-200/60">{day.title}</p>
 
         <dl className="mt-12 grid grid-cols-2 gap-6 sm:grid-cols-3">
-          <BigStat label="Duration" value={formatMinutes(Math.round(result.summary.durationSeconds / 60))} />
+          <BigStat
+            label="Duration"
+            value={formatMinutes(Math.round(result.summary.durationSeconds / 60))}
+          />
           <BigStat label="Volume" value={formatVolume(result.summary.volumeGrams)} />
           <BigStat label="Calories" value={String(result.summary.calories)} />
           <BigStat label="Sets" value={String(result.summary.setsCompleted)} />
           <BigStat label="Exercises" value={String(result.summary.exercises)} />
-          <BigStat label="Avg RPE" value={result.summary.averageRpe ? String(result.summary.averageRpe) : '—'} />
+          <BigStat
+            label="Avg RPE"
+            value={result.summary.averageRpe ? String(result.summary.averageRpe) : '—'}
+          />
         </dl>
 
         {result.personalRecords.length > 0 && (
           <Card tone="dark">
             <div className="mt-12">
               <p className="eyebrow mb-5 text-accent">
-                {result.personalRecords.length} personal record{result.personalRecords.length === 1 ? '' : 's'}
+                {result.personalRecords.length} personal record
+                {result.personalRecords.length === 1 ? '' : 's'}
               </p>
               <ul className="space-y-4">
                 {result.personalRecords.map((record, index) => (
-                  <li key={index} className="flex items-baseline justify-between gap-4 border-b border-bone-200/10 pb-4 last:border-0">
+                  <li
+                    key={index}
+                    className="flex items-baseline justify-between gap-4 border-b border-bone-200/10 pb-4 last:border-0"
+                  >
                     <div>
                       <p className="font-semibold text-bone-100">{record.exerciseName}</p>
                       <p className="mt-0.5 text-xs text-muted">
-                        {record.kind === 'load' ? 'Heaviest load' : 'Estimated one-rep max'} · {record.reps} reps
+                        {record.kind === 'load' ? 'Heaviest load' : 'Estimated one-rep max'} ·{' '}
+                        {record.reps} reps
                       </p>
                     </div>
                     <p className="shrink-0 text-right">
-                      <span className="display text-lg tabular-nums">{formatLoad(record.value)}</span>
+                      <span className="display text-lg tabular-nums">
+                        {formatLoad(record.value)}
+                      </span>
                       {record.previousValue > 0 && (
                         <span className="block text-xs text-muted">
                           was {formatLoad(record.previousValue)}
@@ -479,7 +570,10 @@ function WorkoutComplete({
             <p className="eyebrow mb-4">What changes next session</p>
             <ul className="space-y-3">
               {result.progression.slice(0, 5).map((entry) => (
-                <li key={entry.exerciseId} className="dark-surface rounded-card border border-bone-200/10 bg-ink-800 p-4">
+                <li
+                  key={entry.exerciseId}
+                  className="dark-surface rounded-card border border-bone-200/10 bg-ink-800 p-4"
+                >
                   <div className="flex items-center gap-3">
                     <Chip tone={entry.action === 'deload' ? 'warn' : 'accent'} size="sm">
                       {entry.action.replace(/-/g, ' ')}
@@ -497,8 +591,8 @@ function WorkoutComplete({
 
         {feedback && (
           <p className="mt-8 text-center text-xs text-muted">
-            You rated this session &ldquo;{feedback.replace(/-/g, ' ')}&rdquo; — the next one of the same kind
-            is adjusted accordingly.
+            You rated this session &ldquo;{feedback.replace(/-/g, ' ')}&rdquo; — the next one of the
+            same kind is adjusted accordingly.
           </p>
         )}
 
@@ -549,11 +643,21 @@ function BigStat({ label, value }: { label: string; value: string }) {
 }
 
 function Stepper({
-  label, value, onDecrement, onIncrement,
-}: { label: string; value: string; onDecrement: () => void; onIncrement: () => void }) {
+  label,
+  value,
+  onDecrement,
+  onIncrement,
+}: {
+  label: string;
+  value: string;
+  onDecrement: () => void;
+  onIncrement: () => void;
+}) {
   return (
     <div>
-      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.1em] text-bone-200/70">{label}</p>
+      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.1em] text-bone-200/70">
+        {label}
+      </p>
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -563,7 +667,9 @@ function Stepper({
         >
           −
         </button>
-        <span className="display flex-1 text-center text-2xl tabular-nums text-bone-100">{value}</span>
+        <span className="display flex-1 text-center text-2xl tabular-nums text-bone-100">
+          {value}
+        </span>
         <button
           type="button"
           onClick={onIncrement}

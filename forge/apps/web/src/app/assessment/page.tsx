@@ -32,7 +32,12 @@ export default async function AssessmentPage({
 
   // The homepage preview passes what it already asked, so nobody answers twice.
   const prefill: Record<string, string[]> = {};
-  const carry: Record<string, string> = { goal: 'primaryGoal', experience: 'experience', location: 'location', equipment: 'equipment' };
+  const carry: Record<string, string> = {
+    goal: 'primaryGoal',
+    experience: 'experience',
+    location: 'location',
+    equipment: 'equipment',
+  };
   for (const [param, stepId] of Object.entries(carry)) {
     const value = params[param];
     if (typeof value === 'string' && value.length > 0) prefill[stepId] = value.split(',');
@@ -42,8 +47,13 @@ export default async function AssessmentPage({
     <div className="dark-surface min-h-dvh bg-ink-900 text-bone-200">
       <header className="border-b border-bone-200/10">
         <div className="shell flex h-[72px] items-center justify-between">
-          <Link href="/" className="display text-xl tracking-[0.08em] text-bone-100">FORGE</Link>
-          <Link href="/" className="text-xs uppercase tracking-[0.12em] text-muted hover:text-bone-100">
+          <Link href="/" className="display text-xl tracking-[0.08em] text-bone-100">
+            FORGE
+          </Link>
+          <Link
+            href="/"
+            className="text-xs uppercase tracking-[0.12em] text-muted hover:text-bone-100"
+          >
             Save &amp; exit
           </Link>
         </div>

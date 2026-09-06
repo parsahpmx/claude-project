@@ -8,8 +8,14 @@ import { Tabs } from '@/components/ui/forms';
 import { formatDateLabel } from '@/lib/format';
 
 interface CalendarEvent {
-  id: string; kind: string; title: string; date: string;
-  startMinutes: number; durationMinutes: number; status: string; referenceId: string | null;
+  id: string;
+  kind: string;
+  title: string;
+  date: string;
+  startMinutes: number;
+  durationMinutes: number;
+  status: string;
+  referenceId: string | null;
 }
 
 const KIND_TONE: Record<string, string> = {
@@ -54,7 +60,8 @@ export function CalendarView({
     return out;
   }, [from, to]);
 
-  const visibleDays = view === 'month' ? days.slice(0, 42) : view === 'week' ? days.slice(0, 7) : [today];
+  const visibleDays =
+    view === 'month' ? days.slice(0, 42) : view === 'week' ? days.slice(0, 7) : [today];
 
   const move = async (eventId: string, date: string) => {
     setPendingId(eventId);
@@ -110,7 +117,9 @@ export function CalendarView({
         <div
           className={clsx(
             'mt-8 grid gap-2',
-            view === 'month' ? 'grid-cols-2 sm:grid-cols-4 xl:grid-cols-7' : 'grid-cols-1 sm:grid-cols-7',
+            view === 'month'
+              ? 'grid-cols-2 sm:grid-cols-4 xl:grid-cols-7'
+              : 'grid-cols-1 sm:grid-cols-7',
           )}
         >
           {visibleDays.map((date) => (
@@ -133,7 +142,14 @@ export function CalendarView({
 }
 
 function DayColumn({
-  date, today, events, expanded, onDrop, onDragStart, dragging, pendingId,
+  date,
+  today,
+  events,
+  expanded,
+  onDrop,
+  onDragStart,
+  dragging,
+  pendingId,
 }: {
   date: string;
   today: string;
@@ -162,7 +178,9 @@ function DayColumn({
       }}
       className={clsx(
         'rounded-card border p-3 transition-colors',
-        over ? 'accent-tint border-ember bg-ember/[0.06]' : 'light-surface border-ink-900/10 bg-bone-100',
+        over
+          ? 'accent-tint border-ember bg-ember/[0.06]'
+          : 'light-surface border-ink-900/10 bg-bone-100',
         expanded ? 'min-h-[220px]' : 'min-h-[120px]',
       )}
     >

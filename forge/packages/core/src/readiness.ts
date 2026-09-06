@@ -168,7 +168,8 @@ function bandFor(score: number): Pick<ReadinessResult, 'band' | 'headline' | 'gu
   return {
     band: 'compromised',
     headline: 'Compromised',
-    guidance: 'Swap to mobility or an easy aerobic session. Pushing today costs you the rest of the week.',
+    guidance:
+      'Swap to mobility or an easy aerobic session. Pushing today costs you the rest of the week.',
   };
 }
 
@@ -204,15 +205,39 @@ export function assessTrainingLoad(dailyLoads: readonly number[]): LoadAssessmen
   const ratio = chronic > 0 ? acute / chronic : 0;
 
   if (ratio < 0.8) {
-    return { acute, chronic, ratio, zone: 'detraining', message: 'Load has dropped off. A lighter week is fine — two in a row costs adaptation.' };
+    return {
+      acute,
+      chronic,
+      ratio,
+      zone: 'detraining',
+      message: 'Load has dropped off. A lighter week is fine — two in a row costs adaptation.',
+    };
   }
   if (ratio <= 1.3) {
-    return { acute, chronic, ratio, zone: 'optimal', message: 'Load is tracking where progressive overload wants it.' };
+    return {
+      acute,
+      chronic,
+      ratio,
+      zone: 'optimal',
+      message: 'Load is tracking where progressive overload wants it.',
+    };
   }
   if (ratio <= 1.5) {
-    return { acute, chronic, ratio, zone: 'stretched', message: 'You have ramped quickly. Keep next week flat rather than adding volume.' };
+    return {
+      acute,
+      chronic,
+      ratio,
+      zone: 'stretched',
+      message: 'You have ramped quickly. Keep next week flat rather than adding volume.',
+    };
   }
-  return { acute, chronic, ratio, zone: 'spike', message: 'Sharp load spike. Your plan will pull back volume to let adaptation catch up.' };
+  return {
+    acute,
+    chronic,
+    ratio,
+    zone: 'spike',
+    message: 'Sharp load spike. Your plan will pull back volume to let adaptation catch up.',
+  };
 }
 
 /** Session load in arbitrary units: RPE × minutes, the standard sRPE method. */
@@ -242,9 +267,10 @@ export function computeRecoveryScore(
   targetRecoverySessions: number,
   sleepConsistency: number,
 ): number {
-  const adherence = targetRecoverySessions > 0
-    ? clamp((completedRecoverySessions / targetRecoverySessions) * 100, 0, 100)
-    : 100;
+  const adherence =
+    targetRecoverySessions > 0
+      ? clamp((completedRecoverySessions / targetRecoverySessions) * 100, 0, 100)
+      : 100;
   const parts = [readinessScore ?? 60, adherence, clamp(sleepConsistency, 0, 100)];
   return Math.round(average(parts));
 }

@@ -117,7 +117,8 @@ export function challengeProgress(
   const daysRemaining = Math.max(0, definition.durationDays - daysElapsed);
   const remaining = Math.max(0, definition.target - value);
   const requiredDailyRate = daysRemaining > 0 ? Math.ceil(remaining / daysRemaining) : remaining;
-  const expected = (definition.target / definition.durationDays) * clamp(daysElapsed, 0, definition.durationDays);
+  const expected =
+    (definition.target / definition.durationDays) * clamp(daysElapsed, 0, definition.durationDays);
   const onTrack = value >= expected * 0.95;
 
   let message: string;

@@ -19,9 +19,15 @@ interface ThreadList {
 interface ThreadDetail {
   thread: { id: string; subject: string };
   messages: {
-    id: string; senderId: string; kind: string; body: string | null;
-    mediaKey: string | null; durationSeconds: number | null; exerciseId: string | null;
-    createdAt: string; readAt: string | null;
+    id: string;
+    senderId: string;
+    kind: string;
+    body: string | null;
+    mediaKey: string | null;
+    durationSeconds: number | null;
+    exerciseId: string | null;
+    createdAt: string;
+    readAt: string | null;
     formCheckComments: { id: string; timestampSeconds: number; body: string }[];
   }[];
 }

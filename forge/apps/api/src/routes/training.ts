@@ -2,15 +2,41 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import {
-  addDays, applyDifficultyFeedback, buildRoadmap, buildSession, buildPerformanceProfile,
-  detectPersonalRecords, estimateOneRepMax, findExercise, findProgram, phaseForWeek,
-  progressExercise, randomId, sessionLoad, startOfWeek, substituteExercise, workingLoadFrom,
-  totalVolume, type AssessmentAnswers, type BuiltSession, type Equipment, type ExercisePrescription,
-  type ExperienceLevel, type Phase, type SetLog,
+  addDays,
+  applyDifficultyFeedback,
+  buildRoadmap,
+  buildSession,
+  buildPerformanceProfile,
+  detectPersonalRecords,
+  estimateOneRepMax,
+  findExercise,
+  findProgram,
+  phaseForWeek,
+  progressExercise,
+  randomId,
+  sessionLoad,
+  startOfWeek,
+  substituteExercise,
+  workingLoadFrom,
+  totalVolume,
+  type AssessmentAnswers,
+  type BuiltSession,
+  type Equipment,
+  type ExercisePrescription,
+  type ExperienceLevel,
+  type Phase,
+  type SetLog,
 } from '@forge/core';
 import {
-  calendarEvents, exerciseLoads, memberProfiles, personalRecords, planDays, plans,
-  planWeeks, setLogs, workoutLogs,
+  calendarEvents,
+  exerciseLoads,
+  memberProfiles,
+  personalRecords,
+  planDays,
+  plans,
+  planWeeks,
+  setLogs,
+  workoutLogs,
 } from '@forge/db';
 import { badRequest, conflict, notFound } from '../lib/errors.js';
 import { parse } from '../lib/validate.js';
@@ -31,15 +57,22 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
     const { db, today } = request.ctx;
 
     const [plan] = await db
-      .select().from(plans)
+      .select()
+      .from(plans)
       .where(and(eq(plans.userId, principal.userId), eq(plans.status, 'active')))
       .limit(1);
     if (!plan) return { plan: null, weeks: [], progress: null };
 
     const weeks = await db
-      .select().from(planWeeks).where(eq(planWeeks.planId, plan.id)).orderBy(planWeeks.weekNumber);
+      .select()
+      .from(planWeeks)
+      .where(eq(planWeeks.planId, plan.id))
+      .orderBy(planWeeks.weekNumber);
     const days = await db
-      .select().from(planDays).where(eq(planDays.userId, principal.userId)).orderBy(planDays.date);
+      .select()
+      .from(planDays)
+      .where(eq(planDays.userId, principal.userId))
+      .orderBy(planDays.date);
 
     const daysByWeek = new Map<string, typeof days>();
     for (const day of days) {
@@ -51,7 +84,8 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
     const completedSessions = days.filter((d) => d.status === 'completed').length;
     const totalSessions = days.filter((d) => d.kind !== 'rest').length;
     const date = today();
-    const currentWeek = weeks.find((w) => w.startDate <= date && date <= w.endDate) ?? weeks[0] ?? null;
+    const currentWeek =
+      weeks.find((w) => w.startDate <= date && date <= w.endDate) ?? weeks[0] ?? null;
 
     const nextMilestone = weeks.find((w) => w.milestone && w.startDate >= date)?.milestone ?? null;
 
@@ -84,13 +118,20 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
     if (!program) throw notFound('Programme');
 
     const [profileRow] = await db
-      .select().from(memberProfiles).where(eq(memberProfiles.userId, principal.userId)).limit(1);
+      .select()
+      .from(memberProfiles)
+      .where(eq(memberProfiles.userId, principal.userId))
+      .limit(1);
     if (!profileRow) {
-      throw badRequest('no_profile', 'Complete the fitness assessment before starting a programme.');
+      throw badRequest(
+        'no_profile',
+        'Complete the fitness assessment before starting a programme.',
+      );
     }
 
     const existing = await db
-      .select({ id: plans.id }).from(plans)
+      .select({ id: plans.id })
+      .from(plans)
       .where(and(eq(plans.userId, principal.userId), eq(plans.status, 'active')));
 
     if (existing.length > 0 && !body.replaceExisting) {
@@ -99,7 +140,9 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
     if (existing.length > 0) {
       // Archive rather than delete: the history behind the Progress page is the
       // member's, and starting a new block must never erase it.
-      await db.update(plans).set({ status: 'archived', updatedAt: new Date() })
+      await db
+        .update(plans)
+        .set({ status: 'archived', updatedAt: new Date() })
         .where(and(eq(plans.userId, principal.userId), eq(plans.status, 'active')));
     }
 
@@ -109,49 +152,81 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
 
     const roadmap = buildRoadmap(
       {
-        program, goal: answers.primaryGoal, level: profile.trainingLevel,
-        sessionsPerWeek: profile.suggestedFrequency, sessionMinutes: profile.sessionMinutes,
-        startDate, coached: answers.coaching === 'human-coach',
-        nutritionGoal: profile.nutritionGoal, recoveryPriority: profile.recoveryPriority,
+        program,
+        goal: answers.primaryGoal,
+        level: profile.trainingLevel,
+        sessionsPerWeek: profile.suggestedFrequency,
+        sessionMinutes: profile.sessionMinutes,
+        startDate,
+        coached: answers.coaching === 'human-coach',
+        nutritionGoal: profile.nutritionGoal,
+        recoveryPriority: profile.recoveryPriority,
       },
       profile.phaseEmphasis,
     );
 
     const knownLoads = Object.fromEntries(
-      (await db.select().from(exerciseLoads).where(eq(exerciseLoads.userId, principal.userId)))
-        .map((row) => [row.exerciseId, row.workingLoadGrams]),
+      (await db.select().from(exerciseLoads).where(eq(exerciseLoads.userId, principal.userId))).map(
+        (row) => [row.exerciseId, row.workingLoadGrams],
+      ),
     );
 
     const planId = randomId('plan');
     await db.insert(plans).values({
-      id: planId, userId: principal.userId, programSlug: program.slug, programName: program.name,
-      goal: answers.primaryGoal, startDate: roadmap.startDate, totalWeeks: roadmap.totalWeeks,
-      sessionsPerWeek: profile.suggestedFrequency, sessionMinutes: profile.sessionMinutes,
-      status: 'active', phases: JSON.stringify(roadmap.phases),
+      id: planId,
+      userId: principal.userId,
+      programSlug: program.slug,
+      programName: program.name,
+      goal: answers.primaryGoal,
+      startDate: roadmap.startDate,
+      totalWeeks: roadmap.totalWeeks,
+      sessionsPerWeek: profile.suggestedFrequency,
+      sessionMinutes: profile.sessionMinutes,
+      status: 'active',
+      phases: JSON.stringify(roadmap.phases),
     });
 
     for (const week of roadmap.weeks) {
       const weekId = randomId('planWeek');
       await db.insert(planWeeks).values({
-        id: weekId, planId, weekNumber: week.weekNumber, phase: week.phase,
-        startDate: week.startDate, endDate: week.endDate, deload: week.deload,
-        nutritionGoal: week.nutritionGoal, recoveryTarget: week.recoveryTarget,
-        coachCheckIn: week.coachCheckIn, milestone: week.milestone,
+        id: weekId,
+        planId,
+        weekNumber: week.weekNumber,
+        phase: week.phase,
+        startDate: week.startDate,
+        endDate: week.endDate,
+        deload: week.deload,
+        nutritionGoal: week.nutritionGoal,
+        recoveryTarget: week.recoveryTarget,
+        coachCheckIn: week.coachCheckIn,
+        milestone: week.milestone,
       });
 
       const dayRows = week.days.map((day) => {
         const built = day.sessionTemplate
           ? buildSession({
-              session: day.sessionTemplate, equipment: answers.equipment,
-              level: profile.trainingLevel, phase: phaseForWeek(roadmap.phases, week.weekNumber),
-              deload: week.deload, minutes: day.minutes, knownLoads,
+              session: day.sessionTemplate,
+              equipment: answers.equipment,
+              level: profile.trainingLevel,
+              phase: phaseForWeek(roadmap.phases, week.weekNumber),
+              deload: week.deload,
+              minutes: day.minutes,
+              knownLoads,
               bodyweightKg: answers.weightKg ?? 75,
             })
           : null;
         return {
-          id: randomId('planDay'), planWeekId: weekId, userId: principal.userId, date: day.date,
-          dayOfWeek: day.dayOfWeek, kind: day.kind, title: day.title, focus: day.focus,
-          minutes: day.minutes, patterns: day.patterns, status: 'scheduled',
+          id: randomId('planDay'),
+          planWeekId: weekId,
+          userId: principal.userId,
+          date: day.date,
+          dayOfWeek: day.dayOfWeek,
+          kind: day.kind,
+          title: day.title,
+          focus: day.focus,
+          minutes: day.minutes,
+          patterns: day.patterns,
+          status: 'scheduled',
           sessionTemplate: built ? JSON.stringify(built) : null,
         };
       });
@@ -161,9 +236,15 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
         dayRows
           .filter((row) => row.kind !== 'rest')
           .map((row) => ({
-            id: randomId('event'), userId: principal.userId, kind: 'workout', title: row.title,
-            date: row.date, startMinutes: row.kind === 'running' ? 7 * 60 : 17 * 60 + 30,
-            durationMinutes: row.minutes, referenceId: row.id, status: 'scheduled',
+            id: randomId('event'),
+            userId: principal.userId,
+            kind: 'workout',
+            title: row.title,
+            date: row.date,
+            startMinutes: row.kind === 'running' ? 7 * 60 : 17 * 60 + 30,
+            durationMinutes: row.minutes,
+            referenceId: row.id,
+            status: 'scheduled',
           })),
       );
     }
@@ -177,13 +258,17 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
     const { db } = request.ctx;
 
     const [day] = await db
-      .select().from(planDays)
+      .select()
+      .from(planDays)
       .where(and(eq(planDays.id, id), eq(planDays.userId, principal.userId)))
       .limit(1);
     if (!day) throw notFound('Session');
 
     const session = safeParseJson<BuiltSession | null>(day.sessionTemplate ?? 'null', null);
-    const loads = await db.select().from(exerciseLoads).where(eq(exerciseLoads.userId, principal.userId));
+    const loads = await db
+      .select()
+      .from(exerciseLoads)
+      .where(eq(exerciseLoads.userId, principal.userId));
     const loadByExercise = new Map(loads.map((row) => [row.exerciseId, row]));
 
     return {
@@ -228,7 +313,8 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
     const { db } = request.ctx;
 
     const [day] = await db
-      .select().from(planDays)
+      .select()
+      .from(planDays)
       .where(and(eq(planDays.id, id), eq(planDays.userId, principal.userId)))
       .limit(1);
     if (!day) throw notFound('Session');
@@ -237,37 +323,57 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
     }
 
     const [profileRow] = await db
-      .select().from(memberProfiles).where(eq(memberProfiles.userId, principal.userId)).limit(1);
+      .select()
+      .from(memberProfiles)
+      .where(eq(memberProfiles.userId, principal.userId))
+      .limit(1);
     const equipment = (profileRow?.equipment ?? ['bodyweight']) as Equipment[];
 
     switch (body.action) {
       case 'reschedule': {
         if (!body.date) throw badRequest('missing_date', 'A new date is required to reschedule.');
-        await db.update(planDays)
-          .set({ date: body.date, rescheduledFrom: day.rescheduledFrom ?? day.date, updatedAt: new Date() })
+        await db
+          .update(planDays)
+          .set({
+            date: body.date,
+            rescheduledFrom: day.rescheduledFrom ?? day.date,
+            updatedAt: new Date(),
+          })
           .where(eq(planDays.id, id));
-        await db.update(calendarEvents).set({ date: body.date, updatedAt: new Date() })
-          .where(and(eq(calendarEvents.referenceId, id), eq(calendarEvents.userId, principal.userId)));
+        await db
+          .update(calendarEvents)
+          .set({ date: body.date, updatedAt: new Date() })
+          .where(
+            and(eq(calendarEvents.referenceId, id), eq(calendarEvents.userId, principal.userId)),
+          );
         return { ok: true, date: body.date };
       }
       case 'skip':
-        await db.update(planDays).set({ status: 'skipped', updatedAt: new Date() }).where(eq(planDays.id, id));
+        await db
+          .update(planDays)
+          .set({ status: 'skipped', updatedAt: new Date() })
+          .where(eq(planDays.id, id));
         return { ok: true };
       case 'restore':
-        await db.update(planDays).set({ status: 'scheduled', updatedAt: new Date() }).where(eq(planDays.id, id));
+        await db
+          .update(planDays)
+          .set({ status: 'scheduled', updatedAt: new Date() })
+          .where(eq(planDays.id, id));
         return { ok: true };
       case 'shorten': {
         const minutes = body.minutes ?? 30;
         const session = safeParseJson<BuiltSession | null>(day.sessionTemplate ?? 'null', null);
         if (!session) throw badRequest('no_session', 'This day has no session to shorten.');
         const shortened = shortenSession(session, minutes);
-        await db.update(planDays)
+        await db
+          .update(planDays)
           .set({ minutes, sessionTemplate: JSON.stringify(shortened), updatedAt: new Date() })
           .where(eq(planDays.id, id));
         return { ok: true, session: shortened };
       }
       case 'substitute': {
-        if (!body.exerciseId) throw badRequest('missing_exercise', 'Name the exercise to substitute.');
+        if (!body.exerciseId)
+          throw badRequest('missing_exercise', 'Name the exercise to substitute.');
         const session = safeParseJson<BuiltSession | null>(day.sessionTemplate ?? 'null', null);
         if (!session) throw badRequest('no_session', 'This day has no session to change.');
 
@@ -296,10 +402,15 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
               : exercise,
           ),
         };
-        await db.update(planDays)
+        await db
+          .update(planDays)
           .set({ sessionTemplate: JSON.stringify(updated), updatedAt: new Date() })
           .where(eq(planDays.id, id));
-        return { ok: true, replacement: { id: replacement.id, name: replacement.name }, session: updated };
+        return {
+          ok: true,
+          replacement: { id: replacement.id, name: replacement.name },
+          session: updated,
+        };
       }
       default:
         throw badRequest('unknown_action', 'That action is not supported.');
@@ -314,7 +425,11 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
         title: z.string().max(120).default('Training session'),
         kind: z.string().max(16).default('strength'),
         date: isoDateSchema.optional(),
-        durationSeconds: z.number().int().min(0).max(6 * 3600),
+        durationSeconds: z
+          .number()
+          .int()
+          .min(0)
+          .max(6 * 3600),
         averageHeartRate: z.number().int().min(30).max(230).optional(),
         maxHeartRate: z.number().int().min(30).max(230).optional(),
         difficultyFeedback: z.enum(['too-easy', 'perfect', 'too-hard']).optional(),
@@ -343,7 +458,8 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
     let planDay: typeof planDays.$inferSelect | undefined;
     if (body.planDayId) {
       [planDay] = await db
-        .select().from(planDays)
+        .select()
+        .from(planDays)
         .where(and(eq(planDays.id, body.planDayId), eq(planDays.userId, principal.userId)))
         .limit(1);
       if (!planDay) throw notFound('Session');
@@ -353,14 +469,18 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
     }
 
     const [profileRow] = await db
-      .select().from(memberProfiles).where(eq(memberProfiles.userId, principal.userId)).limit(1);
+      .select()
+      .from(memberProfiles)
+      .where(eq(memberProfiles.userId, principal.userId))
+      .limit(1);
     const level = (profileRow?.experience ?? 'intermediate') as ExperienceLevel;
 
     const workoutId = randomId('workoutLog');
     const completedSets = body.sets.filter((s) => s.completed);
     const volume = totalVolume(completedSets.map(toSetLog));
     const rpes = completedSets.map((s) => s.rpe).filter((r): r is number => typeof r === 'number');
-    const averageRpe = rpes.length > 0 ? Math.round(rpes.reduce((a, b) => a + b, 0) / rpes.length) : null;
+    const averageRpe =
+      rpes.length > 0 ? Math.round(rpes.reduce((a, b) => a + b, 0) / rpes.length) : null;
     const minutes = Math.round(body.durationSeconds / 60);
 
     const muscleGroups = new Set<string>();
@@ -370,24 +490,39 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
     }
 
     await db.insert(workoutLogs).values({
-      id: workoutId, userId: principal.userId, planDayId: planDay?.id ?? null,
-      title: planDay?.title ?? body.title, kind: planDay?.kind ?? body.kind, date,
-      startedAt: new Date(Date.now() - body.durationSeconds * 1000), completedAt: new Date(),
-      durationSeconds: body.durationSeconds, volumeGrams: volume,
+      id: workoutId,
+      userId: principal.userId,
+      planDayId: planDay?.id ?? null,
+      title: planDay?.title ?? body.title,
+      kind: planDay?.kind ?? body.kind,
+      date,
+      startedAt: new Date(Date.now() - body.durationSeconds * 1000),
+      completedAt: new Date(),
+      durationSeconds: body.durationSeconds,
+      volumeGrams: volume,
       calories: Math.round(minutes * 8.4),
-      averageHeartRate: body.averageHeartRate ?? null, maxHeartRate: body.maxHeartRate ?? null,
-      averageRpe, sessionLoad: sessionLoad(minutes, averageRpe ?? 7),
+      averageHeartRate: body.averageHeartRate ?? null,
+      maxHeartRate: body.maxHeartRate ?? null,
+      averageRpe,
+      sessionLoad: sessionLoad(minutes, averageRpe ?? 7),
       difficultyFeedback: body.difficultyFeedback ?? null,
-      muscleGroups: [...muscleGroups], notes: body.notes ?? null,
+      muscleGroups: [...muscleGroups],
+      notes: body.notes ?? null,
     });
 
     if (body.sets.length > 0) {
       await db.insert(setLogs).values(
         body.sets.map((set) => ({
-          id: randomId('setLog'), workoutLogId: workoutId, exerciseId: set.exerciseId,
-          exerciseName: set.exerciseName, setIndex: set.setIndex, reps: set.reps,
-          loadGrams: set.loadGrams, rpe: set.rpe ? Math.round(set.rpe) : null,
-          completed: set.completed, restSeconds: set.restSeconds ?? null,
+          id: randomId('setLog'),
+          workoutLogId: workoutId,
+          exerciseId: set.exerciseId,
+          exerciseName: set.exerciseName,
+          setIndex: set.setIndex,
+          reps: set.reps,
+          loadGrams: set.loadGrams,
+          rpe: set.rpe ? Math.round(set.rpe) : null,
+          completed: set.completed,
+          restSeconds: set.restSeconds ?? null,
         })),
       );
     }
@@ -397,7 +532,9 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
       ? safeParseJson<BuiltSession | null>(planDay.sessionTemplate, null)
       : null;
     const existingLoads = await db
-      .select().from(exerciseLoads).where(eq(exerciseLoads.userId, principal.userId));
+      .select()
+      .from(exerciseLoads)
+      .where(eq(exerciseLoads.userId, principal.userId));
     const loadByExercise = new Map(existingLoads.map((row) => [row.exerciseId, row]));
 
     const byExercise = new Map<string, typeof body.sets>();
@@ -408,7 +545,12 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
     }
 
     const newRecords: (typeof personalRecords.$inferInsert)[] = [];
-    const decisions: { exerciseId: string; action: string; reason: string; nextLoadGrams: number }[] = [];
+    const decisions: {
+      exerciseId: string;
+      action: string;
+      reason: string;
+      nextLoadGrams: number;
+    }[] = [];
 
     for (const [exerciseId, sets] of byExercise) {
       const definition = findExercise(exerciseId);
@@ -418,29 +560,45 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
       const bestOneRepMax = history?.bestEstimatedOneRepMax ?? 0;
 
       for (const record of detectPersonalRecords(exerciseId, logs, {
-        bestLoadGrams: bestLoad, bestEstimatedOneRepMax: bestOneRepMax,
+        bestLoadGrams: bestLoad,
+        bestEstimatedOneRepMax: bestOneRepMax,
       })) {
         newRecords.push({
-          id: randomId('workoutLog'), userId: principal.userId, exerciseId,
+          id: randomId('workoutLog'),
+          userId: principal.userId,
+          exerciseId,
           exerciseName: sets[0]?.exerciseName ?? definition?.name ?? exerciseId,
-          kind: record.kind, valueGrams: record.value, previousValueGrams: record.previousValue,
-          reps: record.reps, achievedOn: date, workoutLogId: workoutId,
+          kind: record.kind,
+          valueGrams: record.value,
+          previousValueGrams: record.previousValue,
+          reps: record.reps,
+          achievedOn: date,
+          workoutLogId: workoutId,
         });
       }
 
-      const prescribed = session?.exercises.find((e) => e.exerciseId === exerciseId)?.prescription
-        ?? fallbackPrescription(sets);
+      const prescribed =
+        session?.exercises.find((e) => e.exerciseId === exerciseId)?.prescription ??
+        fallbackPrescription(sets);
       const decision = progressExercise(prescribed, logs, {
-        type: 'double-progression', level, plateGrams: definition?.plateGrams ?? 2500,
+        type: 'double-progression',
+        level,
+        plateGrams: definition?.plateGrams ?? 2500,
       });
       decisions.push({
-        exerciseId, action: decision.action, reason: decision.reason,
+        exerciseId,
+        action: decision.action,
+        reason: decision.reason,
         nextLoadGrams: decision.next.loadGrams,
       });
 
-      const heaviest = logs.reduce((best, l) => (l.completed ? Math.max(best, l.loadGrams) : best), 0);
+      const heaviest = logs.reduce(
+        (best, l) => (l.completed ? Math.max(best, l.loadGrams) : best),
+        0,
+      );
       const bestEstimate = logs.reduce(
-        (best, l) => (l.completed ? Math.max(best, estimateOneRepMax(l.loadGrams, l.reps) ?? 0) : best),
+        (best, l) =>
+          l.completed ? Math.max(best, estimateOneRepMax(l.loadGrams, l.reps) ?? 0) : best,
         0,
       );
       const lastSet = sets.at(-1);
@@ -448,7 +606,11 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
       const values = {
         // The prescription carries this phase's intensity bias; store the load
         // without it, or the bias compounds and the block drifts lighter.
-        workingLoadGrams: workingLoadFrom(decision.next, prescribed, definition?.plateGrams ?? 2500),
+        workingLoadGrams: workingLoadFrom(
+          decision.next,
+          prescribed,
+          definition?.plateGrams ?? 2500,
+        ),
         lastReps: lastSet?.reps ?? null,
         lastRpe: lastSet?.rpe ? Math.round(lastSet.rpe) : null,
         bestLoadGrams: Math.max(bestLoad, heaviest),
@@ -460,7 +622,10 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
         await db.update(exerciseLoads).set(values).where(eq(exerciseLoads.id, history.id));
       } else {
         await db.insert(exerciseLoads).values({
-          id: randomId('exercise'), userId: principal.userId, exerciseId, ...values,
+          id: randomId('exercise'),
+          userId: principal.userId,
+          exerciseId,
+          ...values,
         });
       }
     }
@@ -468,17 +633,30 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
     if (newRecords.length > 0) await db.insert(personalRecords).values(newRecords);
 
     if (planDay) {
-      await db.update(planDays)
+      await db
+        .update(planDays)
         .set({ status: 'completed', updatedAt: new Date() })
         .where(eq(planDays.id, planDay.id));
-      await db.update(calendarEvents)
+      await db
+        .update(calendarEvents)
         .set({ status: 'completed', updatedAt: new Date() })
-        .where(and(eq(calendarEvents.referenceId, planDay.id), eq(calendarEvents.userId, principal.userId)));
+        .where(
+          and(
+            eq(calendarEvents.referenceId, planDay.id),
+            eq(calendarEvents.userId, principal.userId),
+          ),
+        );
 
       // The difficulty answer feeds the *next* scheduled session of the same
       // kind — that is what makes the question worth asking.
       if (body.difficultyFeedback && body.difficultyFeedback !== 'perfect') {
-        await applyFeedbackToNextSession(db, principal.userId, planDay, body.difficultyFeedback, date);
+        await applyFeedbackToNextSession(
+          db,
+          principal.userId,
+          planDay,
+          body.difficultyFeedback,
+          date,
+        );
       }
     }
 
@@ -494,8 +672,12 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
         averageRpe,
       },
       personalRecords: newRecords.map((r) => ({
-        exerciseId: r.exerciseId, exerciseName: r.exerciseName, kind: r.kind,
-        value: r.valueGrams, previousValue: r.previousValueGrams, reps: r.reps,
+        exerciseId: r.exerciseId,
+        exerciseName: r.exerciseName,
+        kind: r.kind,
+        value: r.valueGrams,
+        previousValue: r.previousValueGrams,
+        reps: r.reps,
       })),
       progression: decisions,
     };
@@ -504,14 +686,18 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
   app.get('/me/workouts', async (request) => {
     const principal = requireMember(request.principal);
     const query = parse(
-      z.object({ limit: z.coerce.number().int().min(1).max(100).default(20), from: isoDateSchema.optional() }),
+      z.object({
+        limit: z.coerce.number().int().min(1).max(100).default(20),
+        from: isoDateSchema.optional(),
+      }),
       request.query,
     );
     const { db, today } = request.ctx;
     const from = query.from ?? addDays(today(), -90);
 
     const logs = await db
-      .select().from(workoutLogs)
+      .select()
+      .from(workoutLogs)
       .where(and(eq(workoutLogs.userId, principal.userId), gte(workoutLogs.date, from)))
       .orderBy(desc(workoutLogs.date))
       .limit(query.limit);
@@ -525,22 +711,31 @@ export async function registerTrainingRoutes(app: FastifyInstance): Promise<void
     const { db } = request.ctx;
 
     const [workout] = await db
-      .select().from(workoutLogs)
+      .select()
+      .from(workoutLogs)
       .where(and(eq(workoutLogs.id, id), eq(workoutLogs.userId, principal.userId)))
       .limit(1);
     if (!workout) throw notFound('Workout');
 
     const sets = await db
-      .select().from(setLogs).where(eq(setLogs.workoutLogId, id)).orderBy(setLogs.setIndex);
+      .select()
+      .from(setLogs)
+      .where(eq(setLogs.workoutLogId, id))
+      .orderBy(setLogs.setIndex);
     const records = await db
-      .select().from(personalRecords).where(eq(personalRecords.workoutLogId, id));
+      .select()
+      .from(personalRecords)
+      .where(eq(personalRecords.workoutLogId, id));
 
     return { workout, sets, personalRecords: records };
   });
 }
 
 function toSetLog(set: {
-  reps: number; loadGrams: number; rpe?: number | undefined; completed: boolean;
+  reps: number;
+  loadGrams: number;
+  rpe?: number | undefined;
+  completed: boolean;
 }): SetLog {
   return {
     reps: set.reps,
@@ -550,7 +745,9 @@ function toSetLog(set: {
   };
 }
 
-function fallbackPrescription(sets: readonly { reps: number; loadGrams: number }[]): ExercisePrescription {
+function fallbackPrescription(
+  sets: readonly { reps: number; loadGrams: number }[],
+): ExercisePrescription {
   const first = sets[0];
   return {
     sets: sets.length,
@@ -591,13 +788,16 @@ async function applyFeedbackToNextSession(
   date: string,
 ): Promise<void> {
   const upcoming = await db
-    .select().from(planDays)
-    .where(and(
-      eq(planDays.userId, userId),
-      eq(planDays.title, planDay.title),
-      sql`${planDays.date} > ${date}`,
-      eq(planDays.status, 'scheduled'),
-    ))
+    .select()
+    .from(planDays)
+    .where(
+      and(
+        eq(planDays.userId, userId),
+        eq(planDays.title, planDay.title),
+        sql`${planDays.date} > ${date}`,
+        eq(planDays.status, 'scheduled'),
+      ),
+    )
     .orderBy(planDays.date)
     .limit(1);
 
@@ -619,7 +819,8 @@ async function applyFeedbackToNextSession(
     })),
   };
 
-  await db.update(planDays)
+  await db
+    .update(planDays)
     .set({ sessionTemplate: JSON.stringify(updated), updatedAt: new Date() })
     .where(eq(planDays.id, next.id));
 }
@@ -638,7 +839,9 @@ function toAnswers(profile: typeof memberProfiles.$inferSelect): AssessmentAnswe
     coaching: profile.coachingPreference as AssessmentAnswers['coaching'],
     ...(profile.heightCm !== null ? { heightCm: profile.heightCm } : {}),
     ...(profile.weightKg !== null ? { weightKg: profile.weightKg } : {}),
-    ...(profile.sexAtBirth !== null ? { sexAtBirth: profile.sexAtBirth as AssessmentAnswers['sexAtBirth'] } : {}),
+    ...(profile.sexAtBirth !== null
+      ? { sexAtBirth: profile.sexAtBirth as AssessmentAnswers['sexAtBirth'] }
+      : {}),
   };
 }
 

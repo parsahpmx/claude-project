@@ -38,12 +38,23 @@ export default async function OnboardingPage({
           <p className="eyebrow mb-4">What happens next</p>
           <ol className="space-y-4">
             {[
-              ['Your plan is built', 'The whole block is scheduled at once, so you always know what is coming.'],
-              ['Your first session', 'Conservative starting loads. Week one is about establishing a baseline, not proving anything.'],
-              ['It adapts', 'Every logged set changes what comes next. By week three the plan is yours, not a template.'],
+              [
+                'Your plan is built',
+                'The whole block is scheduled at once, so you always know what is coming.',
+              ],
+              [
+                'Your first session',
+                'Conservative starting loads. Week one is about establishing a baseline, not proving anything.',
+              ],
+              [
+                'It adapts',
+                'Every logged set changes what comes next. By week three the plan is yours, not a template.',
+              ],
             ].map(([title, body], index) => (
               <li key={title} className="flex gap-4">
-                <span aria-hidden className="display text-lg leading-none text-accent">0{index + 1}</span>
+                <span aria-hidden className="display text-lg leading-none text-accent">
+                  0{index + 1}
+                </span>
                 <div>
                   <p className="font-medium text-bone-100">{title}</p>
                   <p className="mt-1 text-sm text-bone-200/60">{body}</p>
@@ -52,7 +63,9 @@ export default async function OnboardingPage({
             ))}
           </ol>
           <div className="mt-7">
-            <ButtonLink href="/app" variant="inverse" size="sm" block>Skip for now</ButtonLink>
+            <ButtonLink href="/app" variant="inverse" size="sm" block>
+              Skip for now
+            </ButtonLink>
           </div>
         </Card>
       </div>

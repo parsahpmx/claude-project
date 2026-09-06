@@ -85,14 +85,55 @@ export const SUGGESTED_QUESTIONS = [
  * Stems cover inflections ("tear" does not match "tore", so both are listed).
  */
 const MEDICAL_TERMS = [
-  'injur', 'pain', 'hurt', 'physio', 'sprain', 'strain', 'fracture', 'broke',
-  'tear', 'tore', 'torn', 'rupture', 'pulled a', 'pop',
-  'surgery', 'surgical', 'medication', 'medicine', 'diagnos', 'doctor', 'gp ',
-  'concussion', 'pregnan', 'post-natal', 'postnatal', 'rehab', 'tendon',
-  'ligament', 'inflam', 'arthrit', 'hernia', 'disc ', 'sciatic',
-  'dizzy', 'faint', 'nausea', 'numb', 'tingl', 'swell', 'ache', 'aching',
-  'blood pressure', 'heart condition', 'palpitation', 'breathless',
-  'shortness of breath', 'unwell', 'illness', 'sick',
+  'injur',
+  'pain',
+  'hurt',
+  'physio',
+  'sprain',
+  'strain',
+  'fracture',
+  'broke',
+  'tear',
+  'tore',
+  'torn',
+  'rupture',
+  'pulled a',
+  'pop',
+  'surgery',
+  'surgical',
+  'medication',
+  'medicine',
+  'diagnos',
+  'doctor',
+  'gp ',
+  'concussion',
+  'pregnan',
+  'post-natal',
+  'postnatal',
+  'rehab',
+  'tendon',
+  'ligament',
+  'inflam',
+  'arthrit',
+  'hernia',
+  'disc ',
+  'sciatic',
+  'dizzy',
+  'faint',
+  'nausea',
+  'numb',
+  'tingl',
+  'swell',
+  'ache',
+  'aching',
+  'blood pressure',
+  'heart condition',
+  'palpitation',
+  'breathless',
+  'shortness of breath',
+  'unwell',
+  'illness',
+  'sick',
 ];
 
 const INTENT_PATTERNS: { intent: AiIntent; patterns: RegExp[] }[] = [
@@ -102,11 +143,17 @@ const INTENT_PATTERNS: { intent: AiIntent; patterns: RegExp[] }[] = [
   },
   {
     intent: 'shorten-workout',
-    patterns: [/\b(shorten|adjust|cut|only have|reduce)\b.*\b(minute|min|hour|time)\b/i, /\b\d+\s*(minutes|mins|min)\b/i],
+    patterns: [
+      /\b(shorten|adjust|cut|only have|reduce)\b.*\b(minute|min|hour|time)\b/i,
+      /\b\d+\s*(minutes|mins|min)\b/i,
+    ],
   },
   {
     intent: 'why-recovery-fell',
-    patterns: [/\b(recovery|readiness|hrv|sleep score)\b.*\b(fell|drop|down|low|worse|bad)\b/i, /\bwhy.*\b(recovery|readiness)\b/i],
+    patterns: [
+      /\b(recovery|readiness|hrv|sleep score)\b.*\b(fell|drop|down|low|worse|bad)\b/i,
+      /\bwhy.*\b(recovery|readiness)\b/i,
+    ],
   },
   {
     intent: 'post-training-nutrition',
@@ -198,9 +245,13 @@ function trainTodayAnswer(context: AiContext): AiAnswer {
   const readiness = context.readiness;
   if (readiness && readiness.score !== null) {
     sources.push('Readiness score');
-    body.push(`Readiness is ${readiness.score} — ${readiness.headline.toLowerCase()}. ${readiness.guidance}`);
+    body.push(
+      `Readiness is ${readiness.score} — ${readiness.headline.toLowerCase()}. ${readiness.guidance}`,
+    );
   } else {
-    body.push('I do not have readiness data for today, so this is the plan as written rather than an adjusted version.');
+    body.push(
+      'I do not have readiness data for today, so this is the plan as written rather than an adjusted version.',
+    );
   }
 
   if (context.weeklyTarget > 0) {
@@ -290,9 +341,7 @@ function recoveryAnswer(context: AiContext): AiAnswer {
   }
 
   const weakest = [...readiness.components].sort((a, b) => a.score - b.score)[0];
-  const body = [
-    `Readiness is ${readiness.score} today — ${readiness.headline.toLowerCase()}.`,
-  ];
+  const body = [`Readiness is ${readiness.score} today — ${readiness.headline.toLowerCase()}.`];
   if (weakest) {
     body.push(
       `The input pulling it down is ${weakest.label.toLowerCase()}: ${weakest.detail}. That contributes ${Math.round(weakest.weight * 100)}% of the score.`,
@@ -300,7 +349,9 @@ function recoveryAnswer(context: AiContext): AiAnswer {
   }
   body.push(readiness.guidance);
   if (typeof context.lastSessionRpe === 'number' && context.lastSessionRpe >= 8.5) {
-    body.push(`Your last session came in at RPE ${context.lastSessionRpe.toFixed(1)}, which is a large part of why today reads lower.`);
+    body.push(
+      `Your last session came in at RPE ${context.lastSessionRpe.toFixed(1)}, which is a large part of why today reads lower.`,
+    );
   }
 
   return {
@@ -321,16 +372,19 @@ function shortenAnswer(question: string, context: AiContext): AiAnswer {
     return {
       intent: 'shorten-workout',
       headline: 'Nothing scheduled to shorten today.',
-      body: ['Today is a rest day. If you want to move, a 15-minute mobility session is the right size.'],
+      body: [
+        'Today is a rest day. If you want to move, a 15-minute mobility session is the right size.',
+      ],
       actions: [{ label: 'Open a mobility session', action: 'open-recovery' }],
       sources: ['Today’s plan'],
     };
   }
 
   const original = context.todaySessionMinutes ?? 45;
-  const kept = requested >= original
-    ? 'Nothing needs cutting — that is already at or above the scheduled length.'
-    : 'I keep the main lift and its working sets, drop the accessories from the bottom of the session up, and shorten rest on the last block only.';
+  const kept =
+    requested >= original
+      ? 'Nothing needs cutting — that is already at or above the scheduled length.'
+      : 'I keep the main lift and its working sets, drop the accessories from the bottom of the session up, and shorten rest on the last block only.';
 
   return {
     intent: 'shorten-workout',
@@ -353,7 +407,9 @@ function nutritionAnswer(context: AiContext): AiAnswer {
     return {
       intent: 'post-training-nutrition',
       headline: 'Set your nutrition targets and I can be specific.',
-      body: ['Once your height, weight and goal are in, I can give you exact numbers rather than general advice.'],
+      body: [
+        'Once your height, weight and goal are in, I can give you exact numbers rather than general advice.',
+      ],
       actions: [{ label: 'Set up nutrition', action: 'open-nutrition' }],
       sources: [],
     };
@@ -382,17 +438,25 @@ function progressAnswer(context: AiContext): AiAnswer {
 
   if (context.programName && context.weekNumber && context.totalWeeks) {
     sources.push('Your roadmap');
-    body.push(`You are in week ${context.weekNumber} of ${context.totalWeeks} on ${context.programName}.`);
+    body.push(
+      `You are in week ${context.weekNumber} of ${context.totalWeeks} on ${context.programName}.`,
+    );
   }
   if (context.weeklyTarget > 0) {
     sources.push('Weekly adherence');
-    body.push(`This week: ${context.weeklyCompleted} of ${context.weeklyTarget} sessions completed.`);
+    body.push(
+      `This week: ${context.weeklyCompleted} of ${context.weeklyTarget} sessions completed.`,
+    );
   }
   if (context.currentStreakDays > 0) {
     sources.push('Training streak');
-    body.push(`Current streak is ${context.currentStreakDays} days. Consistency is the variable that predicts everything else.`);
+    body.push(
+      `Current streak is ${context.currentStreakDays} days. Consistency is the variable that predicts everything else.`,
+    );
   }
-  body.push('Your Progress page has the strength, volume and consistency series behind these numbers.');
+  body.push(
+    'Your Progress page has the strength, volume and consistency series behind these numbers.',
+  );
 
   return {
     intent: 'progress-check',
@@ -420,19 +484,37 @@ function unknownAnswer(context: AiContext): AiAnswer {
   };
 }
 
-function findMentionedExercise(question: string): { id: string; name: string; pattern: string } | null {
+function findMentionedExercise(
+  question: string,
+): { id: string; name: string; pattern: string } | null {
   const text = question.toLowerCase();
   const candidates = [
-    'barbell-back-squat', 'barbell-front-squat', 'goblet-squat', 'bodyweight-squat',
-    'conventional-deadlift', 'romanian-deadlift', 'barbell-bench-press', 'dumbbell-bench-press',
-    'push-up', 'overhead-press', 'pull-up', 'barbell-row', 'dumbbell-row', 'walking-lunge',
-    'kettlebell-swing', 'hip-thrust', 'plank',
+    'barbell-back-squat',
+    'barbell-front-squat',
+    'goblet-squat',
+    'bodyweight-squat',
+    'conventional-deadlift',
+    'romanian-deadlift',
+    'barbell-bench-press',
+    'dumbbell-bench-press',
+    'push-up',
+    'overhead-press',
+    'pull-up',
+    'barbell-row',
+    'dumbbell-row',
+    'walking-lunge',
+    'kettlebell-swing',
+    'hip-thrust',
+    'plank',
   ];
 
   // Longest match first, so "barbell back squat" does not resolve to "squat".
   const matches = candidates
     .map((id) => ({ id, exercise: findExercise(id) }))
-    .filter((entry): entry is { id: string; exercise: NonNullable<ReturnType<typeof findExercise>> } => entry.exercise !== undefined)
+    .filter(
+      (entry): entry is { id: string; exercise: NonNullable<ReturnType<typeof findExercise>> } =>
+        entry.exercise !== undefined,
+    )
     .filter((entry) => text.includes(entry.exercise.name.toLowerCase()))
     .sort((a, b) => b.exercise.name.length - a.exercise.name.length);
 

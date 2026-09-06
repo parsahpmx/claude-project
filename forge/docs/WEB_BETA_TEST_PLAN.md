@@ -14,6 +14,14 @@
 Plus `pnpm -r typecheck` (strict, `noUncheckedIndexedAccess`), `pnpm -r lint`,
 and `pnpm --filter @forge/beta build`.
 
+**These now run in CI.** They did not before: FORGE is a separate pnpm workspace
+under `forge/`, the root workspace is only `apps/*` and `packages/*`, and
+`turbo run test` at the root therefore never saw it. The only thing in CI that
+touched `forge/` was `prettier --check .`, because Prettier globs files rather
+than packages — which is why formatting was the one thing that failed. A `forge`
+job in `.github/workflows/ci.yml` now runs lint, typecheck, tests and the build
+against the workspace itself.
+
 ## Authorization tests — the important ones
 
 ```sql

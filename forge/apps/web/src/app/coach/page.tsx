@@ -11,15 +11,40 @@ export const metadata = { title: 'Coach overview' };
 export const dynamic = 'force-dynamic';
 
 interface Overview {
-  coach: { slug: string; headline: string; clientCap: number; monthlyPriceCents: number; ratingTenths: number } | null;
-  workload: { activeClients: number; pendingCheckIns: number; unreadMessages: number; upcomingCalls: number };
+  coach: {
+    slug: string;
+    headline: string;
+    clientCap: number;
+    monthlyPriceCents: number;
+    ratingTenths: number;
+  } | null;
+  workload: {
+    activeClients: number;
+    pendingCheckIns: number;
+    unreadMessages: number;
+    upcomingCalls: number;
+  };
   capacity: { utilisation: number; status: 'available' | 'busy' | 'at-capacity'; message: string };
   upcomingCalls: {
-    booking: { id: string; kind: string; startsAt: string; durationMinutes: number; agenda: string | null };
+    booking: {
+      id: string;
+      kind: string;
+      startsAt: string;
+      durationMinutes: number;
+      agenda: string | null;
+    };
     member: { firstName: string; lastName: string };
   }[];
   needsAttention: {
-    checkIn: { id: string; weekStart: string; score: number; band: string; flags: string[]; painNotes: string | null; submittedAt: string };
+    checkIn: {
+      id: string;
+      weekStart: string;
+      score: number;
+      band: string;
+      flags: string[];
+      painNotes: string | null;
+      submittedAt: string;
+    };
     member: { id: string; firstName: string; lastName: string; avatarKey: string | null };
   }[];
 }
@@ -41,10 +66,30 @@ export default async function CoachOverviewPage() {
       />
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card><Stat label="Active clients" value={data.workload.activeClients} hint={`Cap ${data.coach?.clientCap ?? 40}`} /></Card>
-        <Card><Stat label="Pending check-ins" value={data.workload.pendingCheckIns} hint="Awaiting your reply" /></Card>
-        <Card><Stat label="Unread messages" value={data.workload.unreadMessages} hint="Across all clients" /></Card>
-        <Card><Stat label="Upcoming calls" value={data.workload.upcomingCalls} hint="Next 7 days" /></Card>
+        <Card>
+          <Stat
+            label="Active clients"
+            value={data.workload.activeClients}
+            hint={`Cap ${data.coach?.clientCap ?? 40}`}
+          />
+        </Card>
+        <Card>
+          <Stat
+            label="Pending check-ins"
+            value={data.workload.pendingCheckIns}
+            hint="Awaiting your reply"
+          />
+        </Card>
+        <Card>
+          <Stat
+            label="Unread messages"
+            value={data.workload.unreadMessages}
+            hint="Across all clients"
+          />
+        </Card>
+        <Card>
+          <Stat label="Upcoming calls" value={data.workload.upcomingCalls} hint="Next 7 days" />
+        </Card>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.6fr]">
@@ -54,14 +99,22 @@ export default async function CoachOverviewPage() {
               value={data.capacity.utilisation}
               size={112}
               sublabel="Capacity"
-              tone={data.capacity.status === 'at-capacity' ? 'bad' : data.capacity.status === 'busy' ? 'warn' : 'good'}
+              tone={
+                data.capacity.status === 'at-capacity'
+                  ? 'bad'
+                  : data.capacity.status === 'busy'
+                    ? 'warn'
+                    : 'good'
+              }
             />
             <div>
               <p className="eyebrow">Roster</p>
               <p className="mt-2 text-lg font-semibold capitalize text-bone-100">
                 {data.capacity.status.replace(/-/g, ' ')}
               </p>
-              <p className="mt-2 text-xs leading-relaxed text-bone-200/60">{data.capacity.message}</p>
+              <p className="mt-2 text-xs leading-relaxed text-bone-200/60">
+                {data.capacity.message}
+              </p>
             </div>
           </div>
 
@@ -75,7 +128,10 @@ export default async function CoachOverviewPage() {
                     {formatCents(data.workload.activeClients * data.coach.monthlyPriceCents)}
                   </p>
                 </div>
-                <Link href="/coach/payments" className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
+                <Link
+                  href="/coach/payments"
+                  className="text-xs font-semibold uppercase tracking-[0.08em] text-accent"
+                >
                   Payments →
                 </Link>
               </div>
@@ -86,7 +142,10 @@ export default async function CoachOverviewPage() {
         <Card padded={false}>
           <div className="flex items-center justify-between gap-4 border-b border-ink-900/10 p-5">
             <p className="eyebrow">Needs attention</p>
-            <Link href="/coach/check-ins" className="text-xs font-semibold uppercase tracking-[0.08em] text-accent">
+            <Link
+              href="/coach/check-ins"
+              className="text-xs font-semibold uppercase tracking-[0.08em] text-accent"
+            >
               All check-ins →
             </Link>
           </div>
@@ -113,10 +172,13 @@ export default async function CoachOverviewPage() {
                           aria-hidden
                           className="dark-surface grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink-900 text-xs font-semibold text-bone-100"
                         >
-                          {entry.member.firstName.charAt(0)}{entry.member.lastName.charAt(0)}
+                          {entry.member.firstName.charAt(0)}
+                          {entry.member.lastName.charAt(0)}
                         </span>
                         <div>
-                          <p className="font-medium">{entry.member.firstName} {entry.member.lastName}</p>
+                          <p className="font-medium">
+                            {entry.member.firstName} {entry.member.lastName}
+                          </p>
                           <p className="mt-0.5 text-xs text-muted">
                             Score {entry.checkIn.score} · {relativeTime(entry.checkIn.submittedAt)}
                           </p>
@@ -155,7 +217,10 @@ export default async function CoachOverviewPage() {
             </div>
             <ul className="divide-y divide-ink-900/8">
               {data.upcomingCalls.map((entry) => (
-                <li key={entry.booking.id} className="flex flex-wrap items-center justify-between gap-4 p-5">
+                <li
+                  key={entry.booking.id}
+                  className="flex flex-wrap items-center justify-between gap-4 p-5"
+                >
                   <div>
                     <p className="font-medium">
                       {entry.member.firstName} {entry.member.lastName}
@@ -168,10 +233,11 @@ export default async function CoachOverviewPage() {
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="text-sm tabular-nums">
-                      {formatDateTime(entry.booking.startsAt)}
-                    </p>
-                    <Link href="/coach/calendar" className="mt-1 inline-block text-xs font-semibold uppercase tracking-[0.08em] text-accent">
+                    <p className="text-sm tabular-nums">{formatDateTime(entry.booking.startsAt)}</p>
+                    <Link
+                      href="/coach/calendar"
+                      className="mt-1 inline-block text-xs font-semibold uppercase tracking-[0.08em] text-accent"
+                    >
                       Join call →
                     </Link>
                   </div>

@@ -55,7 +55,12 @@ export async function resolveSession(
   const hash = hashToken(token);
 
   const rows = await db
-    .select({ id: authSessions.id, userId: authSessions.userId, expiresAt: authSessions.expiresAt, tokenHash: authSessions.tokenHash })
+    .select({
+      id: authSessions.id,
+      userId: authSessions.userId,
+      expiresAt: authSessions.expiresAt,
+      tokenHash: authSessions.tokenHash,
+    })
     .from(authSessions)
     .where(eq(authSessions.tokenHash, hash))
     .limit(1);

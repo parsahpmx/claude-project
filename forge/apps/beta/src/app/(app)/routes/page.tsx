@@ -15,7 +15,9 @@ export default async function RoutesPage() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-page-title font-display text-bone-100">Routes</h1>
-          <p className="mt-2 text-secondary muted">Routes you have built or saved. Private unless you share one.</p>
+          <p className="mt-2 text-secondary muted">
+            Routes you have built or saved. Private unless you share one.
+          </p>
         </div>
         <ButtonLink href="/routes/new">Build a route</ButtonLink>
       </header>
@@ -30,19 +32,33 @@ export default async function RoutesPage() {
         <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {routes.map((route) => (
             <li key={route.id}>
-              <Link href={`/route/${route.id}`}
-                className="block rounded-card border border-ink-600 bg-ink-800 p-5 transition-transform duration-200 ease-forge hover:-translate-y-0.5 hover:shadow-lift">
+              <Link
+                href={`/route/${route.id}`}
+                className="block rounded-card border border-ink-600 bg-ink-800 p-5 transition-transform duration-200 ease-forge hover:-translate-y-0.5 hover:shadow-lift"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <h2 className="text-card-title text-bone-100">{route.name}</h2>
                   <Badge>{SPORT_LABEL[route.sport]}</Badge>
                 </div>
                 <dl className="mt-4 grid grid-cols-3 gap-3 text-secondary">
-                  <div><dt className="text-caption muted">Distance</dt>
-                    <dd className="mt-0.5 tabular-nums text-bone-100">{formatDistance(route.distanceM, units)}</dd></div>
-                  <div><dt className="text-caption muted">Climb</dt>
-                    <dd className="mt-0.5 tabular-nums text-bone-100">{formatElevation(route.elevationGainM, units)}</dd></div>
-                  <div><dt className="text-caption muted">Time</dt>
-                    <dd className="mt-0.5 tabular-nums text-bone-100">{formatDuration(route.estimatedS)}</dd></div>
+                  <div>
+                    <dt className="text-caption muted">Distance</dt>
+                    <dd className="mt-0.5 tabular-nums text-bone-100">
+                      {formatDistance(route.distanceM, units)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-caption muted">Climb</dt>
+                    <dd className="mt-0.5 tabular-nums text-bone-100">
+                      {formatElevation(route.elevationGainM, units)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-caption muted">Time</dt>
+                    <dd className="mt-0.5 tabular-nums text-bone-100">
+                      {formatDuration(route.estimatedS)}
+                    </dd>
+                  </div>
                 </dl>
               </Link>
             </li>

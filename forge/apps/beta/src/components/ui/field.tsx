@@ -12,8 +12,17 @@ const CONTROL =
  * it went wrong on, not as a disembodied sentence somewhere above the form.
  */
 export function Field({
-  label, name, type = 'text', required, hint, error, autoComplete, defaultValue, placeholder,
-  value, onChange,
+  label,
+  name,
+  type = 'text',
+  required,
+  hint,
+  error,
+  autoComplete,
+  defaultValue,
+  placeholder,
+  value,
+  onChange,
 }: {
   label: string;
   name: string;
@@ -53,8 +62,16 @@ export function Field({
         aria-describedby={describedBy || undefined}
         className={clsx(CONTROL, error ? 'border-state-bad' : 'border-ink-600')}
       />
-      {hint && <p id={hintId} className="mt-1.5 text-caption muted">{hint}</p>}
-      {error && <p id={errorId} className="mt-1.5 text-caption text-state-bad">{error}</p>}
+      {hint && (
+        <p id={hintId} className="mt-1.5 text-caption muted">
+          {hint}
+        </p>
+      )}
+      {error && (
+        <p id={errorId} className="mt-1.5 text-caption text-state-bad">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

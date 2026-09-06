@@ -74,15 +74,43 @@ export default {
         },
       },
       fontFamily: {
-        display: ['var(--font-display)', 'Impact', 'Haettenschweiler', 'Arial Narrow Bold', 'sans-serif'],
-        sans: ['var(--font-sans)', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        display: [
+          'var(--font-display)',
+          'Impact',
+          'Haettenschweiler',
+          'Arial Narrow Bold',
+          'sans-serif',
+        ],
+        sans: [
+          'var(--font-sans)',
+          'ui-sans-serif',
+          'system-ui',
+          '-apple-system',
+          'Segoe UI',
+          'Roboto',
+          'Helvetica Neue',
+          'Arial',
+          'sans-serif',
+        ],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       fontSize: {
-        'display-xl': ['clamp(2.75rem, 11vw, 9.5rem)', { lineHeight: '0.86', letterSpacing: '-0.03em', fontWeight: '800' }],
-        'display-lg': ['clamp(2.25rem, 7vw, 6rem)', { lineHeight: '0.9', letterSpacing: '-0.025em', fontWeight: '800' }],
-        'display-md': ['clamp(1.75rem, 4.5vw, 3.5rem)', { lineHeight: '0.95', letterSpacing: '-0.02em', fontWeight: '800' }],
-        'display-sm': ['clamp(1.5rem, 3vw, 2.25rem)', { lineHeight: '1.02', letterSpacing: '-0.015em', fontWeight: '700' }],
+        'display-xl': [
+          'clamp(2.75rem, 11vw, 9.5rem)',
+          { lineHeight: '0.86', letterSpacing: '-0.03em', fontWeight: '800' },
+        ],
+        'display-lg': [
+          'clamp(2.25rem, 7vw, 6rem)',
+          { lineHeight: '0.9', letterSpacing: '-0.025em', fontWeight: '800' },
+        ],
+        'display-md': [
+          'clamp(1.75rem, 4.5vw, 3.5rem)',
+          { lineHeight: '0.95', letterSpacing: '-0.02em', fontWeight: '800' },
+        ],
+        'display-sm': [
+          'clamp(1.5rem, 3vw, 2.25rem)',
+          { lineHeight: '1.02', letterSpacing: '-0.015em', fontWeight: '700' },
+        ],
         eyebrow: ['0.6875rem', { lineHeight: '1', letterSpacing: '0.18em', fontWeight: '600' }],
       },
       borderRadius: {

@@ -38,17 +38,25 @@ export async function registerCommerceRoutes(app: FastifyInstance): Promise<void
     if (!product.inStock) throw conflict('out_of_stock', 'That product is out of stock.');
 
     const existing = await db
-      .select({ id: cartItems.id, quantity: cartItems.quantity }).from(cartItems)
+      .select({ id: cartItems.id, quantity: cartItems.quantity })
+      .from(cartItems)
       .where(and(eq(cartItems.userId, principal.userId), eq(cartItems.productId, product.id)))
       .limit(1);
 
     if (existing[0]) {
-      await db.update(cartItems)
-        .set({ quantity: Math.min(10, existing[0].quantity + body.quantity), updatedAt: new Date() })
+      await db
+        .update(cartItems)
+        .set({
+          quantity: Math.min(10, existing[0].quantity + body.quantity),
+          updatedAt: new Date(),
+        })
         .where(eq(cartItems.id, existing[0].id));
     } else {
       await db.insert(cartItems).values({
-        id: randomId('order'), userId: principal.userId, productId: product.id, quantity: body.quantity,
+        id: randomId('order'),
+        userId: principal.userId,
+        productId: product.id,
+        quantity: body.quantity,
       });
     }
     return { ok: true };
@@ -59,14 +67,16 @@ export async function registerCommerceRoutes(app: FastifyInstance): Promise<void
     const { slug } = parse(z.object({ slug: z.string().max(80) }), request.params);
     const { db } = request.ctx;
 
-    const [product] = await db.select({ id: products.id }).from(products)
-      .where(eq(products.slug, slug)).limit(1);
+    const [product] = await db
+      .select({ id: products.id })
+      .from(products)
+      .where(eq(products.slug, slug))
+      .limit(1);
     if (!product) throw notFound('Product');
 
-    await db.delete(cartItems).where(and(
-      eq(cartItems.userId, principal.userId),
-      eq(cartItems.productId, product.id),
-    ));
+    await db
+      .delete(cartItems)
+      .where(and(eq(cartItems.userId, principal.userId), eq(cartItems.productId, product.id)));
     return { ok: true };
   });
 
@@ -86,14 +96,20 @@ export async function registerCommerceRoutes(app: FastifyInstance): Promise<void
     const orderId = randomId('order');
 
     await db.insert(orders).values({
-      id: orderId, userId: principal.userId, status: 'confirmed',
-      subtotalCents: cart.subtotalCents, shippingCents: cart.shippingCents,
+      id: orderId,
+      userId: principal.userId,
+      status: 'confirmed',
+      subtotalCents: cart.subtotalCents,
+      shippingCents: cart.shippingCents,
       totalCents: cart.totalCents,
     });
 
     await db.insert(orderItems).values(
       rows.map((row) => ({
-        id: randomId('order'), orderId, productId: row.product.id, name: row.product.name,
+        id: randomId('order'),
+        orderId,
+        productId: row.product.id,
+        name: row.product.name,
         quantity: row.item.quantity,
         // Captured at order time so a later price change never rewrites history.
         unitPriceCents: row.product.priceCents,
@@ -109,13 +125,18 @@ export async function registerCommerceRoutes(app: FastifyInstance): Promise<void
     const { db } = request.ctx;
 
     const rows = await db
-      .select().from(orders)
+      .select()
+      .from(orders)
       .where(eq(orders.userId, principal.userId))
       .orderBy(sql`${orders.placedAt} desc`);
 
-    const items = rows.length > 0
-      ? await db.select().from(orderItems).where(sql`${orderItems.orderId} in ${rows.map((o) => o.id)}`)
-      : [];
+    const items =
+      rows.length > 0
+        ? await db
+            .select()
+            .from(orderItems)
+            .where(sql`${orderItems.orderId} in ${rows.map((o) => o.id)}`)
+        : [];
 
     return {
       orders: rows.map((order) => ({
@@ -126,13 +147,25 @@ export async function registerCommerceRoutes(app: FastifyInstance): Promise<void
   });
 }
 
-function summarise(rows: readonly { item: { quantity: number }; product: { priceCents: number; name: string; slug: string; imageKey: string } }[]) {
-  const subtotalCents = rows.reduce((total, row) => total + row.product.priceCents * row.item.quantity, 0);
-  const shippingCents = subtotalCents >= FREE_SHIPPING_THRESHOLD || subtotalCents === 0 ? 0 : SHIPPING_CENTS;
+function summarise(
+  rows: readonly {
+    item: { quantity: number };
+    product: { priceCents: number; name: string; slug: string; imageKey: string };
+  }[],
+) {
+  const subtotalCents = rows.reduce(
+    (total, row) => total + row.product.priceCents * row.item.quantity,
+    0,
+  );
+  const shippingCents =
+    subtotalCents >= FREE_SHIPPING_THRESHOLD || subtotalCents === 0 ? 0 : SHIPPING_CENTS;
   return {
     items: rows.map((row) => ({
-      slug: row.product.slug, name: row.product.name, imageKey: row.product.imageKey,
-      quantity: row.item.quantity, unitPriceCents: row.product.priceCents,
+      slug: row.product.slug,
+      name: row.product.name,
+      imageKey: row.product.imageKey,
+      quantity: row.item.quantity,
+      unitPriceCents: row.product.priceCents,
       lineTotalCents: row.product.priceCents * row.item.quantity,
     })),
     subtotalCents,

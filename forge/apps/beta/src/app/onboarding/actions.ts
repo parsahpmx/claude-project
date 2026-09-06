@@ -4,7 +4,9 @@ import { revalidatePath } from 'next/cache';
 import { onboardingSchema } from '@forge/contracts';
 import { createClient } from '@/lib/supabase/server';
 
-export interface OnboardingResult { error?: string }
+export interface OnboardingResult {
+  error?: string;
+}
 
 /**
  * Onboarding edits the profile and privacy rows the auth trigger already
@@ -18,7 +20,9 @@ export async function completeOnboarding(input: unknown): Promise<OnboardingResu
   }
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return { error: 'Your session expired. Log in and try again.' };
 
   const { displayName, sports, profileVisibility } = parsed.data;

@@ -114,12 +114,25 @@ export const ASSESSMENT_STEPS: AssessmentStep[] = [
     index: 4,
     eyebrow: 'Starting point',
     question: 'How much structured training have you done?',
-    helper: 'Be honest here — starting one level low costs you two weeks, one level high costs you a month.',
+    helper:
+      'Be honest here — starting one level low costs you two weeks, one level high costs you a month.',
     kind: 'single',
     options: [
-      { value: 'beginner', label: 'Beginner', description: 'New to structured training, or returning after a long break.' },
-      { value: 'intermediate', label: 'Intermediate', description: 'Six months or more of consistent, programmed training.' },
-      { value: 'advanced', label: 'Advanced', description: 'Years of training with a working knowledge of periodisation.' },
+      {
+        value: 'beginner',
+        label: 'Beginner',
+        description: 'New to structured training, or returning after a long break.',
+      },
+      {
+        value: 'intermediate',
+        label: 'Intermediate',
+        description: 'Six months or more of consistent, programmed training.',
+      },
+      {
+        value: 'advanced',
+        label: 'Advanced',
+        description: 'Years of training with a working knowledge of periodisation.',
+      },
     ],
     optional: false,
   },
@@ -133,7 +146,10 @@ export const ASSESSMENT_STEPS: AssessmentStep[] = [
     options: [2, 3, 4, 5, 6].map((n) => ({
       value: String(n),
       label: `${n} days`,
-      description: n <= 3 ? 'Full-body sessions, high value per session.' : 'Split sessions with focused volume.',
+      description:
+        n <= 3
+          ? 'Full-body sessions, high value per session.'
+          : 'Split sessions with focused volume.',
     })),
     optional: false,
   },
@@ -192,9 +208,21 @@ export const ASSESSMENT_STEPS: AssessmentStep[] = [
     helper: 'You can change this at any time — including adding a human coach later.',
     kind: 'single',
     options: [
-      { value: 'self-guided', label: 'Self-guided', description: 'Give me the plan and get out of the way.' },
-      { value: 'ai-assisted', label: 'FORGE AI', description: 'A 24/7 assistant that adapts sessions around my week.' },
-      { value: 'human-coach', label: 'Human coach', description: 'A certified coach, weekly check-ins and form review.' },
+      {
+        value: 'self-guided',
+        label: 'Self-guided',
+        description: 'Give me the plan and get out of the way.',
+      },
+      {
+        value: 'ai-assisted',
+        label: 'FORGE AI',
+        description: 'A 24/7 assistant that adapts sessions around my week.',
+      },
+      {
+        value: 'human-coach',
+        label: 'Human coach',
+        description: 'A certified coach, weekly check-ins and form review.',
+      },
     ],
     optional: false,
   },
@@ -316,11 +344,14 @@ export function buildPerformanceProfile(answers: AssessmentAnswers): Performance
   }
 
   const ageLoad = AGE_RECOVERY_LOAD[answers.ageRange] ?? 1;
-  const recoveryScore = ageLoad + (frequency >= 5 ? 1 : 0) + (answers.experience === 'beginner' ? 1 : 0);
+  const recoveryScore =
+    ageLoad + (frequency >= 5 ? 1 : 0) + (answers.experience === 'beginner' ? 1 : 0);
   const recoveryPriority: PerformanceProfile['recoveryPriority'] =
     recoveryScore >= 3 ? 'high' : recoveryScore >= 1 ? 'medium' : 'low';
   if (recoveryPriority === 'high') {
-    rationale.push('Recovery is scheduled as work, not as an afterthought — two dedicated sessions a week.');
+    rationale.push(
+      'Recovery is scheduled as work, not as an afterthought — two dedicated sessions a week.',
+    );
   }
 
   // Programme selection, with an equipment reality check.
@@ -330,9 +361,15 @@ export function buildPerformanceProfile(answers: AssessmentAnswers): Performance
       answers.primaryGoal === 'build-muscle'
         ? { slug: 'bodyweight-strength', name: 'Bodyweight Strength' }
         : { slug: 'functional-fitness', name: 'Functional Fitness' };
-    rationale.push('Swapped to a barbell-free build — every session works with the equipment you listed.');
+    rationale.push(
+      'Swapped to a barbell-free build — every session works with the equipment you listed.',
+    );
   }
-  if (answers.experience === 'beginner' && program.slug !== 'beginner-foundation' && answers.primaryGoal !== 'improve-mobility') {
+  if (
+    answers.experience === 'beginner' &&
+    program.slug !== 'beginner-foundation' &&
+    answers.primaryGoal !== 'improve-mobility'
+  ) {
     rationale.push('Weeks 1–2 run a movement-quality on-ramp before the main block opens.');
   }
 
@@ -403,7 +440,9 @@ export function recommendTier(coaching: CoachingPreference): 'forge' | 'forge-pr
   return 'forge';
 }
 
-export function isCompleteAnswerSheet(value: Partial<AssessmentAnswers>): value is AssessmentAnswers {
+export function isCompleteAnswerSheet(
+  value: Partial<AssessmentAnswers>,
+): value is AssessmentAnswers {
   return (
     typeof value.primaryGoal === 'string' &&
     GOALS.includes(value.primaryGoal) &&

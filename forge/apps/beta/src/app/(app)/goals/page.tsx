@@ -13,7 +13,9 @@ export const dynamic = 'force-dynamic';
  */
 export default async function GoalsPage() {
   const [profile, goals, activities] = await Promise.all([
-    getSessionProfile(), getActiveGoals(), getMyActivities(50),
+    getSessionProfile(),
+    getActiveGoals(),
+    getMyActivities(50),
   ]);
 
   const units = profile?.units ?? 'metric';
@@ -23,11 +25,18 @@ export default async function GoalsPage() {
   const progressFor = (kind: string, sport: string | null): number => {
     const scoped = sport ? thisWeek.filter((a) => a.sport === sport) : thisWeek;
     switch (kind) {
-      case 'weekly_sessions': return scoped.length;
-      case 'strength_sessions': return thisWeek.filter((a) => a.sport === 'strength' || a.sport === 'functional').length;
-      case 'weekly_minutes': return Math.round(scoped.reduce((n, a) => n + a.movingS, 0) / 60);
-      case 'weekly_distance': return scoped.filter((a) => DISTANCE_SPORTS.includes(a.sport)).reduce((n, a) => n + a.distanceM, 0);
-      default: return 0;
+      case 'weekly_sessions':
+        return scoped.length;
+      case 'strength_sessions':
+        return thisWeek.filter((a) => a.sport === 'strength' || a.sport === 'functional').length;
+      case 'weekly_minutes':
+        return Math.round(scoped.reduce((n, a) => n + a.movingS, 0) / 60);
+      case 'weekly_distance':
+        return scoped
+          .filter((a) => DISTANCE_SPORTS.includes(a.sport))
+          .reduce((n, a) => n + a.distanceM, 0);
+      default:
+        return 0;
     }
   };
 
@@ -61,7 +70,9 @@ export default async function GoalsPage() {
               <li key={goal.id}>
                 <Card>
                   <div className="flex items-start justify-between gap-3">
-                    <h2 className="text-card-title text-bone-100">{GOAL_LABEL[goal.kind] ?? goal.kind}</h2>
+                    <h2 className="text-card-title text-bone-100">
+                      {GOAL_LABEL[goal.kind] ?? goal.kind}
+                    </h2>
                     {met ? <Badge tone="good">✓ Met</Badge> : <Badge>{pct}%</Badge>}
                   </div>
 
@@ -82,8 +93,10 @@ export default async function GoalsPage() {
                     aria-label={`${GOAL_LABEL[goal.kind] ?? goal.kind}: ${pct}% complete`}
                     className="mt-4 h-1.5 overflow-hidden rounded-pill bg-ink-700"
                   >
-                    <div className="h-full rounded-pill bg-signal transition-[width] duration-500 ease-forge"
-                      style={{ width: `${pct}%` }} />
+                    <div
+                      className="h-full rounded-pill bg-signal transition-[width] duration-500 ease-forge"
+                      style={{ width: `${pct}%` }}
+                    />
                   </div>
                 </Card>
               </li>

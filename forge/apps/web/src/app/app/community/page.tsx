@@ -8,8 +8,14 @@ export const metadata = { title: 'Community' };
 export const dynamic = 'force-dynamic';
 
 interface Post {
-  id: string; kind: string; body: string; likeCount: number; commentCount: number;
-  createdAt: string; likedByViewer: boolean; savedByViewer: boolean;
+  id: string;
+  kind: string;
+  body: string;
+  likeCount: number;
+  commentCount: number;
+  createdAt: string;
+  likedByViewer: boolean;
+  savedByViewer: boolean;
   author: { id: string; firstName: string; lastName: string; avatarKey: string | null };
   group: { slug: string; name: string } | null;
 }
@@ -17,9 +23,9 @@ interface Post {
 export default async function CommunityPage() {
   const [{ posts }, { groups }] = await Promise.all([
     apiFetch<{ posts: Post[] }>('/v1/community/feed?limit=20'),
-    apiPublic<{ groups: { slug: string; name: string; description: string; memberCount: number }[] }>(
-      '/v1/catalog/groups',
-    ),
+    apiPublic<{
+      groups: { slug: string; name: string; description: string; memberCount: number }[];
+    }>('/v1/catalog/groups'),
   ]);
 
   return (
@@ -59,7 +65,9 @@ export default async function CommunityPage() {
                 'Coaches identify themselves as coaches.',
               ].map((rule) => (
                 <li key={rule} className="flex gap-2.5 text-muted">
-                  <span aria-hidden className="text-accent">·</span>
+                  <span aria-hidden className="text-accent">
+                    ·
+                  </span>
                   {rule}
                 </li>
               ))}

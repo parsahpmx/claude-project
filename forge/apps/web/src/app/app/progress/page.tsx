@@ -11,24 +11,46 @@ export const dynamic = 'force-dynamic';
 
 interface ProgressResponse {
   summary: {
-    totalWorkouts: number; trainingHours: number; totalVolumeGrams: number;
-    totalCalories: number; currentStreakDays: number; longestStreakDays: number; weeklyAverage: number;
+    totalWorkouts: number;
+    trainingHours: number;
+    totalVolumeGrams: number;
+    totalCalories: number;
+    currentStreakDays: number;
+    longestStreakDays: number;
+    weeklyAverage: number;
   };
   weeklyVolume: { date: string; value: number }[];
   heatmap: { date: string; count: number; intensity: number }[];
   muscleDistribution: { group: string; sessions: number; share: number }[];
   personalRecords: {
-    id: string; exerciseName: string; kind: string; valueGrams: number;
-    previousValueGrams: number; reps: number; achievedOn: string;
+    id: string;
+    exerciseName: string;
+    kind: string;
+    valueGrams: number;
+    previousValueGrams: number;
+    reps: number;
+    achievedOn: string;
   }[];
   strengthTrends: {
-    exerciseId: string; name: string; points: { date: string; estimatedOneRepMax: number }[];
-    startGrams: number; currentGrams: number; changeGrams: number; changePercent: number;
+    exerciseId: string;
+    name: string;
+    points: { date: string; estimatedOneRepMax: number }[];
+    startGrams: number;
+    currentGrams: number;
+    changeGrams: number;
+    changePercent: number;
   }[];
-  bodyweight: { raw: { date: string; value: number }[]; smoothed: { date: string; value: number }[] };
+  bodyweight: {
+    raw: { date: string; value: number }[];
+    smoothed: { date: string; value: number }[];
+  };
   recovery: {
-    date: string; readiness: number | null; recovery: number | null;
-    sleepMinutes: number | null; hrv: number | null; restingHeartRate: number | null;
+    date: string;
+    readiness: number | null;
+    recovery: number | null;
+    sleepMinutes: number | null;
+    hrv: number | null;
+    restingHeartRate: number | null;
   }[];
   cardio: { restingHeartRate: number | null; maxHeartRate: number; vo2MaxEstimate: number | null };
   measurements: { date: string; weightGrams: number | null; bodyFatPercent: number | null } | null;
@@ -47,26 +69,50 @@ export default async function ProgressPage() {
       />
 
       <nav aria-label="Progress sections" className="mt-6 flex flex-wrap gap-2">
-        {['Overview', 'Strength', 'Body', 'Cardio', 'Consistency', 'Recovery'].map((label, index) => (
-          <a
-            key={label}
-            href={`#${label.toLowerCase()}`}
-            className={`min-h-[40px] rounded-pill border px-4 text-xs font-medium leading-[38px] transition-colors ${
-              index === 0 ? 'dark-surface border-ink-900 bg-ink-900 text-bone-100' : 'border-ink-900/15 hover:border-ink-900/40'
-            }`}
-          >
-            {label}
-          </a>
-        ))}
+        {['Overview', 'Strength', 'Body', 'Cardio', 'Consistency', 'Recovery'].map(
+          (label, index) => (
+            <a
+              key={label}
+              href={`#${label.toLowerCase()}`}
+              className={`min-h-[40px] rounded-pill border px-4 text-xs font-medium leading-[38px] transition-colors ${
+                index === 0
+                  ? 'dark-surface border-ink-900 bg-ink-900 text-bone-100'
+                  : 'border-ink-900/15 hover:border-ink-900/40'
+              }`}
+            >
+              {label}
+            </a>
+          ),
+        )}
       </nav>
 
       {/* ------------------------------------------------------- overview */}
       <section id="overview" className="mt-10 scroll-mt-24">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Card><Stat label="Total workouts" value={formatNumber(summary.totalWorkouts)} hint={`${summary.weeklyAverage} a week`} /></Card>
-          <Card><Stat label="Training hours" value={`${summary.trainingHours}h`} hint="Last 90 days" /></Card>
-          <Card><Stat label="Total volume" value={formatVolume(summary.totalVolumeGrams)} hint="Load × reps" /></Card>
-          <Card><Stat label="Current streak" value={`${summary.currentStreakDays}d`} hint={`Longest ${summary.longestStreakDays}d`} /></Card>
+          <Card>
+            <Stat
+              label="Total workouts"
+              value={formatNumber(summary.totalWorkouts)}
+              hint={`${summary.weeklyAverage} a week`}
+            />
+          </Card>
+          <Card>
+            <Stat label="Training hours" value={`${summary.trainingHours}h`} hint="Last 90 days" />
+          </Card>
+          <Card>
+            <Stat
+              label="Total volume"
+              value={formatVolume(summary.totalVolumeGrams)}
+              hint="Load × reps"
+            />
+          </Card>
+          <Card>
+            <Stat
+              label="Current streak"
+              value={`${summary.currentStreakDays}d`}
+              hint={`Longest ${summary.longestStreakDays}d`}
+            />
+          </Card>
         </div>
       </section>
 
@@ -89,18 +135,23 @@ export default async function ProgressPage() {
                     <p className="mt-1 text-xs text-muted">Estimated one-rep max</p>
                   </div>
                   <Chip tone={trend.changeGrams >= 0 ? 'good' : 'warn'} size="sm">
-                    {trend.changeGrams >= 0 ? '+' : ''}{trend.changePercent}%
+                    {trend.changeGrams >= 0 ? '+' : ''}
+                    {trend.changePercent}%
                   </Chip>
                 </div>
 
                 <p className="display mt-4 text-2xl tabular-nums">
-                  {formatLoad(trend.startGrams)} <span className="text-muted">→</span> {formatLoad(trend.currentGrams)}
+                  {formatLoad(trend.startGrams)} <span className="text-muted">→</span>{' '}
+                  {formatLoad(trend.currentGrams)}
                 </p>
 
                 <div className="mt-5">
                   <LineChart
                     label={trend.name}
-                    points={trend.points.map((p) => ({ date: p.date, value: p.estimatedOneRepMax }))}
+                    points={trend.points.map((p) => ({
+                      date: p.date,
+                      value: p.estimatedOneRepMax,
+                    }))}
                     format={(v) => formatLoad(v)}
                     height={130}
                   />
@@ -115,26 +166,42 @@ export default async function ProgressPage() {
       <section className="mt-12">
         <h2 className="eyebrow mb-5">Personal record timeline</h2>
         {data.personalRecords.length === 0 ? (
-          <EmptyState icon="★" title="No records yet" body="Your first logged working set becomes your first record." />
+          <EmptyState
+            icon="★"
+            title="No records yet"
+            body="Your first logged working set becomes your first record."
+          />
         ) : (
           <Card padded={false}>
             <ul className="divide-y divide-ink-900/8">
               {data.personalRecords.slice(0, 12).map((record) => (
-                <li key={record.id} className="flex flex-wrap items-center justify-between gap-4 p-5">
+                <li
+                  key={record.id}
+                  className="flex flex-wrap items-center justify-between gap-4 p-5"
+                >
                   <div className="flex items-center gap-4">
-                    <span aria-hidden className="accent-tint grid h-10 w-10 place-items-center rounded-full bg-ember/12 text-accent">★</span>
+                    <span
+                      aria-hidden
+                      className="accent-tint grid h-10 w-10 place-items-center rounded-full bg-ember/12 text-accent"
+                    >
+                      ★
+                    </span>
                     <div>
                       <p className="font-medium">{record.exerciseName}</p>
                       <p className="mt-0.5 text-xs text-muted">
-                        {record.kind === 'load' ? 'Heaviest load' : 'Estimated 1RM'} · {record.reps} reps ·{' '}
-                        {formatDateLabel(record.achievedOn)}
+                        {record.kind === 'load' ? 'Heaviest load' : 'Estimated 1RM'} · {record.reps}{' '}
+                        reps · {formatDateLabel(record.achievedOn)}
                       </p>
                     </div>
                   </div>
                   <p className="text-right">
-                    <span className="display text-lg tabular-nums">{formatLoad(record.valueGrams)}</span>
+                    <span className="display text-lg tabular-nums">
+                      {formatLoad(record.valueGrams)}
+                    </span>
                     {record.previousValueGrams > 0 && (
-                      <span className="block text-xs text-muted">was {formatLoad(record.previousValueGrams)}</span>
+                      <span className="block text-xs text-muted">
+                        was {formatLoad(record.previousValueGrams)}
+                      </span>
                     )}
                   </p>
                 </li>
@@ -178,7 +245,11 @@ export default async function ProgressPage() {
           <Card id="body">
             <h2 className="eyebrow mb-5">Bodyweight</h2>
             {data.bodyweight.raw.length < 2 ? (
-              <EmptyState icon="◐" title="Not enough measurements" body="Log your weight weekly and the trend line appears here." />
+              <EmptyState
+                icon="◐"
+                title="Not enough measurements"
+                body="Log your weight weekly and the trend line appears here."
+              />
             ) : (
               <>
                 <LineChart
@@ -188,8 +259,9 @@ export default async function ProgressPage() {
                   format={(v) => `${v.toFixed(1)} kg`}
                 />
                 <p className="mt-4 text-xs leading-relaxed text-muted">
-                  The solid line is a four-week moving average; the dotted line is your raw measurements.
-                  Bodyweight moves a kilo or two a day on water alone, so the average is the honest one.
+                  The solid line is a four-week moving average; the dotted line is your raw
+                  measurements. Bodyweight moves a kilo or two a day on water alone, so the average
+                  is the honest one.
                 </p>
               </>
             )}
@@ -203,21 +275,28 @@ export default async function ProgressPage() {
           <Card>
             <h2 className="eyebrow mb-5">Cardio markers</h2>
             <dl className="space-y-6">
-              <Stat inList
+              <Stat
+                inList
                 label="Resting heart rate"
                 value={data.cardio.restingHeartRate ? `${data.cardio.restingHeartRate}` : '—'}
                 hint="bpm, most recent"
               />
-              <Stat inList label="Estimated max HR" value={`${data.cardio.maxHeartRate}`} hint="Age-predicted (Tanaka)" />
-              <Stat inList
+              <Stat
+                inList
+                label="Estimated max HR"
+                value={`${data.cardio.maxHeartRate}`}
+                hint="Age-predicted (Tanaka)"
+              />
+              <Stat
+                inList
                 label="VO₂ max estimate"
                 value={data.cardio.vo2MaxEstimate ? `${data.cardio.vo2MaxEstimate}` : '—'}
                 hint="ml/kg/min, from resting HR"
               />
             </dl>
             <p className="mt-6 text-xs leading-relaxed text-muted">
-              Both are estimates from heart rate, not laboratory measurements. Track the direction, not the
-              absolute number.
+              Both are estimates from heart rate, not laboratory measurements. Track the direction,
+              not the absolute number.
             </p>
           </Card>
 

@@ -2,13 +2,35 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { asc, desc, eq, sql } from 'drizzle-orm';
 import {
-  ASSESSMENT_STEPS, CHALLENGES, EQUIPMENT_LABELS, EXERCISE_LIBRARY, GOAL_LABELS,
-  PLANS, PROGRAMS, TRAINING_STYLE_LABELS, filterPrograms, findChallenge, findProgram,
-  matchCoaches, planPricing, randomId, type CoachSpecialty, type Equipment,
+  ASSESSMENT_STEPS,
+  CHALLENGES,
+  EQUIPMENT_LABELS,
+  EXERCISE_LIBRARY,
+  GOAL_LABELS,
+  PLANS,
+  PROGRAMS,
+  TRAINING_STYLE_LABELS,
+  filterPrograms,
+  findChallenge,
+  findProgram,
+  matchCoaches,
+  planPricing,
+  randomId,
+  type CoachSpecialty,
+  type Equipment,
 } from '@forge/core';
 import {
-  articles, coachApplications, coaches, coachReviews, groups, products, recipes,
-  recipeIngredients, recoverySessions, successStories, users,
+  articles,
+  coachApplications,
+  coaches,
+  coachReviews,
+  groups,
+  products,
+  recipes,
+  recipeIngredients,
+  recoverySessions,
+  successStories,
+  users,
 } from '@forge/db';
 import { notFound } from '../lib/errors.js';
 import { parse } from '../lib/validate.js';
@@ -31,17 +53,22 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
   app.get('/catalog/programs', async (request) => {
     const query = parse(
       z.object({
-        goal: z.string().optional(), difficulty: z.string().optional(),
-        style: z.string().optional(), location: z.string().optional(),
+        goal: z.string().optional(),
+        difficulty: z.string().optional(),
+        style: z.string().optional(),
+        location: z.string().optional(),
         maxSessionMinutes: z.coerce.number().int().optional(),
-        equipment: z.string().optional(), search: z.string().optional(),
+        equipment: z.string().optional(),
+        search: z.string().optional(),
       }),
       request.query,
     );
 
     const results = filterPrograms({
-      goal: query.goal as never, difficulty: query.difficulty as never,
-      style: query.style as never, location: query.location as never,
+      goal: query.goal as never,
+      difficulty: query.difficulty as never,
+      style: query.style as never,
+      location: query.location as never,
       maxSessionMinutes: query.maxSessionMinutes,
       equipment: query.equipment ? (query.equipment.split(',') as Equipment[]) : undefined,
       search: query.search,
@@ -67,8 +94,12 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
     const { db } = request.ctx;
     const [coach] = await db
       .select({
-        slug: coaches.slug, headline: coaches.headline, imageKey: coaches.imageKey,
-        ratingTenths: coaches.ratingTenths, firstName: users.firstName, lastName: users.lastName,
+        slug: coaches.slug,
+        headline: coaches.headline,
+        imageKey: coaches.imageKey,
+        ratingTenths: coaches.ratingTenths,
+        firstName: users.firstName,
+        lastName: users.lastName,
         yearsExperience: coaches.yearsExperience,
       })
       .from(coaches)
@@ -79,8 +110,10 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
     const reviews = coach
       ? await db
           .select({
-            rating: coachReviews.rating, body: coachReviews.body,
-            firstName: users.firstName, createdAt: coachReviews.createdAt,
+            rating: coachReviews.rating,
+            body: coachReviews.body,
+            firstName: users.firstName,
+            createdAt: coachReviews.createdAt,
           })
           .from(coachReviews)
           .innerJoin(users, eq(users.id, coachReviews.memberId))
@@ -93,7 +126,10 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
       program,
       coach: coach ?? null,
       reviews,
-      related: PROGRAMS.filter((p) => p.slug !== slug && p.goals[0] === program.goals[0]).slice(0, 3),
+      related: PROGRAMS.filter((p) => p.slug !== slug && p.goals[0] === program.goals[0]).slice(
+        0,
+        3,
+      ),
     };
   });
 
@@ -109,7 +145,16 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
         if (owned) {
           const available = new Set<string>([...owned, 'bodyweight']);
           if (owned.includes('full-gym')) {
-            for (const item of ['dumbbells', 'barbell', 'bench', 'rack', 'kettlebell', 'resistance-bands', 'cable-machine', 'cardio-equipment']) {
+            for (const item of [
+              'dumbbells',
+              'barbell',
+              'bench',
+              'rack',
+              'kettlebell',
+              'resistance-bands',
+              'cable-machine',
+              'cardio-equipment',
+            ]) {
               available.add(item);
             }
           }
@@ -145,9 +190,12 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
   app.get('/catalog/coaches', async (request) => {
     const query = parse(
       z.object({
-        goal: z.string().optional(), specialty: z.string().optional(),
-        language: z.string().optional(), maxMonthlyPriceCents: z.coerce.number().optional(),
-        minRating: z.coerce.number().optional(), availableOnly: z.coerce.boolean().optional(),
+        goal: z.string().optional(),
+        specialty: z.string().optional(),
+        language: z.string().optional(),
+        maxMonthlyPriceCents: z.coerce.number().optional(),
+        minRating: z.coerce.number().optional(),
+        availableOnly: z.coerce.boolean().optional(),
       }),
       request.query,
     );
@@ -155,14 +203,21 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
 
     const rows = await db
       .select({
-        id: coaches.id, slug: coaches.slug, headline: coaches.headline,
-        specialties: coaches.specialties, languages: coaches.languages,
-        yearsExperience: coaches.yearsExperience, ratingTenths: coaches.ratingTenths,
-        reviewCount: coaches.reviewCount, clientCount: coaches.clientCount,
+        id: coaches.id,
+        slug: coaches.slug,
+        headline: coaches.headline,
+        specialties: coaches.specialties,
+        languages: coaches.languages,
+        yearsExperience: coaches.yearsExperience,
+        ratingTenths: coaches.ratingTenths,
+        reviewCount: coaches.reviewCount,
+        clientCount: coaches.clientCount,
         availableSlotsThisWeek: coaches.availableSlotsThisWeek,
-        monthlyPriceCents: coaches.monthlyPriceCents, imageKey: coaches.imageKey,
+        monthlyPriceCents: coaches.monthlyPriceCents,
+        imageKey: coaches.imageKey,
         acceptingClients: coaches.acceptingClients,
-        firstName: users.firstName, lastName: users.lastName,
+        firstName: users.firstName,
+        lastName: users.lastName,
       })
       .from(coaches)
       .innerJoin(users, eq(users.id, coaches.userId))
@@ -172,7 +227,8 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
       const filtered = rows.filter((coach) => {
         if (query.specialty && !coach.specialties.includes(query.specialty)) return false;
         if (query.language && !coach.languages.includes(query.language)) return false;
-        if (query.maxMonthlyPriceCents && coach.monthlyPriceCents > query.maxMonthlyPriceCents) return false;
+        if (query.maxMonthlyPriceCents && coach.monthlyPriceCents > query.maxMonthlyPriceCents)
+          return false;
         if (query.minRating && coach.ratingTenths / 10 < query.minRating) return false;
         if (query.availableOnly && coach.availableSlotsThisWeek <= 0) return false;
         return true;
@@ -183,9 +239,12 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
     // With a goal supplied the marketplace ranks and explains itself.
     const matches = matchCoaches(
       rows.map((coach) => ({
-        slug: coach.slug, specialties: coach.specialties as CoachSpecialty[],
-        languages: coach.languages, yearsExperience: coach.yearsExperience,
-        rating: coach.ratingTenths / 10, clientCount: coach.clientCount,
+        slug: coach.slug,
+        specialties: coach.specialties as CoachSpecialty[],
+        languages: coach.languages,
+        yearsExperience: coach.yearsExperience,
+        rating: coach.ratingTenths / 10,
+        clientCount: coach.clientCount,
         availableSlotsThisWeek: coach.availableSlotsThisWeek,
         monthlyPriceCents: coach.monthlyPriceCents,
       })),
@@ -216,17 +275,26 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
 
     const [coach] = await db
       .select({
-        id: coaches.id, slug: coaches.slug, headline: coaches.headline, bio: coaches.bio,
-        philosophy: coaches.philosophy, specialties: coaches.specialties,
-        languages: coaches.languages, certifications: coaches.certifications,
-        yearsExperience: coaches.yearsExperience, ratingTenths: coaches.ratingTenths,
-        reviewCount: coaches.reviewCount, clientCount: coaches.clientCount,
+        id: coaches.id,
+        slug: coaches.slug,
+        headline: coaches.headline,
+        bio: coaches.bio,
+        philosophy: coaches.philosophy,
+        specialties: coaches.specialties,
+        languages: coaches.languages,
+        certifications: coaches.certifications,
+        yearsExperience: coaches.yearsExperience,
+        ratingTenths: coaches.ratingTenths,
+        reviewCount: coaches.reviewCount,
+        clientCount: coaches.clientCount,
         availableSlotsThisWeek: coaches.availableSlotsThisWeek,
         acceptingClients: coaches.acceptingClients,
         monthlyPriceCents: coaches.monthlyPriceCents,
         consultationPriceCents: coaches.consultationPriceCents,
-        sessionPriceCents: coaches.sessionPriceCents, imageKey: coaches.imageKey,
-        firstName: users.firstName, lastName: users.lastName,
+        sessionPriceCents: coaches.sessionPriceCents,
+        imageKey: coaches.imageKey,
+        firstName: users.firstName,
+        lastName: users.lastName,
       })
       .from(coaches)
       .innerJoin(users, eq(users.id, coaches.userId))
@@ -236,8 +304,10 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
 
     const reviews = await db
       .select({
-        rating: coachReviews.rating, body: coachReviews.body,
-        firstName: users.firstName, createdAt: coachReviews.createdAt,
+        rating: coachReviews.rating,
+        body: coachReviews.body,
+        firstName: users.firstName,
+        createdAt: coachReviews.createdAt,
       })
       .from(coachReviews)
       .innerJoin(users, eq(users.id, coachReviews.memberId))
@@ -254,7 +324,11 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
 
   app.get('/catalog/recipes', async (request) => {
     const query = parse(
-      z.object({ diet: z.string().optional(), slot: z.string().optional(), search: z.string().optional() }),
+      z.object({
+        diet: z.string().optional(),
+        slot: z.string().optional(),
+        search: z.string().optional(),
+      }),
       request.query,
     );
     const { db } = request.ctx;
@@ -262,8 +336,13 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
     return {
       recipes: rows.filter((recipe) => {
         if (query.slot && recipe.slot !== query.slot) return false;
-        if (query.diet && query.diet !== 'balanced' && !recipe.tags.includes(query.diet)) return false;
-        if (query.search && !`${recipe.name} ${recipe.summary}`.toLowerCase().includes(query.search.toLowerCase())) return false;
+        if (query.diet && query.diet !== 'balanced' && !recipe.tags.includes(query.diet))
+          return false;
+        if (
+          query.search &&
+          !`${recipe.name} ${recipe.summary}`.toLowerCase().includes(query.search.toLowerCase())
+        )
+          return false;
         return true;
       }),
     };
@@ -275,7 +354,8 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
     const [recipe] = await db.select().from(recipes).where(eq(recipes.slug, slug)).limit(1);
     if (!recipe) throw notFound('Recipe');
     const ingredients = await db
-      .select().from(recipeIngredients)
+      .select()
+      .from(recipeIngredients)
       .where(eq(recipeIngredients.recipeId, recipe.id))
       .orderBy(asc(recipeIngredients.position));
     return { recipe, ingredients: ingredients.map(toIngredient) };
@@ -283,7 +363,9 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
 
   app.get('/catalog/recovery', async (request) => {
     const { db } = request.ctx;
-    return { sessions: await db.select().from(recoverySessions).orderBy(asc(recoverySessions.minutes)) };
+    return {
+      sessions: await db.select().from(recoverySessions).orderBy(asc(recoverySessions.minutes)),
+    };
   });
 
   app.get('/catalog/articles', async (request) => {
@@ -292,7 +374,10 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
     const rows = await db.select().from(articles).orderBy(desc(articles.publishedOn));
     const filtered = query.category ? rows.filter((a) => a.category === query.category) : rows;
     return {
-      articles: filtered.map(({ body, ...rest }) => { void body; return rest; }),
+      articles: filtered.map(({ body, ...rest }) => {
+        void body;
+        return rest;
+      }),
       categories: [...new Set(rows.map((a) => a.category))],
     };
   });
@@ -313,7 +398,11 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
   app.get('/catalog/stories/:slug', async (request) => {
     const { slug } = parse(z.object({ slug: z.string() }), request.params);
     const { db } = request.ctx;
-    const [story] = await db.select().from(successStories).where(eq(successStories.slug, slug)).limit(1);
+    const [story] = await db
+      .select()
+      .from(successStories)
+      .where(eq(successStories.slug, slug))
+      .limit(1);
     if (!story) throw notFound('Story');
     return { story };
   });
@@ -384,7 +473,12 @@ export async function registerCatalogRoutes(app: FastifyInstance): Promise<void>
 }
 
 function toIngredient(row: { name: string; quantityCenti: number; unit: string; section: string }) {
-  return { name: row.name, quantity: row.quantityCenti / 100, unit: row.unit, section: row.section };
+  return {
+    name: row.name,
+    quantity: row.quantityCenti / 100,
+    unit: row.unit,
+    section: row.section,
+  };
 }
 
 function safeJson(value: string): Record<string, string> {

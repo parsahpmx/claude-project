@@ -108,19 +108,14 @@ export function computeMacroTargets(input: NutritionInputs): MacroTargets {
 
   // Two floors: an absolute one, and a relative one at 1.1× RMR so a very
   // small member is never pushed under their own resting requirement.
-  const calories = Math.round(
-    Math.max(rawCalories, ABSOLUTE_CALORIE_FLOOR, rmr * 1.1) / 10,
-  ) * 10;
+  const calories = Math.round(Math.max(rawCalories, ABSOLUTE_CALORIE_FLOOR, rmr * 1.1) / 10) * 10;
 
   const proteinGrams = Math.round(
     input.weightKg * GOAL_PROTEIN_PER_KG[input.goal] * DIET_PROTEIN_MODIFIER[input.diet],
   );
 
   // Fat at 25% of calories, floored at 0.7 g/kg for hormonal health.
-  const fatGrams = Math.max(
-    Math.round((calories * 0.25) / 9),
-    Math.round(input.weightKg * 0.7),
-  );
+  const fatGrams = Math.max(Math.round((calories * 0.25) / 9), Math.round(input.weightKg * 0.7));
 
   const remainingCalories = calories - proteinGrams * 4 - fatGrams * 9;
   const carbGrams = Math.max(50, Math.round(remainingCalories / 4));
@@ -131,7 +126,9 @@ export function computeMacroTargets(input: NutritionInputs): MacroTargets {
     carbGrams,
     fatGrams,
     fibreGrams: Math.round(clamp(calories / 1000, 1, 5) * 14),
-    waterLitres: Math.round(clamp(input.weightKg * 0.035 + input.trainingDaysPerWeek * 0.05, 1.8, 5) * 10) / 10,
+    waterLitres:
+      Math.round(clamp(input.weightKg * 0.035 + input.trainingDaysPerWeek * 0.05, 1.8, 5) * 10) /
+      10,
   };
 }
 

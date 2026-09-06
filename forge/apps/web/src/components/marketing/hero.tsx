@@ -13,7 +13,11 @@ export function Hero() {
 
   return (
     <section className="dark-surface relative isolate flex min-h-[100svh] items-end overflow-hidden bg-ink-900 pb-16 pt-32 text-bone-200 sm:pb-24">
-      <div aria-hidden className="grain absolute inset-0 -z-10" style={{ background: backdrop.background }} />
+      <div
+        aria-hidden
+        className="grain absolute inset-0 -z-10"
+        style={{ background: backdrop.background }}
+      />
       <div
         aria-hidden
         className="absolute inset-0 -z-10 bg-gradient-to-t from-ink-900 via-ink-900/70 to-ink-900/40"
@@ -29,8 +33,8 @@ export function Hero() {
               STRONGEST SELF.
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-relaxed text-bone-200/75">
-              A complete performance system combining personalised training, nutrition, recovery and real
-              coaching.
+              A complete performance system combining personalised training, nutrition, recovery and
+              real coaching.
             </p>
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -50,7 +54,9 @@ export function Hero() {
 
             <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-bone-200/65">
               <span className="flex items-center gap-2">
-                <span aria-hidden className="text-accent">★★★★★</span>
+                <span aria-hidden className="text-accent">
+                  ★★★★★
+                </span>
                 <span>4.9 Member Rating</span>
               </span>
               <span className="hidden h-4 w-px bg-bone-200/20 sm:block" />
@@ -68,7 +74,10 @@ export function Hero() {
 /** The floating phone. Real content, real numbers — it is the actual product. */
 function AppMockup() {
   return (
-    <div className="animate-fade-up justify-self-center lg:justify-self-end" style={{ animationDelay: '160ms' }}>
+    <div
+      className="animate-fade-up justify-self-center lg:justify-self-end"
+      style={{ animationDelay: '160ms' }}
+    >
       <div className="w-[280px] rounded-[32px] border border-bone-200/15 bg-ink-800/85 p-3 shadow-lift backdrop-blur-xl sm:w-[300px]">
         <div className="dark-surface rounded-[24px] bg-ink-900 p-5">
           <div className="flex items-center justify-between">
@@ -76,7 +85,11 @@ function AppMockup() {
             <span className="text-[0.625rem] tabular-nums text-muted">07:12</span>
           </div>
 
-          <p className="display mt-3 text-xl leading-none text-bone-100">GOOD MORNING,<br />ALEX.</p>
+          <p className="display mt-3 text-xl leading-none text-bone-100">
+            GOOD MORNING,
+            <br />
+            ALEX.
+          </p>
 
           <div className="mt-5 rounded-[12px] border border-bone-200/10 bg-bone-200/[0.04] p-4">
             <div className="flex items-baseline justify-between">

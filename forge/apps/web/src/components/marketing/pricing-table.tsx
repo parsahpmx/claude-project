@@ -30,7 +30,9 @@ export function PricingTable({ plans }: { plans: PlanTierDefinition[] }) {
 
       <div className="mt-12 grid gap-6 lg:grid-cols-3">
         {plans.map((plan) => {
-          const price = yearly ? plan.pricing.yearlyMonthlyEquivalentCents : plan.pricing.monthlyCents;
+          const price = yearly
+            ? plan.pricing.yearlyMonthlyEquivalentCents
+            : plan.pricing.monthlyCents;
           return (
             <article
               key={plan.tier}
@@ -52,18 +54,24 @@ export function PricingTable({ plans }: { plans: PlanTierDefinition[] }) {
 
               <div className="mt-7">
                 <p className="flex items-baseline gap-1.5">
-                  {plan.startingAt && <span className="text-xs uppercase tracking-[0.1em] text-muted">from</span>}
+                  {plan.startingAt && (
+                    <span className="text-xs uppercase tracking-[0.1em] text-muted">from</span>
+                  )}
                   <span className="display text-display-sm tabular-nums">{formatCents(price)}</span>
                   <span className="text-sm text-muted">/ month</span>
                 </p>
                 {yearly && (
                   <p className="mt-2 text-xs text-muted">
                     {formatCents(plan.pricing.yearlyCents)} billed yearly —{' '}
-                    <span className="text-accent">save {formatCents(plan.pricing.yearlySavingCents)}</span>
+                    <span className="text-accent">
+                      save {formatCents(plan.pricing.yearlySavingCents)}
+                    </span>
                   </p>
                 )}
                 {!yearly && plan.trialDays > 0 && (
-                  <p className="mt-2 text-xs text-muted">{plan.trialDays}-day free trial included</p>
+                  <p className="mt-2 text-xs text-muted">
+                    {plan.trialDays}-day free trial included
+                  </p>
                 )}
               </div>
 
@@ -87,7 +95,9 @@ export function PricingTable({ plans }: { plans: PlanTierDefinition[] }) {
                 )}
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex gap-3 text-sm leading-relaxed">
-                    <span aria-hidden className="mt-0.5 shrink-0 text-accent">✓</span>
+                    <span aria-hidden className="mt-0.5 shrink-0 text-accent">
+                      ✓
+                    </span>
                     <span className="opacity-80">{feature}</span>
                   </li>
                 ))}

@@ -1,6 +1,14 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Section, SectionHeading, Card, Media, Chip, ButtonLink, Stat } from '@/components/ui/primitives';
+import {
+  Section,
+  SectionHeading,
+  Card,
+  Media,
+  Chip,
+  ButtonLink,
+  Stat,
+} from '@/components/ui/primitives';
 import { ProgramCard } from '@/components/marketing/cards';
 import { apiPublic } from '@/lib/api';
 import { ApiRequestError } from '@/lib/api';
@@ -13,8 +21,13 @@ export const dynamic = 'force-dynamic';
 interface ProgramDetail {
   program: Program;
   coach: {
-    slug: string; headline: string; imageKey: string; ratingTenths: number;
-    firstName: string; lastName: string; yearsExperience: number;
+    slug: string;
+    headline: string;
+    imageKey: string;
+    ratingTenths: number;
+    firstName: string;
+    lastName: string;
+    yearsExperience: number;
   } | null;
   reviews: { rating: number; body: string; firstName: string; createdAt: string }[];
   related: Program[];
@@ -76,10 +89,16 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
           className="grain absolute inset-0 -z-10"
           style={{ background: generateImage(program.accentImage).background }}
         />
-        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-ink-900 via-ink-900/80 to-ink-900/40" />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 bg-gradient-to-t from-ink-900 via-ink-900/80 to-ink-900/40"
+        />
 
         <div className="shell relative">
-          <Link href="/programs" className="text-xs uppercase tracking-[0.14em] text-bone-200/55 hover:text-bone-100">
+          <Link
+            href="/programs"
+            className="text-xs uppercase tracking-[0.14em] text-bone-200/55 hover:text-bone-100"
+          >
             ← All programmes
           </Link>
           <h1 className="display mt-6 max-w-4xl text-display-lg text-balance">{program.name}</h1>
@@ -90,12 +109,18 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
             <Chip tone="inverse">{capitalise(program.difficulty)}</Chip>
             <Chip tone="inverse">{program.sessionsPerWeek} days / week</Chip>
             <Chip tone="inverse">{capitalise(program.location)}</Chip>
-            <Chip tone="inverse">★ {program.rating.toFixed(1)} ({formatNumber(program.reviewCount)})</Chip>
+            <Chip tone="inverse">
+              ★ {program.rating.toFixed(1)} ({formatNumber(program.reviewCount)})
+            </Chip>
           </div>
 
           <div className="mt-9 flex flex-wrap gap-3">
-            <ButtonLink href={`/assessment?program=${program.slug}`} size="lg">Start Program</ButtonLink>
-            <ButtonLink href="/pricing" variant="inverse" size="lg">See Pricing</ButtonLink>
+            <ButtonLink href={`/assessment?program=${program.slug}`} size="lg">
+              Start Program
+            </ButtonLink>
+            <ButtonLink href="/pricing" variant="inverse" size="lg">
+              See Pricing
+            </ButtonLink>
           </div>
         </div>
       </section>
@@ -112,7 +137,9 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
               <ul className="space-y-4">
                 {program.outcomes.map((outcome) => (
                   <li key={outcome} className="flex gap-4 border-b border-ink-900/8 pb-4 text-base">
-                    <span aria-hidden className="mt-1 text-accent">→</span>
+                    <span aria-hidden className="mt-1 text-accent">
+                      →
+                    </span>
                     <span className="opacity-80">{outcome}</span>
                   </li>
                 ))}
@@ -124,7 +151,9 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
               <ul className="space-y-3">
                 {program.whoItIsFor.map((line) => (
                   <li key={line} className="flex gap-3 text-sm">
-                    <span aria-hidden className="text-accent">✓</span>
+                    <span aria-hidden className="text-accent">
+                      ✓
+                    </span>
                     <span className="text-muted">{line}</span>
                   </li>
                 ))}
@@ -143,19 +172,23 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
               </dl>
               <div className="rule my-6" />
               <p className="eyebrow mb-3">Progression model</p>
-              <p className="text-sm capitalize text-muted">{program.progression.replace(/-/g, ' ')}</p>
+              <p className="text-sm capitalize text-muted">
+                {program.progression.replace(/-/g, ' ')}
+              </p>
             </Card>
 
             <Card>
               <p className="eyebrow mb-4">Required equipment</p>
               <ul className="flex flex-wrap gap-2">
                 {program.equipment.map((item) => (
-                  <li key={item}><Chip>{item.replace(/-/g, ' ')}</Chip></li>
+                  <li key={item}>
+                    <Chip>{item.replace(/-/g, ' ')}</Chip>
+                  </li>
                 ))}
               </ul>
               <p className="mt-4 text-xs leading-relaxed text-muted">
-                Missing something? Most movements have substitutes — FORGE checks your setup before the first
-                session and tells you exactly what it swapped.
+                Missing something? Most movements have substitutes — FORGE checks your setup before
+                the first session and tells you exactly what it swapped.
               </p>
             </Card>
 
@@ -164,14 +197,22 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                 <p className="eyebrow mb-4">Your coach</p>
                 <Link href={`/coaching/${coach.slug}`} className="group flex gap-4">
                   <div className="w-20 shrink-0">
-                    <Media imageKey={coach.imageKey} ratio="3/4" alt={`${coach.firstName} ${coach.lastName}`} />
+                    <Media
+                      imageKey={coach.imageKey}
+                      ratio="3/4"
+                      alt={`${coach.firstName} ${coach.lastName}`}
+                    />
                   </div>
                   <div>
-                    <p className="display text-lg leading-none">{coach.firstName} {coach.lastName}</p>
+                    <p className="display text-lg leading-none">
+                      {coach.firstName} {coach.lastName}
+                    </p>
                     <p className="mt-1.5 text-xs text-muted">{coach.headline}</p>
                     <p className="mt-2 text-xs">
-                      <span aria-hidden className="text-accent">★</span> {formatRating(coach.ratingTenths)} ·{' '}
-                      {coach.yearsExperience} years
+                      <span aria-hidden className="text-accent">
+                        ★
+                      </span>{' '}
+                      {formatRating(coach.ratingTenths)} · {coach.yearsExperience} years
                     </p>
                   </div>
                 </Link>
@@ -196,7 +237,9 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                   {session.kind}
                 </Chip>
               </div>
-              <p className="mt-3 text-xs text-muted">{session.focus} · {formatMinutes(session.minutes)}</p>
+              <p className="mt-3 text-xs text-muted">
+                {session.focus} · {formatMinutes(session.minutes)}
+              </p>
               <ul className="mt-4 flex flex-wrap gap-1.5">
                 {session.patterns.map((pattern) => (
                   <li key={pattern}>
@@ -222,7 +265,9 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                   {'★'.repeat(review.rating)}
                   <span className="opacity-25">{'★'.repeat(5 - review.rating)}</span>
                 </p>
-                <p className="mt-4 text-sm leading-relaxed opacity-80">&ldquo;{review.body}&rdquo;</p>
+                <p className="mt-4 text-sm leading-relaxed opacity-80">
+                  &ldquo;{review.body}&rdquo;
+                </p>
                 <p className="mt-5 text-xs text-muted">{review.firstName}</p>
               </Card>
             ))}
@@ -235,10 +280,18 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
         <SectionHeading eyebrow="Questions" title="BEFORE YOU START." />
         <div className="mt-10 grid gap-4 lg:grid-cols-2">
           {FAQ.map((entry) => (
-            <details key={entry.q} className="light-surface group rounded-card border border-ink-900/10 bg-bone-100 p-6">
+            <details
+              key={entry.q}
+              className="light-surface group rounded-card border border-ink-900/10 bg-bone-100 p-6"
+            >
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold">
                 {entry.q}
-                <span aria-hidden className="text-lg text-muted transition-transform group-open:rotate-45">+</span>
+                <span
+                  aria-hidden
+                  className="text-lg text-muted transition-transform group-open:rotate-45"
+                >
+                  +
+                </span>
               </summary>
               <p className="mt-4 text-sm leading-relaxed text-muted">{entry.a}</p>
             </details>
@@ -261,11 +314,16 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="display text-display-md">START {program.name.toUpperCase()}.</h2>
           <p className="mt-5 text-bone-200/70">
-            Take the assessment first — it takes two minutes and confirms this is the right block for you.
+            Take the assessment first — it takes two minutes and confirms this is the right block
+            for you.
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <ButtonLink href={`/assessment?program=${program.slug}`} size="lg">Start Program</ButtonLink>
-            <ButtonLink href="/coaching" variant="inverse" size="lg">Add a Coach</ButtonLink>
+            <ButtonLink href={`/assessment?program=${program.slug}`} size="lg">
+              Start Program
+            </ButtonLink>
+            <ButtonLink href="/coaching" variant="inverse" size="lg">
+              Add a Coach
+            </ButtonLink>
           </div>
         </div>
       </Section>

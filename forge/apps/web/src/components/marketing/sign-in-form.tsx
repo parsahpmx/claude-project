@@ -60,7 +60,11 @@ export function SignInForm() {
     <div className="space-y-6">
       {error && <ErrorState title="Sign in failed" body={error} />}
 
-      <form onSubmit={submit} noValidate className="dark-surface space-y-5 [&_input]:border-bone-200/20 [&_input]:bg-ink-800 [&_input]:text-bone-100 [&_label]:text-bone-200/70">
+      <form
+        onSubmit={submit}
+        noValidate
+        className="dark-surface space-y-5 [&_input]:border-bone-200/20 [&_input]:bg-ink-800 [&_input]:text-bone-100 [&_label]:text-bone-200/70"
+      >
         <TextInput
           label="Email"
           type="email"

@@ -17,7 +17,9 @@ export interface Harness {
 }
 
 export async function createHarness(): Promise<Harness> {
-  const handle = await createDatabase({ dataDir: `memory://forge-api-${Math.random().toString(36).slice(2)}` });
+  const handle = await createDatabase({
+    dataDir: `memory://forge-api-${Math.random().toString(36).slice(2)}`,
+  });
   await runMigrations(handle);
   await seedDatabase(handle, { today: TEST_TODAY });
 
@@ -39,7 +41,11 @@ export async function createHarness(): Promise<Harness> {
 }
 
 /** Log in and return the session cookie header for subsequent requests. */
-export async function login(app: FastifyInstance, email: string, password = 'ForgeDemo!2026'): Promise<string> {
+export async function login(
+  app: FastifyInstance,
+  email: string,
+  password = 'ForgeDemo!2026',
+): Promise<string> {
   const response = await app.inject({
     method: 'POST',
     url: '/v1/auth/login',
