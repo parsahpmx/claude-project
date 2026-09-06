@@ -42,6 +42,16 @@ catalog:
   # --- Domain ---
   zod: ^3.25.76
 
+  # --- Supabase ---
+  '@supabase/supabase-js': ^2.58.0
+  '@supabase/ssr': ^0.7.0
+
+  # --- Maps & charts ---
+  # MapLibre GL is BSD-licensed and renders OpenStreetMap tiles, so the map
+  # layer carries no per-view licence cost. See docs/WEB_MAPS.md.
+  'maplibre-gl': ^5.9.0
+  recharts: ^2.15.4
+
   # --- Frontend ---
   next: ^15.5.9
   react: ^19.2.0
