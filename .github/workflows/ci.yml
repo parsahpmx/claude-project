@@ -144,13 +144,18 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: pnpm -r lint
+        run: pnpm lint
 
+      # These are the root scripts, not `pnpm -r ...` spelled out again, so CI
+      # and a developer's terminal run the identical command. @forge/core and
+      # @forge/db are consumed through dist/, so each root script builds the
+      # packages first — on a fresh checkout, skipping that step fails with
+      # "Cannot find module '@forge/core'" rather than typechecking anything.
       - name: Typecheck
-        run: pnpm -r typecheck
+        run: pnpm typecheck
 
       - name: Unit tests
-        run: pnpm -r test
+        run: pnpm test
 
       # The beta app reads Supabase configuration at module load. CI has no
       # project and needs none — these are placeholders so the build can run;
