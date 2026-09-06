@@ -1,5 +1,5 @@
-import { haversineM } from './geo.js';
-import type { LngLat, PrivacySettings, Visibility } from './types.js';
+import { haversineM } from './geo';
+import type { LngLat, PrivacySettings, Visibility } from './types';
 
 export interface PrivateZone {
   center: LngLat;

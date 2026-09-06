@@ -13,7 +13,7 @@ const PILLARS = [
     eyebrow: 'Train',
     title: 'A plan that answers what to do today',
     body: 'Structured strength and running programmes with real progression — phases, loads and reps that move because you moved them, not because a calendar rolled over.',
-    href: '/training',
+    href: '/how-it-works',
   },
   {
     eyebrow: 'Track',
@@ -25,7 +25,7 @@ const PILLARS = [
     eyebrow: 'Explore',
     title: 'Routes and maps that use the screen',
     body: 'Build a route, save one you found, and see your own history on a private map. Full-width on desktop, because a map in a small card is not a map.',
-    href: '/maps',
+    href: '/how-it-works',
   },
   {
     eyebrow: 'Progress',

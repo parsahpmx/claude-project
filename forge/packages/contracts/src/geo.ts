@@ -1,4 +1,4 @@
-import type { LngLat } from './types.js';
+import type { LngLat } from './types';
 
 const EARTH_RADIUS_M = 6_371_008.8;
 const toRad = (deg: number) => (deg * Math.PI) / 180;

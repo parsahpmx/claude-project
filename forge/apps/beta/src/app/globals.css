@@ -63,6 +63,6 @@
   /* A panel floating over the map. Needs a real edge and a blur to stay
      readable over arbitrary terrain. */
   .map-panel {
-    @apply rounded-card border border-ink-600 bg-ink-900/92 shadow-overlay backdrop-blur-md;
+    @apply rounded-card border border-ink-600 bg-ink-900/95 shadow-overlay backdrop-blur-md;
   }
 }

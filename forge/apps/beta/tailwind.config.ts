@@ -43,6 +43,10 @@ export default {
           400: '#CDF060',
           500: '#B8E62E',
           600: '#96BE1E',
+          // Chart fills. The accent is a UI colour: at L 0.86 it glares as a
+          // filled shape on ink. This step sits inside the dark-mode lightness
+          // band and still clears 3:1 against the chart surface.
+          700: '#7FA018',
           // For the rare light surface, where lime on bone would be unreadable.
           ink: '#4A6209',
         },

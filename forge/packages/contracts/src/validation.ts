@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SPORTS, VISIBILITY } from './types.js';
+import { SPORTS, VISIBILITY } from './types';
 
 /**
  * Every mutation the browser can reach is validated here first, so a route

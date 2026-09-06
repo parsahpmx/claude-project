@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { encodePolyline, decodePolyline, haversineM, pathLengthM, simplify } from './geo.js';
-import { sanitizeTrack, canView } from './privacy.js';
-import { loadBalance, loadBand, consistency, effortScore, estimateOneRepMax, sessionLoad, pacePerKm } from './metrics.js';
-import { isEnabled, parseDisabledFeatures } from './flags.js';
-import { activityCreateSchema, routeCreateSchema } from './validation.js';
-import type { LngLat } from './types.js';
+import { encodePolyline, decodePolyline, haversineM, pathLengthM, simplify } from './geo';
+import { sanitizeTrack, canView } from './privacy';
+import { loadBalance, loadBand, consistency, effortScore, estimateOneRepMax, sessionLoad, pacePerKm } from './metrics';
+import { isEnabled, parseDisabledFeatures } from './flags';
+import { activityCreateSchema, routeCreateSchema } from './validation';
+import type { LngLat } from './types';
 
 /** A straight west-to-east line at ~1.1 m per 1e-5 degree of longitude. */
 function line(points: number): LngLat[] {

@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { ButtonLink } from '@/components/ui/primitives';
 
+// These are marketing paths only. /training, /maps and /community belong to the
+// authenticated app, and a route group cannot claim a path another group serves.
 const NAV = [
   { href: '/features', label: 'Features' },
-  { href: '/training', label: 'Training' },
-  { href: '/maps', label: 'Maps' },
-  { href: '/community', label: 'Community' },
+  { href: '/how-it-works', label: 'How it works' },
   { href: '/pricing', label: 'Pricing' },
+  { href: '/about', label: 'About' },
 ];
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
