@@ -43,6 +43,27 @@ the policies themselves rather than PostgREST's behaviour in front of them, and
 it can assert on mutations that are *supposed* to fail — which a client library
 would only throw on.
 
+## Found by running it
+
+Starting the dev server surfaced a bug that nothing else would have:
+**the middleware was never executing.** `middleware.ts` sat at the app root,
+but Next only picks it up there when the app is also at the root — with a
+`src/` directory it must be `src/middleware.ts`, and anywhere else it is
+silently ignored. No error, no warning.
+
+Protected routes still redirected, because the `(app)` layout also checks the
+session, which is what hid it. What was actually missing was session refresh
+and the `?next=` destination, so an expired token would have logged someone out
+mid-session rather than refreshing, and every redirect lost where they were
+going.
+
+Confirmed fixed: `/home` now redirects to `/login?next=%2Fhome`, and
+`/settings/privacy` to `/login?next=%2Fsettings%2Fprivacy`.
+
+The middleware also now fails closed if Supabase is unreachable. An unhandled
+throw there would turn an outage into a 500 on every route, marketing pages
+included.
+
 ## What is NOT verified, and why
 
 **The application has not been run end to end against Supabase.** This
@@ -54,9 +75,13 @@ the Next server cannot reach the database from here. Consequently:
 - No confirmation that the auth cookie round-trips through middleware.
 - No confirmation that map tiles render (that host is blocked too).
 
-What *is* known: the app typechecks under strict TypeScript, lints clean, builds
-for production, and every query it issues was written against a schema whose
-shape has been verified by running SQL against the real database.
+What *is* known: the app runs. All nine public pages return 200 with Supabase
+unreachable, every protected route redirects to `/login` with its destination
+preserved, and an axe sweep at 390 px and 1280 px finds zero violations, zero
+horizontal overflow and zero console errors. It typechecks under strict
+TypeScript, lints clean, and builds for production, and every query it issues
+was written against a schema whose shape has been verified by running SQL
+against the real database.
 
 **This is the single largest gap in the beta and the first thing to close.**
 On any machine with normal network access:

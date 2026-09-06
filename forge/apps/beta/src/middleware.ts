@@ -1,5 +1,9 @@
 import type { NextRequest } from 'next/server';
-import { updateSession } from './src/lib/supabase/middleware';
+
+// This file must live inside `src/` because the app does. At the project root
+// Next does not pick it up and silently runs no middleware at all — which is
+// how it was originally written, and why session refresh never happened.
+import { updateSession } from './lib/supabase/middleware';
 
 export async function middleware(request: NextRequest) {
   return updateSession(request);

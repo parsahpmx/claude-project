@@ -29,7 +29,19 @@ export async function updateSession(request: NextRequest) {
 
   // getUser() revalidates the token with Supabase rather than trusting the
   // cookie's contents, which is why it is used here instead of getSession().
-  const { data: { user } } = await supabase.auth.getUser();
+  //
+  // If Supabase cannot be reached, treat the visitor as signed out rather than
+  // letting the exception escape: an unhandled throw here would turn an outage
+  // into a 500 on every route, marketing pages included. Failing closed sends
+  // people to /login, which is the safe direction — it never admits anyone to a
+  // protected page on the strength of an error.
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    user = null;
+  }
 
   const path = request.nextUrl.pathname;
   const needsAuth = PROTECTED.some((p) => path === p || path.startsWith(`${p}/`));
