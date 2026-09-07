@@ -6,3 +6,9 @@ coverage/
 pnpm-lock.yaml
 *.md
 packages/database/drizzle/
+
+# FORGE workspace. Generated Drizzle artefacts are excluded for the same reason
+# as Meter402's above: they are produced by a tool and reformatting them makes
+# the next generate produce a spurious diff.
+forge/packages/db/drizzle/
+forge/**/.next*/

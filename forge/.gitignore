@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.next/
+out/
+*.tsbuildinfo
+coverage/
+.env
+.env.*
+!.env.example
+.forge-data/

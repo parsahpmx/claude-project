@@ -119,6 +119,100 @@ jobs:
       - name: Integration tests
         run: pnpm test
 
+  # FORGE is a separate pnpm workspace nested under forge/. The root workspace
+  # is only apps/* and packages/*, so `turbo run test` at the root never sees it
+  # — before this job existed, the only thing in CI that touched forge/ was
+  # `prettier --check .`, because Prettier globs files rather than packages.
+  # Its 206 tests were not running anywhere.
+  forge:
+    name: FORGE workspace (lint, typecheck, tests, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: forge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: forge/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      # These are the root scripts, not `pnpm -r ...` spelled out again, so CI
+      # and a developer's terminal run the identical command. @forge/core and
+      # @forge/db are consumed through dist/, so each root script builds the
+      # packages first — on a fresh checkout, skipping that step fails with
+      # "Cannot find module '@forge/core'" rather than typechecking anything.
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      # The beta app reads Supabase configuration at module load. CI has no
+      # project and needs none — these are placeholders so the build can run;
+      # nothing in CI connects to a database.
+      - name: Build
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+
+  # Browser tests run separately from the unit suite: they need a browser
+  # download and a dev server, and keeping them apart means a slow or flaky
+  # browser run never delays the fast feedback from lint and typecheck.
+  #
+  # The Supabase stand-in these drive lives under apps/beta/e2e/ and is started
+  # by playwright.config.ts. It is test-only — no application code imports it,
+  # and no deployment can reach it.
+  forge-e2e:
+    name: FORGE browser tests (Playwright + axe)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: forge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: forge/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # The workspace packages are consumed through dist/, so the app cannot
+      # build without them — same prerequisite the other jobs declare.
+      - name: Build packages
+        run: pnpm run build:packages
+
+      # Chromium only. Firefox and WebKit would triple the download for no
+      # coverage this suite currently asks for.
+      - name: Install Chromium
+        run: pnpm --filter @forge/beta exec playwright install --with-deps chromium
+
+      - name: Browser tests
+        run: pnpm --filter @forge/beta test:e2e
+
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: forge/apps/beta/playwright-report/
+          retention-days: 7
+
   security:
     name: Dependency audit
     runs-on: ubuntu-latest

@@ -1,0 +1,36 @@
+{
+  "name": "forge",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "FORGE \u2014 premium personalized fitness, nutrition and online coaching platform.",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build:packages": "pnpm -r --filter \"./packages/**\" build && node scripts/assert-packages-built.mjs",
+    "build": "pnpm run build:packages && pnpm --filter @forge/api build && pnpm --filter @forge/web build && pnpm --filter @forge/beta build",
+    "dev": "pnpm run build:packages && pnpm --parallel --filter @forge/api --filter @forge/web dev",
+    "dev:api": "pnpm run build:packages && pnpm --filter @forge/api dev",
+    "dev:web": "pnpm run build:packages && pnpm --filter @forge/web dev",
+    "dev:beta": "pnpm run build:packages && pnpm --filter @forge/beta dev",
+    "typecheck": "pnpm run build:packages && pnpm -r typecheck",
+    "test": "pnpm run build:packages && pnpm -r test",
+    "lint": "pnpm -r lint",
+    "db:seed": "pnpm --filter @forge/db seed",
+    "db:generate": "pnpm --filter @forge/db generate",
+    "clean": "pnpm -r clean"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "rimraf": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vitest": "catalog:"
+  }
+}
