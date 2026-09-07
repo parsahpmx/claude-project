@@ -23,6 +23,13 @@ const PUBLIC_EXACT: ReadonlySet<string> = new Set([
   '/terms',
   '/login',
   '/signup',
+  '/forgot-password',
+  // Public on purpose. Reaching it with a live recovery session is the normal
+  // path, but someone whose link has expired arrives with none — gating it
+  // would bounce them to sign-in, which is exactly the page they cannot use.
+  // The page and the action both refuse to change anything without a recovery
+  // session, so being public costs nothing and explains what went wrong.
+  '/reset-password',
 ]);
 
 /**

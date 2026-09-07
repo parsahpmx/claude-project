@@ -10,7 +10,7 @@ import {
   sessionLoad,
   pacePerKm,
 } from './metrics';
-import { isEnabled, parseDisabledFeatures } from './flags';
+import { isEnabled, isKnownFeature, parseDisabledFeatures, type FeatureName } from './flags';
 import { activityCreateSchema, routeCreateSchema } from './validation';
 import type { LngLat } from './types';
 
@@ -246,5 +246,32 @@ describe('validation', () => {
         ],
       }).success,
     ).toBe(false);
+  });
+});
+
+describe('feature flags fail safe', () => {
+  it('keeps every unbuilt platform surface off', () => {
+    for (const name of [
+      'coachPlatform',
+      'gymPlatform',
+      'classBooking',
+      'qrAccess',
+      'payments',
+      'aiAssistant',
+      'googleMaps',
+      'adminConsole',
+    ] as const) {
+      // Not even an environment that tries can turn these on: the security
+      // work behind them is not done, and a flag file must not be able to
+      // expose a surface that was never built.
+      expect(isEnabled(name), name).toBe(false);
+      expect(isEnabled(name, []), name).toBe(false);
+    }
+  });
+
+  it('treats a flag it has never heard of as off', () => {
+    expect(isEnabled('somethingFromAnOlderDeploy' as FeatureName)).toBe(false);
+    expect(isKnownFeature('somethingFromAnOlderDeploy')).toBe(false);
+    expect(isKnownFeature('activities')).toBe(true);
   });
 });

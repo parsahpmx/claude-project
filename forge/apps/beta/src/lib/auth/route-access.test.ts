@@ -18,6 +18,15 @@ describe('public paths', () => {
     }
   });
 
+  it('serves the password recovery pages anonymously', () => {
+    // Someone locked out of their account is by definition signed out; gating
+    // these would send them to the one page they cannot get past.
+    expect(isPublicPath('/forgot-password')).toBe(true);
+    expect(isPublicPath('/reset-password')).toBe(true);
+    expect(classifyRoute('/forgot-password')).toBe('public');
+    expect(classifyRoute('/reset-password')).toBe('public');
+  });
+
   it('serves the auth callback anonymously, or sign-in could never complete', () => {
     expect(isPublicPath('/auth/callback')).toBe(true);
     expect(isPublicPath('/auth/confirm')).toBe(true);

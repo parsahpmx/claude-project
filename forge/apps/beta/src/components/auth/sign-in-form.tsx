@@ -1,6 +1,7 @@
 'use client';
 
 import { useActionState } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { signIn, type AuthState } from '@/app/(auth)/actions';
 import { Button } from '@/components/ui/primitives';
@@ -40,6 +41,15 @@ export function SignInForm() {
         required
         error={state.fieldErrors?.password}
       />
+
+      <p className="-mt-2 text-right">
+        <Link
+          href="/forgot-password"
+          className="text-secondary muted hover:text-bone-100 underline-offset-4 hover:underline"
+        >
+          Forgot your password?
+        </Link>
+      </p>
 
       <Button type="submit" block size="lg" disabled={pending}>
         {pending ? 'Signing in…' : 'Log in'}

@@ -36,3 +36,7 @@ npm-debug.log*
 .idea/
 .vscode/*
 !.vscode/extensions.json
+forge/apps/beta/playwright-report/
+forge/apps/beta/test-results/
+forge/apps/beta/blob-report/
+forge/apps/beta/.playwright/

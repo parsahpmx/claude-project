@@ -92,12 +92,20 @@ export function RecordActivityForm({ defaultVisibility }: { defaultVisibility: V
 
       <Card>
         <fieldset>
-          <legend className="text-secondary font-medium text-bone-200">Who can see this</legend>
-          <p className="mt-1 text-caption muted">
+          {/* A <legend> names the fieldset, not the control inside it, so the
+              select was reaching screen readers with no accessible name at all.
+              Pointing at the legend reuses the visible text rather than adding
+              a second, hidden copy that could drift from it. */}
+          <legend id="visibility-legend" className="text-secondary font-medium text-bone-200">
+            Who can see this
+          </legend>
+          <p id="visibility-hint" className="mt-1 text-caption muted">
             Defaults to your privacy setting. You can change it later.
           </p>
           <select
             name="visibility"
+            aria-labelledby="visibility-legend"
+            aria-describedby="visibility-hint"
             defaultValue={defaultVisibility}
             className="mt-3 min-h-[48px] w-full rounded-control border border-ink-600 bg-ink-900 px-4 text-body text-bone-100"
           >

@@ -46,6 +46,11 @@ catalog:
   '@supabase/supabase-js': ^2.58.0
   '@supabase/ssr': ^0.7.0
 
+  # --- Browser testing ---
+  # Pinned together: @axe-core/playwright must match the Playwright it runs in.
+  '@playwright/test': ^1.56.0
+  '@axe-core/playwright': ^4.10.2
+
   # --- Maps & charts ---
   # MapLibre GL is BSD-licensed and renders OpenStreetMap tiles, so the map
   # layer carries no per-view licence cost. See docs/WEB_MAPS.md.
