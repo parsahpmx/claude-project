@@ -1,0 +1,127 @@
+# Broker adapters and per-broker symbol mapping.
+#
+# Credentials are NEVER stored here.  ${VAR} references are resolved from the process
+# environment at load; a reference with no value and no default raises at startup.
+
+active_broker: simulated
+
+brokers:
+
+  simulated:
+    adapter: core.brokers.simulated.SimulatedBrokerAdapter
+    description: Deterministic in-process matching engine used by the backtester.
+    capabilities:
+      order_types: [MARKET, LIMIT, STOP, STOP_LIMIT]
+      time_in_force: [DAY, GTC, IOC, FOK]
+      native_cancel_replace: true
+      fractional_qty: true
+    symbols:
+      "CME:MES": "CME:MES"
+      "CME:ES": "CME:ES"
+      "CME:MNQ": "CME:MNQ"
+      "CME:NQ": "CME:NQ"
+      "COMEX:MGC": "COMEX:MGC"
+      "COMEX:GC": "COMEX:GC"
+      "COMEX:SI": "COMEX:SI"
+      "NASDAQ:AAPL": "NASDAQ:AAPL"
+      "NASDAQ:NVDA": "NASDAQ:NVDA"
+      "NASDAQ:TSLA": "NASDAQ:TSLA"
+      "NASDAQ:MSFT": "NASDAQ:MSFT"
+      "NASDAQ:AMZN": "NASDAQ:AMZN"
+      "NASDAQ:META": "NASDAQ:META"
+      "CFD:XAUUSD": "CFD:XAUUSD"
+      "CFD:XAGUSD": "CFD:XAGUSD"
+      "CFD:NAS100": "CFD:NAS100"
+      "CFD:US500": "CFD:US500"
+      "FX:EURUSD": "FX:EURUSD"
+      "FX:GBPUSD": "FX:GBPUSD"
+      "FX:USDJPY": "FX:USDJPY"
+
+  paper:
+    adapter: core.brokers.paper.PaperBrokerAdapter
+    description: Live market data, simulated fills.  Same engine path as live.
+    capabilities:
+      order_types: [MARKET, LIMIT, STOP, STOP_LIMIT]
+      time_in_force: [DAY, GTC, IOC, FOK]
+      native_cancel_replace: true
+      fractional_qty: true
+    symbols:
+      "CME:MES": "CME:MES"
+      "CME:ES": "CME:ES"
+      "NASDAQ:AAPL": "NASDAQ:AAPL"
+      "CFD:XAUUSD": "CFD:XAUUSD"
+
+  ibkr:
+    adapter: brokers.ibkr.adapter.IBKRAdapter
+    description: Interactive Brokers (futures and US equities).  NOT YET IMPLEMENTED.
+    enabled: false
+    connection:
+      host: ${IBKR_HOST:-127.0.0.1}
+      port: ${IBKR_PORT:-7497}
+      client_id: ${IBKR_CLIENT_ID:-1}
+      account: ${IBKR_ACCOUNT:-}
+    capabilities:
+      order_types: [MARKET, LIMIT, STOP, STOP_LIMIT]
+      time_in_force: [DAY, GTC, IOC, FOK]
+      native_cancel_replace: true
+      fractional_qty: false
+    symbols:
+      "CME:MES": "MES"
+      "CME:ES": "ES"
+      "CME:MNQ": "MNQ"
+      "CME:NQ": "NQ"
+      "COMEX:MGC": "MGC"
+      "COMEX:GC": "GC"
+      "COMEX:SI": "SI"
+      "NASDAQ:AAPL": "AAPL"
+      "NASDAQ:NVDA": "NVDA"
+      "NASDAQ:TSLA": "TSLA"
+      "NASDAQ:MSFT": "MSFT"
+      "NASDAQ:AMZN": "AMZN"
+      "NASDAQ:META": "META"
+
+  mt5:
+    adapter: brokers.mt5.adapter.MetaTrader5Adapter
+    description: MetaTrader 5 CFD/FX.  Symbol names differ per broker.  NOT YET IMPLEMENTED.
+    enabled: false
+    connection:
+      server: ${MT5_SERVER:-}
+      login: ${MT5_LOGIN:-}
+      password: ${MT5_PASSWORD:-}
+      path: ${MT5_TERMINAL_PATH:-}
+    capabilities:
+      order_types: [MARKET, LIMIT, STOP, STOP_LIMIT]
+      time_in_force: [GTC, IOC, FOK]
+      native_cancel_replace: true
+      fractional_qty: true
+    # The reason SymbolMapper exists: the same metal has three names across three brokers.
+    symbols:
+      "CFD:XAUUSD": "GOLD"
+      "CFD:XAGUSD": "SILVER"
+      "CFD:NAS100": "USTEC"
+      "CFD:US500": "US500"
+      "FX:EURUSD": "EURUSD"
+      "FX:GBPUSD": "GBPUSD"
+      "FX:USDJPY": "USDJPY"
+
+  oanda:
+    adapter: brokers.oanda.adapter.OandaAdapter
+    description: OANDA v20 FX and metals.  NOT YET IMPLEMENTED.
+    enabled: false
+    connection:
+      api_url: ${OANDA_API_URL:-https://api-fxpractice.oanda.com}
+      account_id: ${OANDA_ACCOUNT_ID:-}
+      api_token: ${OANDA_API_TOKEN:-}
+    capabilities:
+      order_types: [MARKET, LIMIT, STOP]
+      time_in_force: [GTC, IOC, FOK]
+      native_cancel_replace: false      # emulated as cancel-then-new by the engine
+      fractional_qty: true
+    symbols:
+      "CFD:XAUUSD": "XAU_USD"
+      "CFD:XAGUSD": "XAG_USD"
+      "CFD:NAS100": "NAS100_USD"
+      "CFD:US500": "SPX500_USD"
+      "FX:EURUSD": "EUR_USD"
+      "FX:GBPUSD": "GBP_USD"
+      "FX:USDJPY": "USD_JPY"

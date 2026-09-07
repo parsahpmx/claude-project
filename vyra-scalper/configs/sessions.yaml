@@ -1,0 +1,99 @@
+# Trading sessions, in EXCHANGE-LOCAL time.  Weekdays and holidays refer to the TRADING
+# DATE, not to the local date a window opens: the CME window that opens Sunday 17:00
+# belongs to Monday's trading date, and a holiday on 25 December cancels the window that
+# opened at 17:00 on the 24th (core/instruments/sessions.py).
+
+sessions:
+
+  cme_equity_index:
+    timezone: America/Chicago
+    weekdays: [1, 2, 3, 4, 5]
+    segments:
+      - {name: GLOBEX, start: "17:00", end: "16:00"}   # opens previous evening
+    holidays:
+      - 2024-01-01
+      - 2024-01-15
+      - 2024-02-19
+      - 2024-03-29
+      - 2024-05-27
+      - 2024-06-19
+      - 2024-07-04
+      - 2024-09-02
+      - 2024-11-28
+      - 2024-12-25
+    early_closes:
+      2024-07-03: "12:00"
+      2024-11-29: "12:00"
+      2024-12-24: "12:00"
+
+  cme_metals:
+    timezone: America/New_York
+    weekdays: [1, 2, 3, 4, 5]
+    segments:
+      - {name: GLOBEX, start: "18:00", end: "17:00"}
+    holidays: [2024-01-01, 2024-01-15, 2024-02-19, 2024-03-29, 2024-05-27, 2024-06-19,
+               2024-07-04, 2024-09-02, 2024-11-28, 2024-12-25]
+    early_closes:
+      2024-07-03: "13:00"
+      2024-11-29: "13:15"
+      2024-12-24: "13:15"
+
+  us_equities:
+    timezone: America/New_York
+    weekdays: [1, 2, 3, 4, 5]
+    segments:
+      - {name: RTH, start: "09:30", end: "16:00"}
+    holidays: [2024-01-01, 2024-01-15, 2024-02-19, 2024-03-29, 2024-05-27, 2024-06-19,
+               2024-07-04, 2024-09-02, 2024-11-28, 2024-12-25]
+    early_closes:
+      2024-07-03: "13:00"
+      2024-11-29: "13:00"
+      2024-12-24: "13:00"
+
+  us_equities_extended:
+    timezone: America/New_York
+    weekdays: [1, 2, 3, 4, 5]
+    segments:
+      - {name: PRE, start: "04:00", end: "09:30"}
+      - {name: RTH, start: "09:30", end: "16:00"}
+      - {name: POST, start: "16:00", end: "20:00"}
+    holidays: [2024-01-01, 2024-01-15, 2024-02-19, 2024-03-29, 2024-05-27, 2024-06-19,
+               2024-07-04, 2024-09-02, 2024-11-28, 2024-12-25]
+
+  fx_24x5:
+    timezone: UTC
+    weekdays: [1, 2, 3, 4, 5]
+    segments:
+      - {name: FX, start: "22:00", end: "22:00"}       # Sun 22:00 UTC -> Fri 22:00 UTC
+    holidays: [2024-01-01, 2024-12-25]
+
+  cfd_metals:
+    timezone: UTC
+    weekdays: [1, 2, 3, 4, 5]
+    segments:
+      - {name: CFD, start: "22:00", end: "21:00"}
+    holidays: [2024-01-01, 2024-12-25]
+
+  cfd_indices:
+    timezone: UTC
+    weekdays: [1, 2, 3, 4, 5]
+    segments:
+      - {name: CFD, start: "22:00", end: "21:00"}
+    holidays: [2024-01-01, 2024-12-25]
+
+  "24x7":
+    timezone: UTC
+    weekdays: [1, 2, 3, 4, 5, 6, 7]
+    segments:
+      - {name: CONTINUOUS, start: "00:00", end: "00:00"}
+
+# Windows in which entries are refused regardless of strategy.  The open and the close
+# are where spreads are widest and where a scalper's edge is most often an artefact of
+# unfillable prices.
+no_trade_windows:
+  us_equities:
+    - {after_open_seconds: 30, reason: OPENING_AUCTION_NOISE}
+    - {before_close_seconds: 120, reason: CLOSING_AUCTION_RISK}
+  cme_equity_index:
+    - {after_open_seconds: 60, reason: SESSION_OPEN_NOISE}
+    - {before_close_seconds: 300, reason: SETTLEMENT_WINDOW}

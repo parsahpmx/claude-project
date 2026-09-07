@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vyra-scalper"
+version = "0.1.0"
+description = "VYRA Scalper Engine — multi-market systematic trading platform"
+requires-python = ">=3.11"
+dependencies = [
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+# The engine core deliberately has no third-party runtime dependency beyond PyYAML.
+# Everything below is for research, storage and services at the edges.
+data = ["pandas>=2.0", "pyarrow>=14.0", "numpy>=1.26"]
+ml = ["scikit-learn>=1.4", "lightgbm>=4.0", "xgboost>=2.0", "catboost>=1.2"]
+api = ["fastapi>=0.110", "uvicorn>=0.27", "pydantic>=2.6", "python-jose>=3.3"]
+storage = ["psycopg[binary]>=3.1", "redis>=5.0", "sqlalchemy>=2.0"]
+dev = ["pytest>=8.0", "pytest-cov>=4.1", "mypy>=1.9", "ruff>=0.3"]
+
+[tool.setuptools]
+packages = ["core", "brokers", "data"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+    "slow: long-running tests (walk-forward, Monte Carlo)",
+    "chaos: fault-injection tests",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+disallow_any_generics = true
+files = ["core", "brokers", "data"]
+
+[[tool.mypy.overrides]]
+module = ["pandas.*", "pyarrow.*", "yaml.*"]
+ignore_missing_imports = true

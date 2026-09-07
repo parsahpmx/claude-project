@@ -1,0 +1,201 @@
+# Instrument definitions.
+#
+# tick_value MUST equal tick_size * multiplier for futures and equities; the loader
+# rejects any definition where it does not (DATA_SPEC.md 7.1).  A wrong tick value
+# rescales every PnL figure in the system and is invisible on a report.
+
+defaults:
+  currency: USD
+  price_precision: 2
+
+instruments:
+
+  # ---- CME index futures ----------------------------------------------------------
+  "CME:MES":
+    symbol: MES
+    asset_class: FUTURE
+    exchange: CME
+    tick_size: 0.25
+    tick_value: 1.25        # 0.25 * 5
+    multiplier: 5
+    min_qty: 1
+    qty_step: 1
+    max_qty: 50
+    max_spread_ticks: 2
+    session_id: cme_equity_index
+    timezone: America/Chicago
+    expiry: "2024-06-21T13:30:00Z"
+    contract_month: M24
+    underlying: SP500
+
+  "CME:ES":
+    symbol: ES
+    asset_class: FUTURE
+    exchange: CME
+    tick_size: 0.25
+    tick_value: 12.50       # 0.25 * 50
+    multiplier: 50
+    min_qty: 1
+    qty_step: 1
+    max_qty: 10
+    max_spread_ticks: 2
+    session_id: cme_equity_index
+    timezone: America/Chicago
+    expiry: "2024-06-21T13:30:00Z"
+    contract_month: M24
+    underlying: SP500
+
+  "CME:MNQ":
+    symbol: MNQ
+    asset_class: FUTURE
+    exchange: CME
+    tick_size: 0.25
+    tick_value: 0.50        # 0.25 * 2
+    multiplier: 2
+    min_qty: 1
+    qty_step: 1
+    max_qty: 50
+    max_spread_ticks: 4
+    session_id: cme_equity_index
+    timezone: America/Chicago
+    expiry: "2024-06-21T13:30:00Z"
+    contract_month: M24
+    underlying: NASDAQ100
+
+  "CME:NQ":
+    symbol: NQ
+    asset_class: FUTURE
+    exchange: CME
+    tick_size: 0.25
+    tick_value: 5.00        # 0.25 * 20
+    multiplier: 20
+    min_qty: 1
+    qty_step: 1
+    max_qty: 10
+    max_spread_ticks: 4
+    session_id: cme_equity_index
+    timezone: America/Chicago
+    expiry: "2024-06-21T13:30:00Z"
+    contract_month: M24
+    underlying: NASDAQ100
+
+  # ---- COMEX metals ---------------------------------------------------------------
+  "COMEX:MGC":
+    symbol: MGC
+    asset_class: FUTURE
+    exchange: COMEX
+    tick_size: 0.10
+    tick_value: 1.00        # 0.10 * 10
+    multiplier: 10
+    min_qty: 1
+    qty_step: 1
+    max_qty: 50
+    max_spread_ticks: 3
+    session_id: cme_metals
+    timezone: America/New_York
+    expiry: "2024-06-26T17:30:00Z"
+    contract_month: M24
+    underlying: GOLD
+    price_precision: 1
+
+  "COMEX:GC":
+    symbol: GC
+    asset_class: FUTURE
+    exchange: COMEX
+    tick_size: 0.10
+    tick_value: 10.00       # 0.10 * 100
+    multiplier: 100
+    min_qty: 1
+    qty_step: 1
+    max_qty: 10
+    max_spread_ticks: 3
+    session_id: cme_metals
+    timezone: America/New_York
+    expiry: "2024-06-26T17:30:00Z"
+    contract_month: M24
+    underlying: GOLD
+    price_precision: 1
+
+  "COMEX:SI":
+    symbol: SI
+    asset_class: FUTURE
+    exchange: COMEX
+    tick_size: 0.005
+    tick_value: 25.00       # 0.005 * 5000
+    multiplier: 5000
+    min_qty: 1
+    qty_step: 1
+    max_qty: 5
+    max_spread_ticks: 4
+    session_id: cme_metals
+    timezone: America/New_York
+    expiry: "2024-07-26T17:25:00Z"
+    contract_month: N24
+    underlying: SILVER
+    price_precision: 3
+
+  # ---- US equities (configurable universe) ----------------------------------------
+  "NASDAQ:AAPL":
+    symbol: AAPL
+    asset_class: EQUITY
+    exchange: NASDAQ
+    tick_size: 0.01
+    tick_value: 0.01
+    multiplier: 1
+    min_qty: 1
+    qty_step: 1
+    max_qty: 5000
+    max_spread_ticks: 5
+    session_id: us_equities
+    timezone: America/New_York
+
+  "NASDAQ:NVDA": {symbol: NVDA, asset_class: EQUITY, exchange: NASDAQ, tick_size: 0.01, tick_value: 0.01, multiplier: 1, min_qty: 1, qty_step: 1, max_qty: 5000, max_spread_ticks: 8, session_id: us_equities, timezone: America/New_York}
+  "NASDAQ:TSLA": {symbol: TSLA, asset_class: EQUITY, exchange: NASDAQ, tick_size: 0.01, tick_value: 0.01, multiplier: 1, min_qty: 1, qty_step: 1, max_qty: 3000, max_spread_ticks: 10, session_id: us_equities, timezone: America/New_York}
+  "NASDAQ:MSFT": {symbol: MSFT, asset_class: EQUITY, exchange: NASDAQ, tick_size: 0.01, tick_value: 0.01, multiplier: 1, min_qty: 1, qty_step: 1, max_qty: 5000, max_spread_ticks: 5, session_id: us_equities, timezone: America/New_York}
+  "NASDAQ:AMZN": {symbol: AMZN, asset_class: EQUITY, exchange: NASDAQ, tick_size: 0.01, tick_value: 0.01, multiplier: 1, min_qty: 1, qty_step: 1, max_qty: 5000, max_spread_ticks: 5, session_id: us_equities, timezone: America/New_York}
+  "NASDAQ:META": {symbol: META, asset_class: EQUITY, exchange: NASDAQ, tick_size: 0.01, tick_value: 0.01, multiplier: 1, min_qty: 1, qty_step: 1, max_qty: 3000, max_spread_ticks: 6, session_id: us_equities, timezone: America/New_York}
+
+  # ---- Broker CFD / FX ------------------------------------------------------------
+  # Contract sizes are broker-defined; the tick_value identity is advisory here and the
+  # values below must be confirmed against each broker's contract specification before
+  # live use.  Depth from these venues is broker quoting, not market liquidity, so
+  # exchange-microstructure strategies are refused on them (DATA_SPEC.md 6).
+  "CFD:XAUUSD":
+    symbol: XAUUSD
+    asset_class: METAL_CFD
+    exchange: "BROKER:CFD"
+    tick_size: 0.01
+    tick_value: 1.00        # 1 lot = 100 oz; broker-dependent
+    multiplier: 100
+    min_qty: 0.01
+    qty_step: 0.01
+    max_qty: 20
+    max_spread_ticks: 40
+    session_id: cfd_metals
+    timezone: UTC
+
+  "CFD:XAGUSD": {symbol: XAGUSD, asset_class: METAL_CFD, exchange: "BROKER:CFD", tick_size: 0.001, tick_value: 5.00, multiplier: 5000, min_qty: 0.01, qty_step: 0.01, max_qty: 10, max_spread_ticks: 30, session_id: cfd_metals, timezone: UTC, price_precision: 3}
+  "CFD:NAS100": {symbol: NAS100, asset_class: INDEX_CFD, exchange: "BROKER:CFD", tick_size: 0.1, tick_value: 0.1, multiplier: 1, min_qty: 0.1, qty_step: 0.1, max_qty: 50, max_spread_ticks: 30, session_id: cfd_indices, timezone: UTC, price_precision: 1}
+  "CFD:US500": {symbol: US500, asset_class: INDEX_CFD, exchange: "BROKER:CFD", tick_size: 0.1, tick_value: 0.1, multiplier: 1, min_qty: 0.1, qty_step: 0.1, max_qty: 50, max_spread_ticks: 20, session_id: cfd_indices, timezone: UTC, price_precision: 1}
+  "FX:EURUSD": {symbol: EURUSD, asset_class: FX, exchange: "BROKER:FX", tick_size: 0.00001, tick_value: 1.00, multiplier: 100000, min_qty: 0.01, qty_step: 0.01, max_qty: 20, max_spread_ticks: 30, session_id: fx_24x5, timezone: UTC, price_precision: 5}
+  "FX:GBPUSD": {symbol: GBPUSD, asset_class: FX, exchange: "BROKER:FX", tick_size: 0.00001, tick_value: 1.00, multiplier: 100000, min_qty: 0.01, qty_step: 0.01, max_qty: 20, max_spread_ticks: 35, session_id: fx_24x5, timezone: UTC, price_precision: 5}
+  "FX:USDJPY": {symbol: USDJPY, asset_class: FX, exchange: "BROKER:FX", tick_size: 0.001, tick_value: 1.00, multiplier: 100000, min_qty: 0.01, qty_step: 0.01, max_qty: 20, max_spread_ticks: 30, session_id: fx_24x5, timezone: UTC, price_precision: 3}
+
+# Continuous-contract recipes.  A stitched series exists only when named here; the
+# engine will not combine contracts implicitly (DATA_SPEC.md 7.3).
+continuous_contracts:
+  MES:
+    root: MES
+    roll_rule: VOLUME_CROSSOVER
+    adjustment: BACK_ADJUST_DIFF
+    crossover_confirm_days: 2
+  ES:
+    root: ES
+    roll_rule: VOLUME_CROSSOVER
+    adjustment: BACK_ADJUST_DIFF
+    crossover_confirm_days: 2
+  GC:
+    root: GC
+    roll_rule: CALENDAR_DAYS_BEFORE_EXPIRY
+    adjustment: BACK_ADJUST_RATIO
+    days_before_expiry: 5

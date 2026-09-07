@@ -1,0 +1,93 @@
+# Execution policy and cost models (EXECUTION_SPEC.md, BACKTEST_SPEC.md 4-6).
+
+entry_policy: MARKETABLE_LIMIT        # MARKET | MARKETABLE_LIMIT | SMART_LIMIT | PASSIVE_LIMIT
+exit_policy: MARKET                   # exits prioritise certainty over price
+
+marketable_limit:
+  aggression_ticks: 1                 # cross by this much beyond the far touch
+  timeout_ms: 3000
+
+smart_limit:
+  max_repricings: 3
+  reprice_interval_ms: 500
+  escalate_after_ms: 2000
+
+passive_limit:
+  timeout_ms: 10000
+
+retry:
+  max_retries: 2
+  backoff_ms: [250, 1000]
+  query_state_before_retry: true      # never retry blind; see EXECUTION_SPEC 4
+
+duplicate_protection:
+  allow_stacking: false               # one working entry per (strategy, instrument, side)
+  idempotent_client_order_id: true
+
+reconciliation:
+  interval_seconds: 30
+  on_connect: true
+  qty_tolerance: 0.0                  # futures/equities are integral; any drift is real
+  price_tolerance_ticks: 1.0
+
+# --- cost model -------------------------------------------------------------------
+commission:
+  default: {type: PER_UNIT, amount: 0.62, minimum: 0.0}
+  overrides:
+    "CME:MES":   {type: PER_UNIT, amount: 0.62}
+    "CME:ES":    {type: PER_UNIT, amount: 2.09}
+    "CME:MNQ":   {type: PER_UNIT, amount: 0.62}
+    "CME:NQ":    {type: PER_UNIT, amount: 2.09}
+    "COMEX:MGC": {type: PER_UNIT, amount: 0.72}
+    "COMEX:GC":  {type: PER_UNIT, amount: 2.29}
+    "COMEX:SI":  {type: PER_UNIT, amount: 2.29}
+    "NASDAQ:AAPL": {type: PER_UNIT, amount: 0.005, minimum: 1.0}
+    "NASDAQ:NVDA": {type: PER_UNIT, amount: 0.005, minimum: 1.0}
+    "NASDAQ:TSLA": {type: PER_UNIT, amount: 0.005, minimum: 1.0}
+    "NASDAQ:MSFT": {type: PER_UNIT, amount: 0.005, minimum: 1.0}
+    "NASDAQ:AMZN": {type: PER_UNIT, amount: 0.005, minimum: 1.0}
+    "NASDAQ:META": {type: PER_UNIT, amount: 0.005, minimum: 1.0}
+    "CFD:XAUUSD":  {type: NOTIONAL_BPS, amount: 0.0}   # CFD cost is in the spread
+    "CFD:XAGUSD":  {type: NOTIONAL_BPS, amount: 0.0}
+    "CFD:NAS100":  {type: NOTIONAL_BPS, amount: 0.0}
+    "CFD:US500":   {type: NOTIONAL_BPS, amount: 0.0}
+    "FX:EURUSD":   {type: NOTIONAL_BPS, amount: 0.2}
+    "FX:GBPUSD":   {type: NOTIONAL_BPS, amount: 0.2}
+    "FX:USDJPY":   {type: NOTIONAL_BPS, amount: 0.2}
+
+exchange_fees:
+  default: 0.0
+  overrides:
+    "CME:MES": 0.37
+    "CME:ES": 1.33
+    "CME:MNQ": 0.37
+    "CME:NQ": 1.33
+    "COMEX:MGC": 0.33
+    "COMEX:GC": 1.55
+    "COMEX:SI": 1.55
+
+slippage:
+  model: SPREAD_FRACTION              # FIXED_TICKS | SPREAD_FRACTION | VOLATILITY_SCALED
+  spread_fraction: 0.5                # half the spread beyond the touch, on average
+  fixed_ticks: 1.0
+  volatility_coefficient: 0.1
+  seed: 20240315
+
+market_impact:
+  enabled: true
+  model: SQUARE_ROOT
+  coefficient: 0.1                    # a model, not a measurement; labelled as such
+  threshold_participation: 0.01       # only applies above 1% of observed volume
+
+latency:
+  # Non-zero by default.  A strategy that only works at zero latency must fail visibly.
+  market_data_latency_us: 800
+  order_latency_us: 1500
+  cancel_latency_us: 1500
+  ack_latency_us: 1200
+  jitter_us: 300
+
+monitoring:
+  slippage_alert_ticks: 5
+  latency_alert_ms: 500
+  max_reject_rate: 0.2

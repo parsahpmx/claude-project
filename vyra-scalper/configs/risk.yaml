@@ -1,0 +1,60 @@
+# Risk limits.  The Risk Engine has absolute authority over strategies (RISK_SPEC.md).
+# These defaults are a conservative baseline, not a recommendation.
+
+account:
+  starting_equity: 100000.0
+  currency: USD
+
+per_trade:
+  max_risk_per_trade_pct: 0.0025      # 0.25% of equity
+  min_stop_distance_ticks: 2          # sizing divides by stop distance; see RISK_SPEC 4
+  max_stop_distance_atr: 4.0
+  size_confidence_floor: 0.4          # confidence may scale size down to 40%, never up
+
+exposure:
+  max_instrument_exposure_pct: 1.0    # 100% of equity in notional
+  max_portfolio_exposure_pct: 3.0
+  max_correlated_exposure_pct: 1.5
+  max_leverage: 5.0
+
+loss_limits:
+  max_daily_loss_pct: 0.02
+  max_weekly_loss_pct: 0.04
+  max_drawdown_pct: 0.08
+  max_consecutive_losses: 4
+  max_trades_per_session: 20
+  cooldown_after_loss_seconds: 60
+  cooldown_after_consecutive_losses_seconds: 900
+
+market_conditions:
+  max_spread_ticks: 4                 # per-instrument override in markets.yaml wins
+  min_liquidity_size: 1
+  max_expected_slippage_ticks: 3
+  min_atr_ticks: 2
+  max_atr_ticks: 200
+  max_quote_age_ms: 2000
+
+news:
+  blackout_minutes_before: 5
+  blackout_minutes_after: 5
+  min_importance: 3
+
+# Instruments in a group represent the same underlying risk.  MES and ES are one bet at
+# two sizes; treating them as independent is how a book ends up 4x larger than intended.
+correlation_groups:
+  us_index: ["CME:MES", "CME:ES", "CME:MNQ", "CME:NQ", "CFD:NAS100", "CFD:US500"]
+  gold: ["COMEX:MGC", "COMEX:GC", "CFD:XAUUSD"]
+  silver: ["COMEX:SI", "CFD:XAGUSD"]
+  usd_fx: ["FX:EURUSD", "FX:GBPUSD", "FX:USDJPY"]
+  us_mega_tech: ["NASDAQ:AAPL", "NASDAQ:NVDA", "NASDAQ:MSFT", "NASDAQ:AMZN", "NASDAQ:META", "NASDAQ:TSLA"]
+
+kill_switch:
+  emergency_policy: HOLD              # HOLD | FLATTEN_ON_RECOVERY | FLATTEN_IMMEDIATELY
+  min_trip_seconds: 60                # minimum time tripped before a reset is accepted
+  max_data_staleness_ms: 10000
+  max_order_reject_rate: 0.25
+  reject_rate_window: 20
+  max_slippage_ticks: 10
+  max_order_latency_ms: 2000
+  max_clock_skew_ms: 1000
+  state_file: runs/kill_switch_state.json

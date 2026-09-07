@@ -1,0 +1,139 @@
+# Strategy parameters.  No numeric trading constant appears in strategy source files;
+# tests/unit/test_no_magic_numbers.py enforces this.
+#
+# allowed_regimes gates each strategy to the market states it was designed for.  A
+# mean-reversion strategy left running into a trend is not a strategy, it is a drawdown.
+
+strategies:
+
+  vwap_mean_reversion:
+    enabled: true
+    class: core.strategies.vwap_mean_reversion.VWAPMeanReversionStrategy
+    version: "1.0.0"
+    instruments: ["CME:MES"]
+    timeframe: 1m
+    requires_exchange_depth: false
+    allowed_regimes: [RANGE, LOW_VOLATILITY]
+    params:
+      vwap_anchor: SESSION            # SESSION | DAY
+      entry_deviation_sigma: 2.0      # enter when price is this far from session VWAP
+      exit_deviation_sigma: 0.25      # take profit near the mean
+      min_bars_for_vwap: 20           # do not trade a VWAP built from too few bars
+      atr_period: 14
+      stop_atr_multiple: 1.5
+      target_atr_multiple: 2.0
+      max_holding_bars: 60
+      min_sigma_ticks: 2.0            # below this the band is inside the spread
+      cooldown_bars_after_exit: 3
+      trade_direction: BOTH           # LONG | SHORT | BOTH
+
+  momentum_breakout:
+    enabled: false
+    class: core.strategies.momentum_breakout.MomentumBreakoutStrategy
+    version: "0.1.0"
+    instruments: ["CME:MNQ"]
+    timeframe: 1m
+    requires_exchange_depth: false
+    allowed_regimes: [TRENDING_UP, TRENDING_DOWN, BREAKOUT]
+    params:
+      lookback_bars: 20
+      breakout_buffer_ticks: 1.0
+      volume_confirmation_ratio: 1.5
+      atr_period: 14
+      stop_atr_multiple: 1.0
+      target_atr_multiple: 3.0
+      max_holding_bars: 45
+
+  liquidity_sweep:
+    enabled: false
+    class: core.strategies.liquidity_sweep.LiquiditySweepStrategy
+    version: "0.1.0"
+    instruments: ["CME:MES"]
+    timeframe: 1m
+    requires_exchange_depth: true
+    allowed_regimes: [RANGE, REVERSAL]
+    params:
+      sweep_lookback_bars: 30
+      equal_level_tolerance_ticks: 1.0
+      reclaim_bars: 2
+      atr_period: 14
+      stop_atr_multiple: 1.0
+      target_atr_multiple: 2.5
+
+  trend_pullback:
+    enabled: false
+    class: core.strategies.trend_pullback.TrendPullbackStrategy
+    version: "0.1.0"
+    instruments: ["CME:MES"]
+    timeframe: 5m
+    requires_exchange_depth: false
+    allowed_regimes: [TRENDING_UP, TRENDING_DOWN]
+    params:
+      fast_ema: 20
+      slow_ema: 50
+      pullback_atr_multiple: 0.5
+      atr_period: 14
+      stop_atr_multiple: 1.5
+      target_atr_multiple: 3.0
+
+  order_flow_imbalance:
+    enabled: false
+    class: core.strategies.order_flow_imbalance.OrderFlowImbalanceStrategy
+    version: "0.1.0"
+    instruments: ["CME:ES"]
+    timeframe: 15s
+    requires_exchange_depth: true      # refused on CFD instruments at load time
+    allowed_regimes: [RANGE, BREAKOUT, HIGH_VOLATILITY]
+    params:
+      imbalance_threshold: 0.65
+      delta_lookback_bars: 10
+      min_book_size: 20
+      atr_period: 14
+      stop_atr_multiple: 0.75
+      target_atr_multiple: 1.5
+
+  opening_range_breakout:
+    enabled: false
+    class: core.strategies.opening_range_breakout.OpeningRangeBreakoutStrategy
+    version: "0.1.0"
+    instruments: ["NASDAQ:AAPL"]
+    timeframe: 1m
+    requires_exchange_depth: false
+    allowed_regimes: [BREAKOUT, TRENDING_UP, TRENDING_DOWN]
+    params:
+      opening_range_minutes: 15
+      breakout_buffer_ticks: 2.0
+      atr_period: 14
+      stop_atr_multiple: 1.0
+      target_atr_multiple: 2.0
+      one_trade_per_session: true
+
+  microstructure_scalper:
+    enabled: false
+    class: core.strategies.microstructure_scalper.MicrostructureScalperStrategy
+    version: "0.1.0"
+    instruments: ["CME:ES"]
+    timeframe: 1s
+    requires_exchange_depth: true
+    allowed_regimes: [RANGE, LOW_VOLATILITY]
+    params:
+      microprice_deviation_ticks: 0.5
+      min_imbalance: 0.7
+      max_spread_ticks: 1
+      target_ticks: 2
+      stop_ticks: 3
+      max_holding_seconds: 60
+
+# Confidence scoring weights (section 10).  Confidence never raises a risk limit; it can
+# only scale size down within an already-approved envelope (RISK_SPEC.md 6).
+confidence:
+  weights:
+    trend_alignment: 0.15
+    vwap_alignment: 0.20
+    volume_confirmation: 0.10
+    order_flow_confirmation: 0.15
+    market_structure: 0.15
+    liquidity_event: 0.05
+    volatility_regime: 0.10
+    spread_condition: 0.10
+  min_confidence_to_trade: 0.35

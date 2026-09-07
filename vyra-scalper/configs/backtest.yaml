@@ -1,0 +1,41 @@
+# The reference MVP backtest.  Everything a run needs is here, so the run is reproducible
+# from this file plus the referenced dataset (BACKTEST_SPEC.md 7).
+
+run:
+  name: mvp_vwap_mes
+  mode: BACKTEST
+  random_seed: 20240315
+
+data:
+  source: SYNTHETIC          # SYNTHETIC | CSV | PARQUET
+  instruments: ["CME:MES"]
+  start: "2024-03-04T00:00:00Z"
+  end: "2024-03-09T00:00:00Z"
+  synthetic:
+    # A seeded generator, used so the pipeline is testable without vendor data.  Results
+    # from synthetic data are watermarked SYNTHETIC and support no expectancy claim.
+    seed: 20240315
+    start_price: 5100.0
+    annual_volatility: 0.18
+    trade_arrival_per_second: 1.5
+    spread_ticks_mean: 1.0
+    spread_ticks_wide_prob: 0.05
+    mean_reversion_strength: 0.02
+    tick_interval_ms: 250
+
+strategies: [vwap_mean_reversion]
+
+execution:
+  fill_model: REALISTIC      # OPTIMISTIC is blocked from promotion decisions
+  queue_ratio: 1.0           # displayed volume required, as a multiple of order size
+  reject_rate: 0.01
+  partial_fill_probability: 0.15
+
+output:
+  directory: runs
+  write_trades: true
+  write_equity: true
+  write_orders: true
+  write_fills: true
+  write_risk_events: true
+  write_report: true
