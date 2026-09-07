@@ -28,6 +28,49 @@ test.describe('sign in', () => {
   });
 });
 
+test.describe('sign up', () => {
+  /**
+   * Regression, and the one that actually stranded someone. With the project's
+   * "Confirm email" setting on, `signUp` creates the account and returns no
+   * session. The action used to redirect to /onboarding regardless — a route
+   * that needs a session — so middleware bounced the brand-new account to
+   * /login with nothing said, and the password they had just chosen was then
+   * refused with "confirm your email first". The account existed and the person
+   * had no way to know.
+   */
+  test('tells a new account to confirm its email instead of bouncing it to /login', async ({
+    page,
+  }) => {
+    await page.goto('/signup');
+    await settle(page);
+    await page.fill('input[name="displayName"]', 'New Athlete');
+    await page.fill('input[name="email"]', 'needsconfirm@forge.test');
+    await page.fill('input[name="password"]', 'a-long-enough-password');
+    await page.click('form button[type="submit"]');
+
+    const status = page.getByRole('status');
+    await expect(status).toBeVisible();
+    await expect(status).toContainText(/confirm your email/i);
+
+    // The failure mode was a silent redirect. Staying put is the fix.
+    expect(new URL(page.url()).pathname).toBe('/signup');
+    await expect(page.getByRole('link', { name: /go to sign in/i })).toBeVisible();
+  });
+
+  test('carries on to onboarding when the project signs new accounts straight in', async ({
+    page,
+  }) => {
+    await page.goto('/signup');
+    await settle(page);
+    await page.fill('input[name="displayName"]', 'New Athlete');
+    await page.fill('input[name="email"]', TEST_EMAIL);
+    await page.fill('input[name="password"]', 'a-long-enough-password');
+    await page.click('form button[type="submit"]');
+
+    await page.waitForURL(/\/(home|onboarding)/, { timeout: 30_000 });
+  });
+});
+
 test.describe('password recovery', () => {
   test('validates the email before sending anything', async ({ page }) => {
     await page.goto('/forgot-password');

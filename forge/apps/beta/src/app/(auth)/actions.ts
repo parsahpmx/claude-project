@@ -72,6 +72,18 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
   redirect(parsed.data.next ?? '/home');
 }
 
+/**
+ * What to say when an account was created but nobody is signed in yet.
+ *
+ * Deliberately the same sentence for "we just made you an account, go confirm
+ * it" and for "that address was already taken". Supabase hides the difference
+ * on purpose — a signup form that says "already registered" is the same
+ * account-enumeration oracle the reset form avoids — and echoing one message
+ * for both keeps that property instead of undoing it in the UI.
+ */
+const CONFIRM_NOTICE =
+  'Check your inbox and confirm your email address, then sign in. The link is valid for a short time.';
+
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const parsed = credentials.safeParse({
     email: formData.get('email'),
@@ -85,13 +97,30 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     .slice(0, 60);
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
-    options: { data: { display_name: displayName } },
+    options: {
+      data: { display_name: displayName },
+      // Where the confirmation link comes back to. Without this Supabase uses
+      // the project's Site URL, which is one fixed origin — so a link opened
+      // from a local dev run would land on production, or nowhere.
+      emailRedirectTo: `${siteOriginFrom(await headers())}/auth/callback?next=/onboarding`,
+    },
   });
 
   if (error) return { error: readableAuthError(error.message) };
+
+  // Whether signUp signs you in depends on a project setting this app does not
+  // control: with "Confirm email" on, Supabase creates the user and returns no
+  // session. The old code destructured only `error` and so could not tell the
+  // difference — it redirected to /onboarding either way. That route needs a
+  // session, so middleware bounced the new account straight back to /login with
+  // nothing explaining why, and their brand-new password was then refused with
+  // "confirm your email first". The account existed; the person had no idea.
+  //
+  // So ask, rather than assume. No session means the next step is the inbox.
+  if (!data.session) return { notice: CONFIRM_NOTICE };
 
   revalidatePath('/', 'layout');
   // The profile and privacy rows already exist — the auth trigger created them

@@ -2,11 +2,33 @@
 
 import { useActionState } from 'react';
 import { signUp, type AuthState } from '@/app/(auth)/actions';
-import { Button } from '@/components/ui/primitives';
+import { Button, ButtonLink } from '@/components/ui/primitives';
 import { Field } from '@/components/ui/field';
 
 export function SignUpForm() {
   const [state, action, pending] = useActionState<AuthState, FormData>(signUp, {});
+
+  // The account was created but the project requires a confirmed email, so
+  // there is no session to carry into onboarding. Say so here. Leaving the
+  // form up would invite a second submission, which only trips the rate limit.
+  if (state.notice) {
+    return (
+      <div className="space-y-5">
+        <p
+          role="status"
+          className="rounded-control border border-signal/40 bg-signal/10 px-4 py-3 text-secondary text-bone-100"
+        >
+          {state.notice}
+        </p>
+        <p className="text-secondary muted">
+          If it does not arrive, check your spam folder before requesting another.
+        </p>
+        <ButtonLink href="/login" block size="lg" variant="secondary">
+          Go to sign in
+        </ButtonLink>
+      </div>
+    );
+  }
 
   return (
     <form action={action} className="space-y-5" noValidate>

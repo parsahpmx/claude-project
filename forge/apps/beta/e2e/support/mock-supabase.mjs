@@ -171,7 +171,16 @@ const server = createServer(async (req, res) => {
   // ---- GoTrue ----
   if (path === '/auth/v1/signup') {
     const b = await readBody(req);
-    return send(res, 200, session(b.email || 'beta@forge.test'));
+    const email = b.email || 'beta@forge.test';
+    // Whether signup returns a session depends on the project's "Confirm email"
+    // setting, and both answers are real. With confirmation ON, GoTrue creates
+    // the user and returns the user object alone — no access_token, so
+    // supabase-js reports `session: null`. Address prefix picks which project
+    // this run is pretending to be, so one mock covers both.
+    if (email.startsWith('needsconfirm')) {
+      return send(res, 200, { ...userObj(email), email_confirmed_at: null, confirmed_at: null });
+    }
+    return send(res, 200, session(email));
   }
   if (path === '/auth/v1/token') {
     const b = await readBody(req);
