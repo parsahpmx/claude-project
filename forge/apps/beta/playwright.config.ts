@@ -79,6 +79,12 @@ export default defineConfig({
       env: {
         // Its own build directory, so a concurrent `pnpm build` or a dev server
         // someone left running cannot rewrite this one's output mid-test.
+        //
+        // One side effect worth knowing: Next rewrites `next-env.d.ts` to point
+        // at whichever build directory it last ran with, so after a local test
+        // run that file shows as modified. It is harmless and the next
+        // `pnpm dev` or `pnpm build` puts it back; `git checkout` on it is the
+        // quickest way to tidy up. CI checks out fresh, so it never sees this.
         NEXT_DIST_DIR: '.next-e2e',
         NEXT_PUBLIC_SUPABASE_URL: `http://127.0.0.1:${MOCK_PORT}`,
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_e2e_stand_in',
