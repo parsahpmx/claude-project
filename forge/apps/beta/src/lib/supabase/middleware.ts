@@ -1,25 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { supabasePublishableKey, supabaseUrl } from './config';
-
-/** Routes that require a session. Everything else is public. */
-const PROTECTED = [
-  '/home',
-  '/feed',
-  '/activities',
-  '/activity',
-  '/maps',
-  '/routes',
-  '/route',
-  '/training',
-  '/programs',
-  '/progress',
-  '/goals',
-  '/community',
-  '/you',
-  '/settings',
-  '/onboarding',
-];
+import { isAuthEntryPath, requiresSession } from '../auth/route-access';
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -56,7 +38,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   const path = request.nextUrl.pathname;
-  const needsAuth = PROTECTED.some((p) => path === p || path.startsWith(`${p}/`));
+  const needsAuth = requiresSession(path);
 
   if (needsAuth && !user) {
     const url = request.nextUrl.clone();
@@ -67,7 +49,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   // A signed-in athlete has no use for the sign-in page.
-  if (user && (path === '/login' || path === '/signup')) {
+  if (user && isAuthEntryPath(path)) {
     const url = request.nextUrl.clone();
     url.pathname = '/home';
     url.search = '';
