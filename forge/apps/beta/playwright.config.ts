@@ -77,6 +77,9 @@ export default defineConfig({
       stdout: 'ignore',
       stderr: 'pipe',
       env: {
+        // Its own build directory, so a concurrent `pnpm build` or a dev server
+        // someone left running cannot rewrite this one's output mid-test.
+        NEXT_DIST_DIR: '.next-e2e',
         NEXT_PUBLIC_SUPABASE_URL: `http://127.0.0.1:${MOCK_PORT}`,
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_e2e_stand_in',
         NEXT_PUBLIC_SITE_URL: BASE_URL,

@@ -11,4 +11,4 @@ packages/database/drizzle/
 # as Meter402's above: they are produced by a tool and reformatting them makes
 # the next generate produce a spurious diff.
 forge/packages/db/drizzle/
-forge/**/.next/
+forge/**/.next*/

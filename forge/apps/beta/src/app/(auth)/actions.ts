@@ -5,6 +5,8 @@ import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
+import { clearRecoveryProof, hasRecoveryProof } from '@/lib/auth/recovery';
+import { siteOriginFrom } from '@/lib/auth/site-origin';
 
 const credentials = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -17,28 +19,6 @@ export interface AuthState {
   fieldErrors?: Record<string, string>;
   /** Set when an action succeeded without navigating, so the form can say so. */
   notice?: string;
-}
-
-/**
- * The origin to build emailed links from.
- *
- * `NEXT_PUBLIC_SITE_URL` wins when set, because behind a proxy the request host
- * is whatever the proxy forwarded and a reset link pointing at an internal
- * hostname is a link nobody can open. Falling back to the request's own host
- * keeps local development and preview deployments working with no config.
- *
- * Supabase only redirects to URLs on its allow-list, so a forged Host header
- * cannot turn this into a link to an attacker's site — but the allow-list has
- * to actually be configured; see docs/production-security-checklist.md.
- */
-async function siteOrigin(): Promise<string> {
-  const configured = process.env.NEXT_PUBLIC_SITE_URL;
-  if (configured) return configured.replace(/\/$/, '');
-
-  const h = await headers();
-  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'localhost:3100';
-  const proto = h.get('x-forwarded-proto') ?? (host.startsWith('localhost') ? 'http' : 'https');
-  return `${proto}://${host}`;
 }
 
 /** One place that turns Zod issues into per-field messages. */
@@ -161,7 +141,7 @@ export async function requestPasswordReset(
     // Supabase sends a code; the existing callback exchanges it for a session
     // and forwards here, which is what makes /reset-password reachable exactly
     // once per link and only by whoever opened the email.
-    redirectTo: `${await siteOrigin()}/auth/callback?next=/reset-password`,
+    redirectTo: `${siteOriginFrom(await headers())}/auth/callback?next=/reset-password`,
   });
 
   // Rate limiting is the one condition worth surfacing, because repeating the
@@ -208,8 +188,21 @@ export async function updatePassword(_prev: AuthState, formData: FormData): Prom
     };
   }
 
+  // The page hides the form without this, but hiding a form is not a security
+  // boundary — this is. An ordinary session is not permission to set a new
+  // password without knowing the old one; only arriving through the emailed
+  // link is, and that is what the cookie records.
+  if (!(await hasRecoveryProof())) {
+    return {
+      error: 'That reset link has expired or has already been used. Request a new one.',
+    };
+  }
+
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) return { error: readableAuthError(error.message) };
+
+  // Spend the proof so one emailed link cannot set the password twice.
+  await clearRecoveryProof();
 
   revalidatePath('/', 'layout');
   redirect('/home');

@@ -1,5 +1,6 @@
 import { ResetPasswordForm } from '@/components/auth/reset-password-form';
 import { createClient } from '@/lib/supabase/server';
+import { hasRecoveryProof } from '@/lib/auth/recovery';
 
 export const metadata = { title: 'Set a new password' };
 
@@ -13,6 +14,10 @@ export default async function ResetPasswordPage() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
 
+  // Both are required. A session alone means "signed in", which is not the same
+  // as "proved control of the mailbox" — see lib/auth/recovery.ts.
+  const canReset = Boolean(data.user) && (await hasRecoveryProof());
+
   return (
     <>
       <h1 className="text-page-title font-display text-bone-100">Set a new password</h1>
@@ -20,7 +25,7 @@ export default async function ResetPasswordPage() {
         Choose something you have not used elsewhere. You will stay signed in on this device.
       </p>
       <div className="mt-8">
-        <ResetPasswordForm hasSession={Boolean(data.user)} />
+        <ResetPasswordForm hasSession={canReset} />
       </div>
     </>
   );

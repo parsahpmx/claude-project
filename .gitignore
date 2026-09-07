@@ -40,3 +40,5 @@ forge/apps/beta/playwright-report/
 forge/apps/beta/test-results/
 forge/apps/beta/blob-report/
 forge/apps/beta/.playwright/
+forge/apps/beta/.next-e2e/
+forge/apps/beta/.next-probe/

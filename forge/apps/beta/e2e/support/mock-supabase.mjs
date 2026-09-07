@@ -188,7 +188,7 @@ const server = createServer(async (req, res) => {
     }
     return send(res, 200, session('beta@forge.test'));
   }
-  if (path === '/auth/v1/user') {
+  if (path === '/auth/v1/user' && req.method === 'GET') {
     const auth = req.headers.authorization || '';
     const token = auth.replace(/^Bearer /, '');
     if (!token || token === process.env.MOCK_ANON_KEY) {
