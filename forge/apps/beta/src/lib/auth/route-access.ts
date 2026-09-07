@@ -71,3 +71,37 @@ export function isAuthEntryPath(pathname: string): boolean {
   const path = normalize(pathname);
   return path === '/login' || path === '/signup';
 }
+
+// ---------------------------------------------------------------------------
+// Route classes
+// ---------------------------------------------------------------------------
+
+/**
+ * What kind of authorization a path needs, beyond merely having a session.
+ *
+ * Middleware cannot answer these. Resolving a person's organization roles takes
+ * database round trips, and middleware runs on every request including static
+ * navigation — so it enforces *authentication* only, and each area's layout
+ * enforces *authorization* with `requirePermission`. Two layers, each doing the
+ * job it can do cheaply and correctly, with RLS underneath as the last one.
+ *
+ * The classes are declared before the areas exist so that the day someone adds
+ * `/gym/members`, the test below already says what it must require.
+ */
+export type RouteClass = 'public' | 'member' | 'coach' | 'organization' | 'platform';
+
+const CLASS_PREFIXES: readonly (readonly [string, RouteClass])[] = [
+  ['/coach', 'coach'],
+  ['/gym', 'organization'],
+  ['/admin', 'platform'],
+];
+
+/** Classify a path. Anything signed-in but unclassified is ordinary member area. */
+export function classifyRoute(pathname: string): RouteClass {
+  const path = normalize(pathname);
+  if (isPublicPath(path)) return 'public';
+  for (const [prefix, cls] of CLASS_PREFIXES) {
+    if (path === prefix || path.startsWith(`${prefix}/`)) return cls;
+  }
+  return 'member';
+}

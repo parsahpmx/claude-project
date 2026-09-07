@@ -1,5 +1,6 @@
 export * from './types';
 export * from './flags';
+export * from './permissions';
 export * from './geo';
 export * from './privacy';
 export * from './metrics';

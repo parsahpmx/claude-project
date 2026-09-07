@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isAuthEntryPath, isPublicPath, requiresSession } from './route-access';
+import { classifyRoute, isAuthEntryPath, isPublicPath, requiresSession } from './route-access';
 
 describe('public paths', () => {
   it('serves the marketing and entry pages anonymously', () => {
@@ -99,6 +99,57 @@ describe('guarded paths', () => {
     // A path that merely starts with a public path's characters is not public.
     expect(requiresSession('/pricing-internal')).toBe(true);
     expect(requiresSession('/aboutus')).toBe(true);
+  });
+});
+
+describe('route classification', () => {
+  it('classifies public marketing paths', () => {
+    for (const p of ['/', '/pricing', '/login', '/auth/callback']) {
+      expect(classifyRoute(p), p).toBe('public');
+    }
+  });
+
+  it('classifies the current member area', () => {
+    for (const p of ['/home', '/feed', '/goals', '/activities/new', '/settings/privacy']) {
+      expect(classifyRoute(p), p).toBe('member');
+    }
+  });
+
+  /**
+   * These areas do not exist yet. The classification is declared first so that
+   * whoever builds them cannot quietly ship a page that only checks for a
+   * session — the class says which permission its layout must require.
+   */
+  it('classifies the coach area', () => {
+    expect(classifyRoute('/coach')).toBe('coach');
+    expect(classifyRoute('/coach/clients')).toBe('coach');
+    expect(classifyRoute('/coach/clients/abc-123')).toBe('coach');
+  });
+
+  it('classifies the gym area as organization-scoped', () => {
+    expect(classifyRoute('/gym')).toBe('organization');
+    expect(classifyRoute('/gym/members')).toBe('organization');
+    expect(classifyRoute('/gym/access')).toBe('organization');
+  });
+
+  it('classifies the admin area as platform-scoped', () => {
+    expect(classifyRoute('/admin')).toBe('platform');
+    expect(classifyRoute('/admin/users')).toBe('platform');
+    expect(classifyRoute('/admin/audit')).toBe('platform');
+  });
+
+  it('does not let a lookalike path borrow a privileged class', () => {
+    // `/coaching` is marketing copy about coaching, not the coach console.
+    expect(classifyRoute('/coaching')).toBe('member');
+    expect(classifyRoute('/administration')).toBe('member');
+    expect(classifyRoute('/gymnastics')).toBe('member');
+  });
+
+  it('never classifies a privileged area as public', () => {
+    for (const p of ['/coach', '/gym', '/admin', '/admin/users']) {
+      expect(isPublicPath(p), p).toBe(false);
+      expect(requiresSession(p), p).toBe(true);
+    }
   });
 });
 
