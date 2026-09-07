@@ -69,6 +69,61 @@ describe('privacy: sanitizeTrack', () => {
     );
   });
 
+  /**
+   * Regression: the trim used to walk in from each end and stop at the first
+   * point outside the radius, so anything that came back inside afterwards was
+   * published. A warm-up loop round the block put a point 80 m from the front
+   * door into a track that claimed to hide a 250 m circle.
+   */
+  it('excludes points that re-enter the hidden radius later in the track', () => {
+    const home: LngLat = [-2.24, 53.48];
+    const north = (m: number): LngLat => [home[0], home[1] + m / 111320];
+
+    const track: LngLat[] = [
+      home,
+      north(100),
+      north(250),
+      north(400), // leaves the radius
+      north(200),
+      north(80), // ...and comes back well inside it
+      north(300),
+      north(1000),
+      north(2000),
+      north(3000),
+    ];
+
+    const out = sanitizeTrack(track, settings);
+    expect(out.length).toBeGreaterThanOrEqual(4);
+    for (const p of out) {
+      expect(haversineM(p, home)).toBeGreaterThan(settings.hideRadiusM);
+    }
+  });
+
+  it('hides the finish too when a route ends somewhere else', () => {
+    const start: LngLat = [-2.24, 53.48];
+    const finish: LngLat = [-2.24, 53.52];
+    const between = (m: number): LngLat => [start[0], start[1] + m / 111320];
+
+    // Approaches the finish, drifts away, then returns — the mirror of the
+    // warm-up case, at the other end.
+    const track: LngLat[] = [
+      start,
+      between(500),
+      between(1500),
+      between(3000),
+      between(4300), // within 250 m of the finish
+      between(3900),
+      between(4400),
+      finish,
+    ];
+
+    const out = sanitizeTrack(track, settings);
+    for (const p of out) {
+      expect(haversineM(p, start)).toBeGreaterThan(settings.hideRadiusM);
+      expect(haversineM(p, finish)).toBeGreaterThan(settings.hideRadiusM);
+    }
+  });
+
   it('publishes nothing when trimming leaves too little to be a shape', () => {
     // A short there-and-back entirely inside the hide radius.
     const points = line(5);

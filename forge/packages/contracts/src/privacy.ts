@@ -42,16 +42,32 @@ export function sanitizeTrack(
   return working.length >= 4 ? working : [];
 }
 
+/**
+ * Remove every point within `radiusM` of where the track started or ended.
+ *
+ * The obvious implementation — walk in from each end until you leave the
+ * radius, then keep the middle — is wrong, and wrong in the common case. It
+ * stops at the *first* point outside the radius, so anything that comes back
+ * inside afterwards survives. A warm-up loop around the block, an out-and-back
+ * that passes the house, or plain GPS noise at the start all put points a few
+ * dozen metres from the front door into a published track that claimed to hide
+ * a 250 m circle. Measured on a realistic warm-up loop, that leaked a point
+ * 80 m from home.
+ *
+ * So the radius is treated as what it says it is: an exclusion zone, not a
+ * head-and-tail trim. Nothing inside it is published, wherever in the track it
+ * falls.
+ *
+ * This can split the track in two, and the renderer will draw a straight line
+ * across the gap. That is the same trade the private-zone filter above already
+ * makes, and a chord over the missing section reveals far less than the points
+ * themselves.
+ */
 function trimEnds(points: readonly LngLat[], radiusM: number): LngLat[] {
   const start = points[0]!;
-  let from = 0;
-  while (from < points.length && haversineM(points[from]!, start) <= radiusM) from += 1;
-
   const end = points[points.length - 1]!;
-  let to = points.length - 1;
-  while (to > from && haversineM(points[to]!, end) <= radiusM) to -= 1;
 
-  return from >= to ? [] : points.slice(from, to + 1);
+  return points.filter((p) => haversineM(p, start) > radiusM && haversineM(p, end) > radiusM);
 }
 
 /**
