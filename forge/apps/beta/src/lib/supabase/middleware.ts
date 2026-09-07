@@ -1,10 +1,36 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { supabasePublishableKey, supabaseUrl } from './config';
+import {
+  isSupabaseConfigured,
+  supabasePublishableKey,
+  supabaseUrl,
+  toleratesMissingConfig,
+} from './config';
 import { isAuthEntryPath, requiresSession } from '../auth/route-access';
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
+
+  // A freshly cloned checkout has no .env.local — it is gitignored, because it
+  // holds a project's keys. Middleware runs on every route, so without this the
+  // whole site answers 500, including marketing pages that never touch a
+  // database, and the message names an environment variable rather than the
+  // file to create.
+  //
+  // Treating "not configured" exactly like "Supabase unreachable" keeps the
+  // security properties: no session can be verified, so every visitor is
+  // anonymous and every guarded route still redirects to sign-in. It admits
+  // nobody. In production this does not apply — see toleratesMissingConfig.
+  if (!isSupabaseConfigured() && toleratesMissingConfig()) {
+    const path = request.nextUrl.pathname;
+    if (requiresSession(path)) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.searchParams.set('next', path);
+      return NextResponse.redirect(url);
+    }
+    return response;
+  }
 
   const supabase = createServerClient(supabaseUrl(), supabasePublishableKey(), {
     cookies: {
