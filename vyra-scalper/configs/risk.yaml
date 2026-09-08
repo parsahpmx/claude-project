@@ -12,10 +12,17 @@ per_trade:
   size_confidence_floor: 0.4          # confidence may scale size down to 40%, never up
 
 exposure:
-  max_instrument_exposure_pct: 1.0    # 100% of equity in notional
-  max_portfolio_exposure_pct: 3.0
-  max_correlated_exposure_pct: 1.5
-  max_leverage: 5.0
+  # Expressed as NOTIONAL over equity.  Futures are inherently leveraged instruments: one
+  # MES contract at 5100 is $25,500 of notional against a few hundred dollars of margin,
+  # so a single risk-appropriate position is already several times equity in notional
+  # terms.  Caps set at equity-like levels (1.0) would throttle every futures position
+  # long before the per-trade risk limit binds, which would silently make
+  # max_risk_per_trade_pct inoperative.  Loss is controlled by that limit; these caps
+  # exist to prevent CONCENTRATION.
+  max_instrument_exposure_pct: 3.0    # 300% of equity in notional, one instrument
+  max_portfolio_exposure_pct: 6.0
+  max_correlated_exposure_pct: 4.0
+  max_leverage: 6.0
 
 loss_limits:
   max_daily_loss_pct: 0.02

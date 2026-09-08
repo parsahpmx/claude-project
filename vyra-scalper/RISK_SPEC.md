@@ -71,10 +71,20 @@ one-tick stop implies an enormous position. Distances below the floor are reject
 
 | Limit | Key | Default |
 |---|---|---|
-| Instrument notional | `max_instrument_exposure_pct` | 100 % of equity |
-| Portfolio gross notional | `max_portfolio_exposure_pct` | 300 % |
-| Correlated-group notional | `max_correlated_exposure_pct` | 150 % |
-| Leverage | `max_leverage` | 5× |
+| Instrument notional | `max_instrument_exposure_pct` | 300 % of equity |
+| Portfolio gross notional | `max_portfolio_exposure_pct` | 600 % |
+| Correlated-group notional | `max_correlated_exposure_pct` | 400 % |
+| Leverage | `max_leverage` | 6× |
+
+These are **notional over equity**, and they are deliberately not equity-like. Futures are
+leveraged instruments: one MES contract at 5100 is $25 500 of notional against a few
+hundred dollars of margin, so a position sized correctly by `max_risk_per_trade_pct` is
+already several times equity in notional terms. Caps set at 100 % would bind before the
+per-trade risk limit ever did, silently making the *actual* loss control inoperative while
+appearing conservative. Loss is controlled by `max_risk_per_trade_pct` and the daily and
+drawdown limits; these caps exist to prevent **concentration**, and they reduce rather
+than reject so a portfolio near a limit still trades smaller instead of oscillating
+between full size and nothing.
 
 Correlation groups are declared in config (`correlation_groups`), e.g.
 `{us_index: [MES, ES, MNQ, NQ, NAS100, US500], gold: [MGC, GC, XAUUSD]}`. MES and ES are
