@@ -117,8 +117,14 @@ Other rules:
 ## 6. Order book, and the CFD boundary
 
 For venues with real depth (CME), `OrderBookEngine` computes spread, mid, microprice,
-liquidity per side, imbalance, delta and cumulative delta, trade velocity, order-arrival
-and cancellation rates, liquidity walls, absorption and large-trade detection.
+liquidity per side, top-of-book and depth imbalance, delta and cumulative delta, trade
+velocity, order-arrival and cancellation rates, liquidity walls, absorption and
+large-trade detection.
+
+Order-arrival and cancellation rates are derived from level-size changes between
+snapshots, so they are **lower bounds**: a cancel and an add at one level within a
+snapshot interval are invisible to a snapshot feed. They are named as rates, not counts,
+for that reason.
 
 **Hard boundary:** a broker CFD "book" is that broker's own quoting, not centralised
 market liquidity. Therefore:

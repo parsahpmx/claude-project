@@ -31,7 +31,7 @@ from core.features.indicators import (
     SessionRange,
     SwingStructure,
 )
-from core.features.rolling import EMA, NotReady, RollingMax, RollingMin, RollingStd
+from core.features.rolling import EMA, SMA, NotReady, RollingMax, RollingMin, RollingStd
 from core.instruments.instrument import Instrument
 from core.instruments.sessions import SessionCalendar
 from core.util.clock import Nanos
@@ -137,7 +137,8 @@ class _InstrumentFeatures:
     __slots__ = (
         "atr", "bar_count", "cfg", "close_max", "close_min", "close_std", "computed_at",
         "fast_ema", "last_bar", "last_quote", "opening_range", "order_flow", "parkinson",
-        "realized_vol", "roc", "rsi", "session_range", "slow_ema", "swing", "vwap",
+        "realized_vol", "roc", "rsi", "session_range", "slow_ema", "swing", "volume_sma",
+        "vwap",
     )
 
     def __init__(self, cfg: FeatureConfig) -> None:
@@ -157,6 +158,7 @@ class _InstrumentFeatures:
         self.close_max = RollingMax(cfg.range_lookback)
         self.close_min = RollingMin(cfg.range_lookback)
         self.close_std = RollingStd(max(2, cfg.range_lookback))
+        self.volume_sma = SMA(cfg.range_lookback)
         self.bar_count = 0
         self.computed_at: Nanos = 0
         self.last_quote: QuoteEvent | None = None
@@ -262,6 +264,7 @@ class FeatureEngine:
         bundle.close_max.update(bar.high)
         bundle.close_min.update(bar.low)
         bundle.close_std.update(bar.close)
+        bundle.volume_sma.update(bar.volume)
         # When no tick data is available, the bar's own VWAP carries the session VWAP.
         if bundle.vwap.trade_count == 0 and bar.vwap is not None:
             bundle.vwap.update_bar(bar)
@@ -299,6 +302,7 @@ class FeatureEngine:
         put("range_high", lambda: bundle.close_max.value)
         put("range_low", lambda: bundle.close_min.value)
         put("close_std", lambda: bundle.close_std.value)
+        put("avg_volume", lambda: bundle.volume_sma.value)
         put("vwap", lambda: bundle.vwap.value)
         put("vwap_std", lambda: bundle.vwap.std)
         put("session_high", lambda: bundle.session_range.session_high)

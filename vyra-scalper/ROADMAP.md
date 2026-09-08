@@ -65,8 +65,8 @@ building it are recorded here because they shaped the code:
 
 | # | Item | Status |
 |---|---|---|
-| 18 | Momentum breakout, liquidity sweep, trend pullback, order-flow imbalance, opening-range breakout, microstructure scalper | PLANNED |
-| 18b | Order book engine (imbalance, delta, absorption, liquidity walls) | PLANNED |
+| 18 | Momentum breakout, liquidity sweep, trend pullback, order-flow imbalance, opening-range breakout, microstructure scalper | DONE — implemented and tested; **none validated, so none promoted** |
+| 18b | Order book engine (imbalance, delta, absorption, liquidity walls, CFD namespace boundary) | DONE |
 | 19 | Walk-forward, Monte Carlo, parameter-sensitivity, cost/latency stress | PLANNED |
 
 Promotion gate: a strategy is promoted only on a **parameter plateau** that survives
@@ -110,12 +110,14 @@ Capital is not deployed until Phases 2, 3, 4 and 24 are all DONE.
 * The market-data gateway is transport-agnostic and fully tested against a fake feed. No
   concrete `FeedTransport` exists, so nothing connects to a real venue yet — that
   implementation is the only part the gateway's tests do not cover, by design.
-* Only one strategy is implemented (`VWAPMeanReversionStrategy`). The other six are
-  configured and disabled; their classes do not exist yet, and the loader will fail
-  loudly if one is enabled.
-* Order book engine is specified but unimplemented; CFD depth is *not* to be conflated
-  with exchange depth when it lands (see `DATA_SPEC.md` §6). Until then no strategy with
-  `requires_exchange_depth` can run, and the loader refuses to attach one to a CFD.
+* All seven strategies are implemented and tested, and **all seven are disabled**. Each
+  is a hypothesis with a test suite, not a validated edge: without the validation pipeline
+  (item 19) none can be promoted, so none runs. Two of them
+  (`order_flow_imbalance`, `microstructure_scalper`) additionally need a depth feed that
+  no live transport yet provides.
+* The order book engine is implemented, with the CFD boundary enforced by namespacing:
+  exchange features are `exch.*`, broker CFD features are `cfd.*`, and requesting the
+  wrong namespace for an instrument raises. No live depth feed exists to drive it.
 * `CsvTickSource` and `CsvBarSource` exist and are tested, but the runner only wires the
   synthetic source; selecting `CSV` or `PARQUET` in `backtest.yaml` fails with an explicit
   error rather than silently falling back.

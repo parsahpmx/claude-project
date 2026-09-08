@@ -28,9 +28,9 @@ strategies:
       trade_direction: BOTH           # LONG | SHORT | BOTH
 
   momentum_breakout:
-    enabled: false
+    enabled: false                     # implemented and tested; not yet validated
     class: core.strategies.momentum_breakout.MomentumBreakoutStrategy
-    version: "0.1.0"
+    version: "1.0.0"
     instruments: ["CME:MNQ"]
     timeframe: 1m
     requires_exchange_depth: false
@@ -38,32 +38,35 @@ strategies:
     params:
       lookback_bars: 20
       breakout_buffer_ticks: 1.0
-      volume_confirmation_ratio: 1.5
+      volume_confirmation_ratio: 1.5   # bar volume vs the recent average
       atr_period: 14
+      range_lookback: 20               # must match lookback_bars: it builds range_high/low
       stop_atr_multiple: 1.0
       target_atr_multiple: 3.0
       max_holding_bars: 45
 
   liquidity_sweep:
-    enabled: false
+    enabled: false                     # implemented and tested; not yet validated
     class: core.strategies.liquidity_sweep.LiquiditySweepStrategy
-    version: "0.1.0"
+    version: "1.0.0"
     instruments: ["CME:MES"]
     timeframe: 1m
-    requires_exchange_depth: true
+    # Uses session and swing levels from bars, not book depth, so exchange depth is not
+    # required. The levels it fades are visible in any OHLC feed.
+    requires_exchange_depth: false
     allowed_regimes: [RANGE, REVERSAL]
     params:
-      sweep_lookback_bars: 30
       equal_level_tolerance_ticks: 1.0
-      reclaim_bars: 2
+      reclaim_bars: 2                  # a sweep never reclaimed was a real break
       atr_period: 14
       stop_atr_multiple: 1.0
       target_atr_multiple: 2.5
+      max_holding_bars: 30
 
   trend_pullback:
-    enabled: false
+    enabled: false                     # implemented and tested; not yet validated
     class: core.strategies.trend_pullback.TrendPullbackStrategy
-    version: "0.1.0"
+    version: "1.0.0"
     instruments: ["CME:MES"]
     timeframe: 5m
     requires_exchange_depth: false
@@ -71,31 +74,34 @@ strategies:
     params:
       fast_ema: 20
       slow_ema: 50
-      pullback_atr_multiple: 0.5
+      pullback_atr_multiple: 0.5       # a retracement this shallow is an entry
+      max_pullback_atr_multiple: 2.0   # beyond this it is a reversal, not a pullback
       atr_period: 14
       stop_atr_multiple: 1.5
       target_atr_multiple: 3.0
+      max_holding_bars: 60
 
   order_flow_imbalance:
-    enabled: false
+    enabled: false                     # needs a depth feed; no live transport exists yet
     class: core.strategies.order_flow_imbalance.OrderFlowImbalanceStrategy
-    version: "0.1.0"
+    version: "1.0.0"
     instruments: ["CME:ES"]
     timeframe: 15s
     requires_exchange_depth: true      # refused on CFD instruments at load time
     allowed_regimes: [RANGE, BREAKOUT, HIGH_VOLATILITY]
     params:
-      imbalance_threshold: 0.65
-      delta_lookback_bars: 10
-      min_book_size: 20
+      imbalance_threshold: 0.65        # signed trade imbalance in (0, 1)
+      min_book_size: 20                # something must be resting to trade against
+      max_spread_ticks: 2
       atr_period: 14
       stop_atr_multiple: 0.75
       target_atr_multiple: 1.5
+      max_holding_bars: 20
 
   opening_range_breakout:
-    enabled: false
+    enabled: false                     # implemented and tested; not yet validated
     class: core.strategies.opening_range_breakout.OpeningRangeBreakoutStrategy
-    version: "0.1.0"
+    version: "1.0.0"
     instruments: ["NASDAQ:AAPL"]
     timeframe: 1m
     requires_exchange_depth: false
@@ -109,20 +115,24 @@ strategies:
       one_trade_per_session: true
 
   microstructure_scalper:
-    enabled: false
+    enabled: false                     # needs a depth feed; no live transport exists yet
     class: core.strategies.microstructure_scalper.MicrostructureScalperStrategy
-    version: "0.1.0"
+    version: "1.0.0"
     instruments: ["CME:ES"]
     timeframe: 1s
     requires_exchange_depth: true
     allowed_regimes: [RANGE, LOW_VOLATILITY]
     params:
       microprice_deviation_ticks: 0.5
-      min_imbalance: 0.7
+      min_imbalance: 0.7               # book imbalance in (0, 1)
       max_spread_ticks: 1
-      target_ticks: 2
+      target_ticks: 4
       stop_ticks: 3
       max_holding_seconds: 60
+      # The target must clear the round trip by this much. At a 4-tick target and a
+      # 1-tick spread that leaves 3 ticks, before commission. This is the strategy most
+      # exposed to costs, so the condition is explicit rather than assumed.
+      min_edge_ticks_over_cost: 2
 
 # Confidence scoring weights (section 10).  Confidence never raises a risk limit; it can
 # only scale size down within an already-approved envelope (RISK_SPEC.md 6).
