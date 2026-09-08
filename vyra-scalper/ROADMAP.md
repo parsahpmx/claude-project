@@ -15,7 +15,7 @@ Legend: `DONE` · `IN PROGRESS` · `PLANNED`
 | 1 | Repository, packaging, dev environment, CI | DONE |
 | 2 | Event models (`core.events`) | DONE |
 | 3 | Instrument model, sessions, calendars, symbol mapper, continuous contracts | DONE |
-| 4 | Historical data ingestion + normalisation | DONE — synthetic and CSV sources; Parquet is PLANNED |
+| 4 | Historical data ingestion + normalisation | DONE — synthetic, CSV and Parquet sources, with an ingestion pipeline and dataset manifests |
 | 5 | Bar engine (1s → 1d, look-ahead safe) | DONE |
 | 6 | Event-driven backtest engine | DONE |
 | 7 | Transaction-cost modelling (commission, spread, slippage, latency, fills) | DONE |
@@ -82,10 +82,27 @@ No strategy has been submitted to the gate on real data, so **none is promoted**
 
 | # | Item | Status |
 |---|---|---|
-| 20 | FastAPI service (health, markets, strategies, signals, positions, orders, performance, risk, backtests, kill switch) with auth + RBAC | PLANNED |
-| 20b | Next.js/TypeScript dashboard | PLANNED |
+| 20 | FastAPI service (health, markets, strategies, signals, positions, orders, performance, risk, backtests, kill switch) with auth + RBAC | DONE — 22 endpoints, JWT + four-role hierarchy; `/health` is the only unauthenticated one |
+| 20b | Next.js/TypeScript dashboard | DONE — 13 pages, kill switch on every screen; driven end to end in a browser against a live API |
 | 26 | Prometheus, Grafana, OpenTelemetry | PLANNED — the structured log schema is designed so exporters need no engine change |
 | 27 | Docker Compose environments, GitHub Actions, secret management | IN PROGRESS | image, compose stack and CI exist; per-environment overlays and secret manager do not |
+
+The API is **read-mostly by design**. It serves what the engine decided and exposes exactly
+two commands: trip the kill switch, and clear it. There is no endpoint that starts a
+backtest, places an order or changes a risk limit — an API that could mutate risk state
+would be a second path into the risk engine, and the platform's central guarantee is that
+there is only one.
+
+Three properties are enforced by tests rather than by review:
+
+* **No endpoint can return a broker credential.** The test injects sentinel credentials
+  through the same environment variables `configs/brokers.yaml` interpolates, then walks
+  every GET endpoint the OpenAPI document declares and asserts none of them appears. A new
+  endpoint is covered the day it is added.
+* **`/health` is the only unauthenticated endpoint**, and it exposes no position, PnL or
+  credential — a load balancer cannot hold a token, and that is the whole reason it is open.
+* **Clearing the kill switch records the operator from the token, never from the request
+  body.** A caller cannot attribute a resume to somebody else.
 
 ## Phase 5 — Intelligence
 
@@ -123,11 +140,20 @@ Capital is not deployed until Phases 2, 3, 4 and 24 are all DONE.
 * The order book engine is implemented, with the CFD boundary enforced by namespacing:
   exchange features are `exch.*`, broker CFD features are `cfd.*`, and requesting the
   wrong namespace for an instrument raises. No live depth feed exists to drive it.
-* `CsvTickSource` and `CsvBarSource` exist and are tested, but the runner only wires the
-  synthetic source; selecting `CSV` or `PARQUET` in `backtest.yaml` fails with an explicit
-  error rather than silently falling back.
-* Storage is JSONL run artefacts. PostgreSQL/TimescaleDB, Redis and Parquet layers are
-  specified in `DATA_SPEC.md` §8 but not built.
+* The Parquet normalised layer is built: `scripts/ingest_data.py` reads a CSV or synthetic
+  source, validates it, records rejections and gaps, writes partitioned Parquet and stamps
+  a manifest whose content hash the run manifest references. All three source kinds
+  (`SYNTHETIC`, `CSV`, `PARQUET`) are wired into the runner.
+* The dashboard shows no price and no position, because the engine has neither: there is no
+  live feed and no live trader. The Positions, ML Models and AI Analysis pages say so
+  explicitly rather than rendering placeholder figures — a screen of plausible numbers for
+  an unbuilt subsystem eventually gets read as real.
+* API accounts come from `VYRA_API_USERS` in the environment, compared in constant time but
+  stored as given. That is an operator list supplied by a secret manager, not a user store:
+  hashed credentials, rotation and lockout belong with the persistence layer and are not
+  built. It is adequate for a small operator group and is not adequate for more.
+* Run artefacts are still JSONL. PostgreSQL/TimescaleDB and Redis are specified in
+  `DATA_SPEC.md` §8 but not built — they matter for live operation, not for research.
 * The validation pipeline exists and runs, but no strategy has passed it. On the shipped
   synthetic dataset the reference strategy is rejected on five criteria — which is the gate
   working, not a defect. Promotion requires real market data, which this environment has

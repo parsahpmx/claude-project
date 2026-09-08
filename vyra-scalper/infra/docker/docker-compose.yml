@@ -49,6 +49,29 @@ services:
     # separately-approved step after paper and shadow are operational (ROADMAP.md).
     command: ["python", "scripts/run_backtest.py", "--quiet"]
 
+  api:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+      target: api
+    ports: ["8000:8000"]
+    environment:
+      # No defaults. The API refuses to start without a signing secret of its own and at
+      # least one configured account, which is the point: a service that comes up with a
+      # known key is one whose tokens anyone can forge.
+      VYRA_API_SECRET: ${VYRA_API_SECRET:?set VYRA_API_SECRET (32+ characters) in your environment}
+      VYRA_API_USERS: ${VYRA_API_USERS:?set VYRA_API_USERS as name:password:ROLE,...}
+      VYRA_CORS_ORIGINS: ${VYRA_CORS_ORIGINS:-http://localhost:3000}
+      VYRA_RUNS_DIR: /app/runs
+      VYRA_STATE_DIR: /app/state
+    volumes:
+      # Read-only: the API reads completed runs and must not be able to alter the record of
+      # what a run produced. Its own durable state — the kill switch — goes to a separate
+      # writable volume, so a tripped switch still survives a restart.
+      - ../../runs:/app/runs:ro
+      - apistate:/app/state
+
 volumes:
   pgdata:
   redisdata:
+  apistate:

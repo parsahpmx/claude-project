@@ -16,12 +16,20 @@ dependencies = [
 # Everything below is for research, storage and services at the edges.
 data = ["pandas>=2.0", "pyarrow>=14.0", "numpy>=1.26"]
 ml = ["scikit-learn>=1.4", "lightgbm>=4.0", "xgboost>=2.0", "catboost>=1.2"]
-api = ["fastapi>=0.110", "uvicorn>=0.27", "pydantic>=2.6", "python-jose>=3.3"]
+api = [
+    "fastapi>=0.110",
+    "uvicorn>=0.27",
+    "pydantic>=2.6",
+    "python-jose[cryptography]>=3.3",
+    # FastAPI parses the OAuth2 password form with it; /auth/token raises at import
+    # time without it, so it is a hard dependency of the service, not an extra.
+    "python-multipart>=0.0.9",
+]
 storage = ["psycopg[binary]>=3.1", "redis>=5.0", "sqlalchemy>=2.0"]
 dev = ["pytest>=8.0", "pytest-cov>=4.1", "mypy>=1.9", "ruff>=0.3"]
 
 [tool.setuptools]
-packages = ["core", "brokers", "data"]
+packages = ["core", "brokers", "data", "apps"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
@@ -54,8 +62,8 @@ python_version = "3.11"
 strict = true
 warn_unreachable = true
 disallow_any_generics = true
-files = ["core", "brokers", "data"]
+files = ["core", "brokers", "data", "apps"]
 
 [[tool.mypy.overrides]]
-module = ["pandas.*", "pyarrow.*", "yaml.*"]
+module = ["pandas.*", "pyarrow.*", "yaml.*", "jose.*"]
 ignore_missing_imports = true

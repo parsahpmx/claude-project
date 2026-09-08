@@ -245,6 +245,38 @@ schema is designed so those exporters need no code changes in the engine.
 
 ---
 
+## 8b. The service boundary
+
+`apps/api` and `apps/dashboard` sit outside the engine and depend on it in one direction
+only: applications import `core`, and `core` never imports an application. A strategy that
+imported the API would make the engine unable to run without a web server.
+
+The API is **read-mostly**. It renders what the engine decided and exposes exactly two
+commands — trip the kill switch and clear it. There is deliberately no endpoint that starts
+a backtest, submits an order or changes a risk limit: an API that could mutate risk state
+would be a second path into the risk engine, and §9's rule that a model may never raise a
+limit means nothing if an HTTP request can.
+
+The same reasoning shapes what the dashboard renders. It computes no trading figure and
+holds no trading state; every number on a screen came from an engine artefact. Where the
+engine has nothing — no live feed, no open positions, no trained model — the page says so
+instead of substituting a plausible value.
+
+Three properties hold at the HTTP boundary regardless of the caller:
+
+| Property | How it is enforced |
+|---|---|
+| No response can carry a broker credential | Whole connection blocks and credential-shaped fields are removed before a config response is built; a test walks every GET endpoint in the OpenAPI document with sentinel credentials injected through the config's own `${VAR}` interpolation |
+| Only `/health` is reachable without a token | Every other route depends on a role check; the same endpoint walk asserts a 401 without one |
+| A kill-switch reset is attributable | The operator recorded in the audit trail comes from the authenticated token, never from the request body |
+
+The API owns no *second* kill switch. Today it constructs one and persists it outside the
+runs directory, so a halt survives a restart of the service and the runs directory can be
+mounted read-only. When the live trader exists it will pass in the same object the risk
+engine holds — two switches would mean one of them is advisory.
+
+---
+
 ## 9. What is deliberately *not* in the hot path
 
 * The LLM analyst (`core.ai`). It reads completed sessions and writes reports. It has no

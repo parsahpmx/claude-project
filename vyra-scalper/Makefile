@@ -1,10 +1,10 @@
-.PHONY: help install test test-fast lint typecheck format backtest clean
+.PHONY: help install test test-fast lint typecheck format backtest api dashboard clean
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
 install:  ## install the package with dev extras
-	pip install -e ".[dev,data]"
+	pip install -e ".[dev,data,api]"
 
 test:  ## run the full test suite
 	pytest
@@ -13,19 +13,25 @@ test-fast:  ## skip slow tests
 	pytest -m "not slow"
 
 cov:  ## test with coverage
-	pytest --cov=core --cov=brokers --cov=data --cov-report=term-missing
+	pytest --cov=core --cov=brokers --cov=data --cov=apps --cov-report=term-missing
 
 lint:  ## ruff
-	ruff check core brokers data tests scripts
+	ruff check core brokers data apps tests scripts
 
 typecheck:  ## mypy
 	mypy
 
 format:  ## ruff format
-	ruff format core brokers data tests scripts
+	ruff format core brokers data apps tests scripts
 
 backtest:  ## run the reference MVP backtest
 	python scripts/run_backtest.py --config configs/backtest.yaml
+
+api:  ## serve the API (VYRA_API_SECRET and VYRA_API_USERS must be set)
+	python -m uvicorn apps.api.main:app --port 8000 --reload
+
+dashboard:  ## serve the operator console
+	cd apps/dashboard && npm run dev
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true

@@ -30,14 +30,28 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
+      # The api extra is installed here even though the engine does not need it: without
+      # it the API tests skip themselves, and a suite that silently stops running is worse
+      # than one that fails.
       - name: Install
-        run: pip install -e ".[dev,data]"
+        run: pip install -e ".[dev,data,api]"
       - name: Lint
-        run: ruff check core brokers data tests scripts
+        run: ruff check core brokers data apps tests scripts
       - name: Type check
         run: mypy
       - name: Test
-        run: pytest -q --cov=core --cov=brokers --cov=data --cov-report=term-missing
+        run: pytest -q --cov=core --cov=brokers --cov=data --cov=apps --cov-report=term-missing
+      - name: The API suite actually ran
+        run: |
+          # importorskip turns a missing dependency into a pass, so a broken install would
+          # show as a green suite that tested nothing. Assert the dependency is importable
+          # and that the run reports passes and no skips.
+          python -c "import fastapi, jose, multipart"
+          # No extra -q: pyproject already sets it, and -qq suppresses the summary line
+          # this check reads.
+          pytest tests/api | tee api-suite.txt
+          grep -qE '[0-9]+ passed' api-suite.txt
+          ! grep -qE '[0-9]+ skipped' api-suite.txt
 
   acceptance:
     name: MVP acceptance criteria
@@ -54,6 +68,28 @@ jobs:
         run: pytest tests/backtest -q
       - name: Reference backtest runs end to end
         run: python scripts/run_backtest.py --output /tmp/runs --quiet
+
+  dashboard:
+    name: dashboard
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vyra-scalper/apps/dashboard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: vyra-scalper/apps/dashboard/package-lock.json
+      - name: Install
+        run: npm ci
+      # typegen first: next-env.d.ts references route types that only Next generates, so a
+      # bare tsc on a clean checkout fails on a file the framework owns.
+      - name: Type check
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
 
   secrets:
     name: no committed secrets

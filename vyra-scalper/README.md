@@ -17,11 +17,13 @@ slippage, latency, market impact, rejected orders and partial fills?
 | [`DATA_SPEC.md`](DATA_SPEC.md) | event schema, validation, bars, sessions, contracts |
 | [`BACKTEST_SPEC.md`](BACKTEST_SPEC.md) | event loop, bias prevention, costs, fills, validation |
 | [`EXECUTION_SPEC.md`](EXECUTION_SPEC.md) | order lifecycle, idempotency, reconciliation, quality |
+| [`docs/PHASE_1_REPORT.md`](docs/PHASE_1_REPORT.md) | what building the engine turned up |
+| [`docs/PHASE_4_REPORT.md`](docs/PHASE_4_REPORT.md) | what building the data layer, API and console turned up |
 
 ## Quick start
 
 ```bash
-pip install -e ".[dev,data]"
+pip install -e ".[dev,data,api]"
 make test
 ```
 
@@ -58,13 +60,33 @@ python scripts/replay_run.py runs/<id>/manifest.json   # verify it reproduces
 The reference run uses a seeded synthetic generator so the pipeline is testable without
 vendor data. Its report is watermarked `SYNTHETIC` and supports no claim about expectancy.
 
+## Running the API and the console
+
+```bash
+export VYRA_API_SECRET="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')"
+export VYRA_API_USERS="you:$(python3 -c 'import secrets; print(secrets.token_urlsafe(12))'):OPERATOR"
+python3 -m uvicorn apps.api.main:app --port 8000        # http://localhost:8000/docs
+
+cd apps/dashboard && npm install && npm run dev          # http://localhost:3000
+```
+
+There is no default account and no default signing secret; the API refuses to start without
+both. See [`apps/dashboard/README.md`](apps/dashboard/README.md) for what the console does
+and does not show.
+
 ## Status
 
-Phase 1 (foundation and MVP backtest) is complete and covered by
-`tests/backtest/test_mvp_acceptance.py`.
+Built and tested: the engine and MVP backtest (covered by
+`tests/backtest/test_mvp_acceptance.py`), reconciliation and the paper and shadow adapters,
+the order book engine and all seven strategies, the validation pipeline and promotion gate,
+the Parquet normalised data layer, the API and the operator console.
 
-Not built yet, explicitly: live broker adapters, the order book engine, six of the seven
-strategies, the SQL/Redis/Parquet storage layers, the API and dashboard, the ML and AI
-components, and the validation pipeline. Because the validation pipeline does not exist,
-**no strategy can be promoted**, and no capital is deployed until paper and shadow modes
-are operational. `ROADMAP.md` tracks each item with its acceptance criteria.
+Not built yet, explicitly: live broker adapters (IBKR, MT5, OANDA) and the feed transport
+they need, the SQL and Redis storage layers, metrics export, and the ML and AI components.
+
+**No strategy is promoted.** All seven are implemented, tested and disabled: each is a
+hypothesis with a test suite, not a validated edge. The validation pipeline exists and runs,
+and on the shipped synthetic dataset it rejects the reference strategy on five criteria —
+that is the gate working. Promotion needs real market data, which this environment has no
+licence for. No capital is deployed until paper and shadow modes are operational.
+`ROADMAP.md` tracks each item with its acceptance criteria.
