@@ -34,7 +34,7 @@ jobs:
       # it the API tests skip themselves, and a suite that silently stops running is worse
       # than one that fails.
       - name: Install
-        run: pip install -e ".[dev,data,api]"
+        run: pip install -e ".[dev,data,api,ml]"
       - name: Lint
         run: ruff check core brokers data apps tests scripts
       - name: Type check
@@ -110,7 +110,7 @@ jobs:
       - name: Install redis-server for the disposable-instance test
         run: sudo apt-get update && sudo apt-get install -y redis-server
       - name: Install
-        run: pip install -e ".[dev,data,api,storage]"
+        run: pip install -e ".[dev,data,api,storage,ml]"
       - name: Storage suite
         run: |
           # These tests skip themselves without the services, so a broken service block

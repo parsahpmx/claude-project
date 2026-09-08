@@ -22,6 +22,7 @@ from typing import Any, Protocol, runtime_checkable
 
 from core.config.loader import ConfigBundle, load_bundle
 from core.instruments.registry import InstrumentRegistry
+from core.promotion import PromotionLedger
 from core.risk.kill_switch import EmergencyPolicy, KillSwitch
 from core.risk.limits import RiskLimits
 from core.util.clock import now_ns, to_iso
@@ -128,6 +129,7 @@ class EngineState:
     runs_dir: Path
     state_dir: Path
     feed: FeedDiagnostics | None
+    promotions: PromotionLedger
     bundle: ConfigBundle = field(init=False)
     registry: InstrumentRegistry = field(init=False)
     limits: RiskLimits = field(init=False)
@@ -155,6 +157,10 @@ class EngineState:
             self.bundle["markets"], self.bundle["sessions"]
         )
         self.limits = RiskLimits.from_config(self.bundle["risk"])
+        # Read from the ledger rather than hardcoded. Still empty — nothing is promoted —
+        # but a field that is always False because nobody wired it up looks identical to
+        # one that is False because nothing cleared the bar.
+        self.promotions = PromotionLedger(store=self._promotion_store())
 
         kill_cfg = self.bundle["risk"].section("kill_switch", required=False)
         self.kill_switch = kill_switch or self._build_switch(kill_cfg)
@@ -165,6 +171,23 @@ class EngineState:
             kill_switch=self.kill_switch.state.value,
             state_dir=str(self.state_dir),
         )
+
+    def _promotion_store(self) -> Any:
+        """The durable promotion ledger, when a database is configured.
+
+        Without one the ledger is in memory, which is correct for research and is not
+        correct for anything that could trade: a promotion that does not survive a restart
+        is a promotion nobody can audit.
+        """
+        dsn = os.environ.get("VYRA_PG_DSN", "").strip()
+        if not dsn:
+            return None
+        from core.storage.sql_store import SqlStore
+
+        store = SqlStore(dsn)
+        store.connect()
+        store.migrate()
+        return store
 
     def _build_switch(self, kill_cfg: Any) -> KillSwitch:
         """The kill switch, backed by the durable store when one is configured.

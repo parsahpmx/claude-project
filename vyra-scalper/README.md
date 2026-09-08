@@ -19,6 +19,8 @@ slippage, latency, market impact, rejected orders and partial fills?
 | [`EXECUTION_SPEC.md`](EXECUTION_SPEC.md) | order lifecycle, idempotency, reconciliation, quality |
 | [`docs/PHASE_1_REPORT.md`](docs/PHASE_1_REPORT.md) | what building the engine turned up |
 | [`docs/PHASE_4_REPORT.md`](docs/PHASE_4_REPORT.md) | what building the data layer, API and console turned up |
+| [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md) | what is exported, and what should page |
+| [`docs/PROMOTION.md`](docs/PROMOTION.md) | the bar a strategy clears before it trades real money |
 
 ## Quick start
 

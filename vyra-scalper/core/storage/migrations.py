@@ -15,7 +15,7 @@ from typing import Any
 
 __all__ = ["MIGRATIONS", "SCHEMA_VERSION", "apply_migrations"]
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 # Nanosecond integers, not timestamps: the engine's internal clock is UTC nanoseconds, and
 # a column that silently rounded to microseconds would make a replayed run disagree with
@@ -115,6 +115,28 @@ MIGRATIONS: list[tuple[int, str]] = [
         -- come back as exactly the object it was.
         ALTER TABLE kill_switch_state
             ADD COLUMN IF NOT EXISTS payload jsonb NOT NULL DEFAULT '{}'::jsonb;
+        """,
+    ),
+    (
+        3,
+        """
+        -- Promotion decisions. Append-only: a promotion is never edited into a demotion,
+        -- it is followed by a separate demotion record. Keyed by strategy, version *and*
+        -- config hash, because a strategy whose parameters changed is not the strategy the
+        -- evidence was gathered about.
+        CREATE TABLE IF NOT EXISTS promotions (
+            id                bigserial PRIMARY KEY,
+            strategy_id       text   NOT NULL,
+            strategy_version  text   NOT NULL,
+            config_hash       text   NOT NULL,
+            action            text   NOT NULL,
+            approver          text   NOT NULL,
+            reason            text   NOT NULL,
+            ts_ns             bigint NOT NULL,
+            evidence          jsonb  NOT NULL DEFAULT '{}'::jsonb
+        );
+        CREATE INDEX IF NOT EXISTS promotions_strategy
+            ON promotions (strategy_id, strategy_version, config_hash);
         """,
     ),
 ]

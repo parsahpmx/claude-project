@@ -74,8 +74,13 @@ async def list_strategies(
     """Every configured strategy.
 
     ``enabled`` and ``promoted`` are distinct and both are reported. A strategy can be
-    enabled in configuration without having passed validation; nothing in this build has
-    passed, so ``promoted`` is false for all of them.
+    enabled in configuration without having passed validation.
+
+    ``promoted`` is read from the promotion ledger, keyed by strategy id, version *and*
+    config hash — so a parameter change de-promotes automatically rather than inheriting an
+    approval given for something else. Nothing is promoted, and that is now a fact read from
+    the ledger rather than a constant: a field that is always false because nobody wired it
+    up looks identical to one that is false because nothing cleared the bar.
     """
     state = get_state()
     section = state.bundle["strategies"].section("strategies")
@@ -92,7 +97,9 @@ async def list_strategies(
                 allowed_regimes=[str(r) for r in spec.list_("allowed_regimes")],
                 requires_exchange_depth=spec.bool_("requires_exchange_depth", False),
                 params=dict(spec.section("params", required=False).data),
-                promoted=False,
+                promoted=state.promotions.state(
+                    name, spec.str_("version", "0.0.0"), state.bundle.hash
+                ).promoted,
             )
         )
     return responses

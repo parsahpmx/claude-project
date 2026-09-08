@@ -406,6 +406,33 @@ class SqlStore:
             for row in rows
         }
 
+    # -- promotions ---------------------------------------------------------------------
+
+    def append_promotion(self, record: dict[str, Any]) -> None:
+        """Append one promotion decision. Never updated, never deleted."""
+        self._execute(
+            "INSERT INTO promotions (strategy_id, strategy_version, config_hash, action,"
+            " approver, reason, ts_ns, evidence) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+            (
+                record["strategy_id"], record["strategy_version"], record["config_hash"],
+                record["action"], record["approver"], record["reason"], int(record["ts"]),
+                json.dumps(record.get("evidence", {})),
+            ),
+        )
+
+    def read_promotions(self) -> list[dict[str, Any]]:
+        """Every decision, oldest first. Order is the ledger's semantics: the last record
+        for a key is the current state."""
+        rows = self._execute(
+            "SELECT strategy_id, strategy_version, config_hash, action, approver, reason,"
+            " ts_ns, evidence FROM promotions ORDER BY ts_ns, id"
+        )
+        keys = (
+            "strategy_id", "strategy_version", "config_hash", "action", "approver",
+            "reason", "ts", "evidence",
+        )
+        return [dict(zip(keys, row, strict=True)) for row in rows]
+
     # -- dataset index ------------------------------------------------------------------
 
     def upsert_dataset(self, record: dict[str, Any]) -> None:

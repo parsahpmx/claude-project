@@ -183,9 +183,27 @@ index entry pointing at data that changed under it is worse than no entry.
 
 | # | Item | Status |
 |---|---|---|
-| 21 | ML regime classifier (LR → RF → LightGBM/XGBoost/CatBoost) with time-series CV and leakage tests | PLANNED |
+| 21 | ML regime classifier (LR → RF → LightGBM/XGBoost/CatBoost) with time-series CV and leakage tests | PARTIAL — logistic regression with purged, embargoed splits and prefix-invariance leakage tests. On the shipped synthetic dataset it reports **AT_CHANCE** (OOS AUC 0.544), which is the expected and correct outcome. Tree models not built |
 | 22 | Strategy selector with conservative smoothing | PLANNED |
 | 23 | LLM trading analyst (reports only, no production writes) | PLANNED |
+
+### The ML pipeline
+
+Backtest-only by construction. `core.ml` imports no execution or broker module and nothing
+in execution imports it, and both directions are asserted by a test over the import graph
+rather than by intention. A model produces a probability; turning one into a position is the
+risk engine's job.
+
+Features come from the same `FeatureEngine` the strategies use, fed the same events in the
+same order — a research feature computed by a second implementation produces a backtest about
+a system nobody is running. Splits are purged by at least the label horizon and optionally
+embargoed, and a purge smaller than the horizon is an error rather than a silent correction.
+Standardisation uses training statistics only.
+
+**On the shipped synthetic dataset the model reports AT_CHANCE** — out-of-sample AUC 0.544
+against a 0.55 bar, over 6,814 rows and five folds. That is the expected outcome, it is
+reported rather than tuned away, and the artifact is written anyway: a negative result has to
+be as reproducible as a positive one.
 
 ## Phase 6 — Deployment
 
@@ -193,6 +211,7 @@ index entry pointing at data that changed under it is worse than no entry.
 |---|---|---|
 | 24 | Shadow trading | PLANNED |
 | 25 | Controlled production deployment | PLANNED |
+| 25b | Strategy promotion mechanism (gate, ledger, audit record) | DONE — built and tested, **deliberately unused**; see `docs/PROMOTION.md` |
 
 Capital is not deployed until Phases 2, 3, 4 and 24 are all DONE.
 
