@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import PlainTextResponse
 
 from apps.api.schemas import (
     HealthResponse,
@@ -21,6 +22,7 @@ from apps.api.schemas import (
 )
 from apps.api.security import Principal, Role, require_roles
 from apps.api.state import EngineState, get_state
+from core.observability import MetricsRegistry, collect_engine_metrics
 from core.risk.kill_switch import Trigger
 from core.util.clock import to_iso
 from core.util.logging import get_logger
@@ -108,6 +110,36 @@ async def feed_health(
     benign, and it is the only one that is normal in this build.
     """
     return get_state().feed_health()
+
+
+@router.get(
+    "/metrics",
+    summary="Prometheus metrics",
+    response_class=PlainTextResponse,
+)
+async def metrics(
+    _: Annotated[Principal, Depends(require_roles(Role.VIEWER))],
+) -> str:
+    """Metrics in the Prometheus text exposition format.
+
+    **Authenticated, unlike most metrics endpoints.** The usual argument for leaving
+    ``/metrics`` open is that it carries no sensitive data; that is a statement about the
+    labels, and it is only true while every label stays clean. Requiring a viewer token
+    costs a scrape config line and removes the need for that assumption to hold forever.
+
+    Label names are filtered through the same credential list as the config endpoint, and a
+    credential-shaped label is a startup failure rather than a runtime leak.
+    """
+    state = get_state()
+    registry = MetricsRegistry()
+    collect_engine_metrics(
+        registry,
+        kill_switch=state.kill_switch,
+        feed=state.feed_health(),
+        instruments=len(state.registry),
+        runs_available=sum(1 for _ in state.iter_runs()),
+    )
+    return registry.render()
 
 
 @router.get("/risk/limits", response_model=RiskLimitsResponse)

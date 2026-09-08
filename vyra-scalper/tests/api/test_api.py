@@ -198,6 +198,32 @@ def test_feed_diagnostics_cannot_leak_a_venue_token(
     assert '"silence_ms":12.0' in body.replace(" ", ""), "the useful fields must survive"
 
 
+def test_metrics_are_scrapeable_and_carry_the_headline_number(client: TestClient) -> None:
+    """The endpoint is authenticated, unlike most /metrics endpoints.
+
+    The usual argument for leaving it open is that it carries nothing sensitive — which is
+    a statement about the labels, true only while every label stays clean. A viewer token
+    costs one scrape-config line and removes the need for that to hold forever.
+    """
+    assert client.get("/metrics").status_code == 401
+
+    response = client.get("/metrics", headers=auth(Role.VIEWER))
+    assert response.status_code == 200
+    body = response.text
+    assert "# TYPE vyra_kill_switch_tripped gauge" in body
+    assert "vyra_kill_switch_tripped 0" in body
+    assert 'vyra_feed_state{state="NOT_ATTACHED"} 0' in body
+
+
+def test_a_halt_shows_up_in_the_scrape(client: TestClient) -> None:
+    client.post(
+        "/kill-switch/trip", json={"reason": "halt"}, headers=auth(Role.OPERATOR, "alice")
+    )
+    body = client.get("/metrics", headers=auth(Role.VIEWER)).text
+    assert "vyra_kill_switch_tripped 1" in body
+    assert 'vyra_kill_switch_trigger{trigger="MANUAL"} 1' in body
+
+
 # --------------------------------------------------------------------------------------
 # Authentication
 # --------------------------------------------------------------------------------------
