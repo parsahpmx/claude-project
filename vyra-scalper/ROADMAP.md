@@ -86,7 +86,8 @@ No strategy has been submitted to the gate on real data, so **none is promoted**
 |---|---|---|
 | 20 | FastAPI service (health, markets, strategies, signals, positions, orders, performance, risk, backtests, kill switch) with auth + RBAC | DONE — 22 endpoints, JWT + four-role hierarchy; `/health` is the only unauthenticated one |
 | 20b | Next.js/TypeScript dashboard | DONE — 13 pages, kill switch on every screen; driven end to end in a browser against a live API |
-| 26 | Prometheus, Grafana, OpenTelemetry | PLANNED — the structured log schema is designed so exporters need no engine change |
+| 4b | PostgreSQL + Redis: durable kill switch, orders, positions, dataset index | DONE — verified against real servers, including killing Redis mid-run |
+| 26 | Prometheus, Grafana, OpenTelemetry | PARTIAL — `/metrics` exports kill-switch state, feed staleness, order flow and guard counters, with thresholds in `docs/OBSERVABILITY.md`. Grafana dashboards, OTel traces and the paging integration are not built |
 | 27 | Docker Compose environments, GitHub Actions, secret management | IN PROGRESS | image, compose stack and CI exist; per-environment overlays and secret manager do not |
 
 The API is **read-mostly by design**. It serves what the engine decided and exposes exactly
@@ -142,6 +143,42 @@ It is disabled by default and requires two independent deliberate acts to constr
 `enabled: true` in configuration *and* credentials in the environment — so neither a config
 typo nor a leftover environment variable can reach a venue alone.
 
+### Shared halt state
+
+An in-process kill switch halts the process holding it. That was correct while one process
+did everything and is wrong the moment there are two: the one that received the trip stops
+and the other keeps trading.
+
+**PostgreSQL is the durable truth** — it survives a restart, a crash, and a read-only
+`runs/` mount, and it is what a new process reads on start. **Redis is the propagation
+channel** — a trip written to Postgres is pushed to Redis so every other process sees it on
+its next check.
+
+**Losing Redis halts trading, deliberately.** It is not a latency cache: it is how a halt
+reaches processes that did not receive it, so a process that cannot reach it cannot know
+whether a halt was declared elsewhere. Its two options are to keep trading through a halt it
+cannot see, or to stop. It stops. That availability cost is taken knowingly, and the
+alternative is a Redis outage silently disabling the kill switch. A genuinely single-process
+deployment can opt out with `require_cache=False`, which is a configuration, not a fallback.
+
+**A stale copy can never clear a halt.** Every write takes the next epoch, and a reader that
+has seen epoch N refuses any value carrying a lower one — so a cached value left over from
+before a trip cannot un-halt a process that already saw it.
+
+Three states stay distinct throughout, because collapsing any two of them resumes trading on
+no evidence: *armed*, *tripped*, and *cannot tell*. The last is treated as tripped. A
+database that has never held a switch reads as "cannot tell" rather than armed — a wiped
+table and a fresh install look identical.
+
+### The dataset cutover
+
+Deliberately partial. Manifests move into SQL so a run can be traced to a fingerprint with a
+query instead of a directory walk; the Parquet files do not move and stay the source of
+truth for the data and its content hash. The migration adds an index, it does not take
+custody — which is why the test that matters is that old data still reads exactly as it did
+before. A dataset failing content verification is recorded as failed and **not** indexed: an
+index entry pointing at data that changed under it is worse than no entry.
+
 ## Phase 5 — Intelligence
 
 | # | Item | Status |
@@ -190,8 +227,10 @@ Capital is not deployed until Phases 2, 3, 4 and 24 are all DONE.
   stored as given. That is an operator list supplied by a secret manager, not a user store:
   hashed credentials, rotation and lockout belong with the persistence layer and are not
   built. It is adequate for a small operator group and is not adequate for more.
-* Run artefacts are still JSONL. PostgreSQL/TimescaleDB and Redis are specified in
-  `DATA_SPEC.md` §8 but not built — they matter for live operation, not for research.
+* Run artefacts are still JSONL, and stay that way: they are large, append-only and
+  already content-hashed, and a row store would cost the fingerprint that makes a run
+  reproducible while buying nothing. What moved into PostgreSQL is state that must outlive
+  a process — the kill switch, orders, positions — plus an index of dataset manifests.
 * The validation pipeline exists and runs, but no strategy has passed it. On the shipped
   synthetic dataset the reference strategy is rejected on five criteria — which is the gate
   working, not a defect. Promotion requires real market data, which this environment has

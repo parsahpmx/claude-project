@@ -14,6 +14,7 @@ trader exists it will register itself here instead, and the routers do not chang
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -27,29 +28,13 @@ from core.util.clock import now_ns, to_iso
 from core.util.ids import canonicalize
 from core.util.logging import get_logger
 
+# One list, shared with the metric-label filter. Two boundaries with two ideas of what a
+# credential looks like means the one missing an entry is the one that leaks.
+from core.util.redaction import strip_credentials
+
 __all__ = ["EngineState", "RunSummary", "get_state", "set_state"]
 
 _log = get_logger("api.state")
-
-# Field names that must never appear in an API response, whatever their value.
-#
-# A bare ``account`` is deliberately absent: ``risk.yaml`` has an ``account`` block holding
-# starting equity and currency, which the risk dashboard needs and which identifies nobody.
-# A broker *account identifier* is matched by ``account_id``/``account_number``, and every
-# one in the shipped configuration also sits inside a connection block, which goes wholesale.
-_CREDENTIAL_HINTS = (
-    "password", "passwd", "secret", "token", "api_key", "apikey", "access_key",
-    "private_key", "credential", "authorization", "account_id", "account_number",
-    "accountid", "login", "username", "user_id", "client_id", "clientid",
-    "passphrase", "session_id", "signing",
-)
-
-# Whole blocks removed regardless of their contents. A connection block exists to hold
-# the details of reaching a venue; a dashboard has no use for any of them, and enumerating
-# which individual fields are sensitive is a list that will eventually be incomplete —
-# `client_id` was missing from the hints above until a test caught it.
-_CREDENTIAL_BLOCKS = ("connection", "credentials", "auth")
-
 
 @runtime_checkable
 class FeedDiagnostics(Protocol):
@@ -61,27 +46,6 @@ class FeedDiagnostics(Protocol):
     """
 
     def diagnostics(self) -> dict[str, Any]: ...
-
-
-def strip_credentials(payload: Any) -> Any:
-    """Remove anything credential-shaped from a structure bound for a response.
-
-    Applied to every config the API serves. The engine already redacts credentials in
-    logs; this is the same guarantee at the HTTP boundary, and it removes the key rather
-    than masking its value — a masked key still tells an attacker what to look for.
-    """
-    if isinstance(payload, dict):
-        # Keys are stringified before matching: YAML yields datetime.date keys for a
-        # holiday calendar, and calling .lower() on one raises.
-        return {
-            key: strip_credentials(value)
-            for key, value in payload.items()
-            if (lowered := str(key).lower()) not in _CREDENTIAL_BLOCKS
-            and not any(hint in lowered for hint in _CREDENTIAL_HINTS)
-        }
-    if isinstance(payload, list):
-        return [strip_credentials(item) for item in payload]
-    return payload
 
 
 @dataclass(frozen=True, slots=True)
@@ -193,17 +157,57 @@ class EngineState:
         self.limits = RiskLimits.from_config(self.bundle["risk"])
 
         kill_cfg = self.bundle["risk"].section("kill_switch", required=False)
-        self.kill_switch = kill_switch or KillSwitch(
-            emergency_policy=EmergencyPolicy(kill_cfg.str_("emergency_policy", "HOLD")),
-            min_trip_seconds=kill_cfg.float_("min_trip_seconds", 60.0),
-            state_file=self.state_dir / "kill_switch_state.json",
-        )
+        self.kill_switch = kill_switch or self._build_switch(kill_cfg)
         _log.info(
             "api_state_initialised",
             config_hash=self.bundle.hash,
             instruments=len(self.registry),
             kill_switch=self.kill_switch.state.value,
             state_dir=str(self.state_dir),
+        )
+
+    def _build_switch(self, kill_cfg: Any) -> KillSwitch:
+        """The kill switch, backed by the durable store when one is configured.
+
+        With ``VYRA_PG_DSN`` set the switch lives in PostgreSQL and propagates through
+        Redis, so a halt tripped through this API reaches every other process. Without it
+        the switch falls back to a file, which is correct for a single-process deployment
+        and is *not* correct for more than one — a file-backed switch halts only the
+        process holding it.
+
+        A configured store that cannot be reached is fatal at startup rather than a silent
+        downgrade to the file. Downgrading would produce a service that looks like it has a
+        global kill switch and does not.
+        """
+        dsn = os.environ.get("VYRA_PG_DSN", "").strip()
+        if not dsn:
+            return KillSwitch(
+                emergency_policy=EmergencyPolicy(kill_cfg.str_("emergency_policy", "HOLD")),
+                min_trip_seconds=kill_cfg.float_("min_trip_seconds", 60.0),
+                state_file=self.state_dir / "kill_switch_state.json",
+            )
+
+        from core.storage.sql_store import SqlStore
+        from core.storage.switch_backend import SqlSwitchBackend
+
+        store = SqlStore(dsn)
+        store.connect()
+        store.migrate()
+        cache = None
+        redis_url = os.environ.get("VYRA_REDIS_URL", "").strip()
+        if redis_url:
+            import redis
+
+            cache = redis.Redis.from_url(redis_url, decode_responses=True)
+            # Pinged, not just constructed. `from_url` connects lazily, so without this the
+            # service would start, report a global kill switch, and only discover the
+            # propagation channel was dead at the first trip — which is the moment it
+            # matters most. Coming up is the claim; this is what backs it.
+            cache.ping()
+        return KillSwitch(
+            emergency_policy=EmergencyPolicy(kill_cfg.str_("emergency_policy", "HOLD")),
+            min_trip_seconds=kill_cfg.float_("min_trip_seconds", 60.0),
+            backend=SqlSwitchBackend(store, cache),
         )
 
     @property

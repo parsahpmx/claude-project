@@ -16,12 +16,38 @@ import json
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 from core.util.clock import NS_PER_SEC, Nanos, now_ns, to_iso
 from core.util.logging import get_logger
 
-__all__ = ["EmergencyPolicy", "KillSwitch", "KillSwitchState", "Trigger", "TripRecord"]
+
+@runtime_checkable
+class SwitchStateBackend(Protocol):
+    """Where the switch's state durably lives.
+
+    Deliberately two methods over an opaque payload. The switch owns every *rule* — the
+    minimum trip duration, the refusal to reset anonymously, the absence of a force flag —
+    and a backend that understood those rules would be a second place they could be
+    implemented differently. It stores bytes and returns them.
+
+    ``load`` returns ``None`` for "nothing stored yet" and **raises** for "could not
+    read". The switch treats those completely differently: the first is armed, the second
+    is tripped.
+    """
+
+    def save(self, payload: dict[str, Any]) -> None: ...
+
+    def load(self) -> dict[str, Any] | None: ...
+
+__all__ = [
+    "EmergencyPolicy",
+    "KillSwitch",
+    "KillSwitchState",
+    "SwitchStateBackend",
+    "Trigger",
+    "TripRecord",
+]
 
 _log = get_logger("risk.kill_switch")
 
@@ -99,6 +125,7 @@ class KillSwitch:
     """
 
     __slots__ = (
+        "_backend",
         "_emergency_policy",
         "_history",
         "_min_trip_ns",
@@ -112,16 +139,25 @@ class KillSwitch:
         emergency_policy: EmergencyPolicy = EmergencyPolicy.HOLD,
         min_trip_seconds: float = 60.0,
         state_file: str | Path | None = None,
+        backend: SwitchStateBackend | None = None,
     ) -> None:
         if min_trip_seconds < 0:
             raise ValueError("min_trip_seconds must be non-negative")
+        if state_file is not None and backend is not None:
+            # Two places to write is two places to disagree, and the disagreement would be
+            # discovered on a restart, which is the worst moment.
+            raise ValueError(
+                "give the kill switch a state_file or a backend, not both: two stores "
+                "would eventually disagree about whether trading is halted"
+            )
         self._emergency_policy = emergency_policy
         self._min_trip_ns = int(min_trip_seconds * NS_PER_SEC)
         self._state_file = Path(state_file) if state_file else None
+        self._backend = backend
         self._state = KillSwitchState.ARMED
         self._trip_record: TripRecord | None = None
         self._history: list[TripRecord] = []
-        if self._state_file is not None:
+        if self._state_file is not None or self._backend is not None:
             self._load()
 
     # -- state --------------------------------------------------------------------------
@@ -285,12 +321,19 @@ class KillSwitch:
         }
 
     def _persist(self) -> None:
-        """Write state to disk.
+        """Write state to wherever it durably lives.
 
         A failure here is logged and re-raised: if the switch cannot record that it is
         tripped, a restart would come back armed, which is the one failure mode this
         persistence exists to prevent.
         """
+        if self._backend is not None:
+            try:
+                self._backend.save(self.to_dict())
+            except Exception:
+                _log.exception("kill_switch_persist_failed", backend=type(self._backend).__name__)
+                raise
+            return
         if self._state_file is None:
             return
         try:
@@ -302,25 +345,67 @@ class KillSwitch:
             _log.exception("kill_switch_persist_failed", path=str(self._state_file))
             raise
 
+    def _fail_closed(self, detail: str) -> None:
+        """Come back tripped because state could not be read.
+
+        The safe reading of "I do not know whether I was halted" is "I was halted". A
+        switch that came back armed after an unreadable store is the one failure this
+        persistence exists to prevent.
+        """
+        self._state = KillSwitchState.TRIPPED
+        self._trip_record = TripRecord(
+            ts=now_ns(), trigger=Trigger.RISK_SERVICE_UNAVAILABLE, detail=detail
+        )
+        _log.critical(
+            "kill_switch_failed_closed_on_load",
+            detail=detail,
+            reason_codes=["KILL_SWITCH_ACTIVE", "KILL_SWITCH_STATE_UNREADABLE"],
+        )
+
     def _load(self) -> None:
-        """Restore state from disk, defaulting to ARMED when no file exists."""
-        assert self._state_file is not None
-        if not self._state_file.is_file():
-            return
+        """Restore state, defaulting to ARMED only when the store is readable and empty.
+
+        Unreadable is not empty. "I do not know whether I was halted" is interpreted as
+        "I was halted", for both storage backends — a switch that came back armed because
+        its state could not be read is the failure this persistence exists to prevent.
+        """
+        payload: dict[str, Any] | None
+        if self._backend is not None:
+            try:
+                payload = self._backend.load()
+            except Exception:
+                _log.exception(
+                    "kill_switch_state_unreadable", backend=type(self._backend).__name__
+                )
+                self._fail_closed("the durable kill switch store is unreadable")
+                return
+            if payload is None:
+                return
+        else:
+            assert self._state_file is not None
+            if not self._state_file.is_file():
+                return
+            try:
+                payload = json.loads(self._state_file.read_text())
+            except (OSError, json.JSONDecodeError):
+                _log.exception("kill_switch_state_unreadable", path=str(self._state_file))
+                self._fail_closed(
+                    f"kill switch state file {self._state_file} is unreadable"
+                )
+                return
+
         try:
-            payload = json.loads(self._state_file.read_text())
-        except (OSError, json.JSONDecodeError):
-            # An unreadable state file is treated as TRIPPED, not as ARMED.  The safe
-            # interpretation of "I do not know whether I was halted" is "I was halted".
-            _log.exception("kill_switch_state_unreadable", path=str(self._state_file))
-            self._state = KillSwitchState.TRIPPED
-            self._trip_record = TripRecord(
-                ts=now_ns(),
-                trigger=Trigger.RISK_SERVICE_UNAVAILABLE,
-                detail=f"kill switch state file {self._state_file} is unreadable",
-            )
+            self._parse(payload)
+        except (KeyError, ValueError, TypeError) as exc:
+            # Fetching it and understanding it are the same requirement. A payload written
+            # by an older version, truncated, or hand-edited is exactly as unreadable as a
+            # database that will not answer, and raising here would abort startup instead
+            # of coming back halted.
+            self._fail_closed(f"the stored kill switch state could not be parsed: {exc}")
             return
 
+    def _parse(self, payload: dict[str, Any]) -> None:
+        """Rebuild state from a stored payload. Raises on anything it does not recognise."""
         self._state = KillSwitchState(payload.get("state", KillSwitchState.ARMED.value))
         # Restore the full history, not just the current state: the next _persist would
         # otherwise write back only this process's records and truncate the audit trail

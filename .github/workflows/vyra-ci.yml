@@ -69,6 +69,56 @@ jobs:
       - name: Reference backtest runs end to end
         run: python scripts/run_backtest.py --output /tmp/runs --quiet
 
+  storage:
+    name: storage (postgres + redis)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vyra-scalper
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: vyra_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      VYRA_TEST_PG_DSN: postgresql://postgres:postgres@127.0.0.1:5432/vyra_test
+      VYRA_TEST_REDIS_URL: redis://127.0.0.1:6379/0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      # One test starts and kills its own Redis, so the binary has to be on the runner as
+      # well as in a service container. Killing the shared service would take the rest of
+      # the suite with it.
+      - name: Install redis-server for the disposable-instance test
+        run: sudo apt-get update && sudo apt-get install -y redis-server
+      - name: Install
+        run: pip install -e ".[dev,data,api,storage]"
+      - name: Storage suite
+        run: |
+          # These tests skip themselves without the services, so a broken service block
+          # would show as a green job that tested nothing. Assert passes and no skips.
+          pytest tests/storage | tee storage-suite.txt
+          grep -qE '[0-9]+ passed' storage-suite.txt
+          ! grep -qE '[0-9]+ skipped' storage-suite.txt
+
   dashboard:
     name: dashboard
     runs-on: ubuntu-latest
