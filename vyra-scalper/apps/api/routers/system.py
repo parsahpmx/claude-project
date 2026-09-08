@@ -96,6 +96,20 @@ async def get_config(
     return {"config_hash": state.bundle.hash, "config": state.safe_config(section)}
 
 
+@router.get("/system/feed", summary="Market-data feed health")
+async def feed_health(
+    _: Annotated[Principal, Depends(require_roles(Role.VIEWER))],
+) -> dict[str, Any]:
+    """What the feed says about itself, with credentials removed.
+
+    Three states are deliberately distinct, because conflating any two of them hides a
+    fault: ``NOT_ATTACHED`` (nothing is subscribed), ``STALE`` (a socket is open but has
+    stopped delivering), and ``UNKNOWN`` (the feed could not answer). Only the first is
+    benign, and it is the only one that is normal in this build.
+    """
+    return get_state().feed_health()
+
+
 @router.get("/risk/limits", response_model=RiskLimitsResponse)
 async def risk_limits(
     _: Annotated[Principal, Depends(require_roles(Role.VIEWER))],

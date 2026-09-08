@@ -301,6 +301,9 @@ class ExecutionEngine:
             stop_price=order.stop_price,
             strategy_id=order.strategy_id,
             ts_created=order.ts_created,
+            # Carried to the venue boundary so the guard there can apply the same rule
+            # this engine applied above, without having to see the signal.
+            reduce_only=not order.is_entry,
         )
 
         order.transition(OrderState.SUBMITTED, ts)

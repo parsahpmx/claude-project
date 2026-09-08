@@ -128,6 +128,76 @@ def test_config_response_is_json_serialisable(state: EngineState) -> None:
     json.dumps(state.safe_config("sessions"))
 
 
+def test_no_feed_attached_is_not_reported_as_healthy(client: TestClient) -> None:
+    """"Nothing is subscribed" must not read as "everything is fine"."""
+    body = client.get("/system/feed", headers=auth(Role.VIEWER)).json()
+    assert body["attached"] is False
+    assert body["state"] == "NOT_ATTACHED"
+    assert "not a feed outage" in body["note"]
+    assert client.get("/health").json()["feed"] == "NOT_ATTACHED"
+
+
+def test_a_stale_feed_is_visibly_stale(api_env: None, runs_dir: Path) -> None:
+    """The failure this endpoint exists for.
+
+    A socket that is open but has stopped delivering is the dangerous case: every naive
+    check calls it connected, and the engine would trade on a price that stopped updating.
+    """
+
+    class StaleFeed:
+        def diagnostics(self) -> dict[str, Any]:
+            return {"state": "STALE", "connected": True, "silence_ms": 45_000.0}
+
+    state = EngineState(config_dir=CONFIG_DIR, runs_dir=runs_dir, feed=StaleFeed())
+    with TestClient(create_app(state)) as client:
+        body = client.get("/system/feed", headers=auth(Role.VIEWER)).json()
+        assert body["state"] == "STALE"
+        assert body["attached"] is True
+        assert client.get("/health").json()["feed"] == "STALE"
+
+
+def test_a_feed_that_cannot_answer_is_not_reported_healthy(
+    api_env: None, runs_dir: Path
+) -> None:
+    """A health check that throws is not a passing health check."""
+
+    class BrokenFeed:
+        def diagnostics(self) -> dict[str, Any]:
+            raise RuntimeError("transport is wedged")
+
+    state = EngineState(config_dir=CONFIG_DIR, runs_dir=runs_dir, feed=BrokenFeed())
+    with TestClient(create_app(state)) as client:
+        body = client.get("/system/feed", headers=auth(Role.VIEWER)).json()
+        assert body["state"] == "UNKNOWN"
+        assert "wedged" in body["note"]
+
+
+def test_feed_diagnostics_cannot_leak_a_venue_token(
+    api_env: None, runs_dir: Path
+) -> None:
+    """The filter runs again at the boundary.
+
+    The transport's own diagnostics already exclude its auth headers. This proves the
+    guarantee does not depend on every upstream component remembering to.
+    """
+
+    class LeakyFeed:
+        def diagnostics(self) -> dict[str, Any]:
+            return {
+                "state": "CONNECTED",
+                "headers": {"Authorization": "Bearer SENTINEL-FEED-TOKEN"},
+                "api_key": "SENTINEL-FEED-KEY",
+                "connection": {"url": "wss://feed.example.com?key=SENTINEL-URL-KEY"},
+                "silence_ms": 12.0,
+            }
+
+    state = EngineState(config_dir=CONFIG_DIR, runs_dir=runs_dir, feed=LeakyFeed())
+    with TestClient(create_app(state)) as client:
+        body = client.get("/system/feed", headers=auth(Role.VIEWER)).text
+    assert "SENTINEL" not in body
+    assert '"silence_ms":12.0' in body.replace(" ", ""), "the useful fields must survive"
+
+
 # --------------------------------------------------------------------------------------
 # Authentication
 # --------------------------------------------------------------------------------------
@@ -153,6 +223,7 @@ def test_health_exposes_no_position_or_pnl(client: TestClient) -> None:
         "instruments",
         "kill_switch",
         "runs_available",
+        "feed",
     }
 
 

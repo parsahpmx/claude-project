@@ -13,6 +13,7 @@
 
 import type {
   ConfigResponse,
+  FeedHealth,
   Health,
   Instrument,
   KillSwitch,
@@ -128,6 +129,7 @@ export async function health(): Promise<Health> {
 
 export const api = {
   systemStatus: () => request<SystemStatus>("/system/status"),
+  feed: () => request<FeedHealth>("/system/feed"),
   config: (section?: string) =>
     request<ConfigResponse>(`/config${section ? `?section=${encodeURIComponent(section)}` : ""}`),
   riskLimits: () => request<RiskLimits>("/risk/limits"),

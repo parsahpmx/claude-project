@@ -55,7 +55,9 @@ building it are recorded here because they shaped the code:
 | # | Item | Status | Acceptance |
 |---|---|---|---|
 | 13 | Live market-data gateway | DONE | reconnect, resequence, gap detection and monotonicity under chaos tests |
-| 14 | Broker adapters: IBKR, MT5, OANDA | PLANNED | must pass `tests/execution/test_adapter_contract.py`, which simulated, paper and shadow already do |
+| 13b | WebSocket feed transport | DONE | verified against a live local socket: hang-up, heartbeat starvation, malformed frames, queue overflow |
+| 13c | Kill-switch guard at the venue boundary | DONE | fails closed; 0 of 10,879 post-trip submissions accepted under load |
+| 14 | Broker adapters: IBKR, MT5, OANDA | PARTIAL | OANDA v20 written and verified against the documented wire format, **never run against OANDA**, disabled by default. IBKR and MT5 not written |
 | 15 | Execution engine hardening: retries, timeouts, cancel/replace | DONE | duplicate-submit, timeout and capability-negotiation tests |
 | 16 | Position reconciliation | DONE | every divergence class trips the kill switch; the backtest reconciles clean throughout |
 | 17 | Paper and shadow adapters | DONE | both pass the shared contract suite; shadow records the counterfactual and never fills |
@@ -103,6 +105,42 @@ Three properties are enforced by tests rather than by review:
   credential — a load balancer cannot hold a token, and that is the whole reason it is open.
 * **Clearing the kill switch records the operator from the token, never from the request
   body.** A caller cannot attribute a resume to somebody else.
+
+### The venue boundary
+
+Two rules were added below the execution engine, both because the engine's own checks
+protect against the engine deciding wrongly and not against anything reaching a venue
+another way.
+
+**The guard** (`core.brokers.guard`) wraps any adapter and applies the halt rule to
+outbound calls. It **fails closed**: a halt source that raises — a dead cache, a corrupt
+file, a network split — is read as tripped, and even risk-reducing exits are refused,
+because a switch that cannot be read cannot report its emergency policy either. What a halt
+never blocks is cancels, flattens and reads: a switch that stranded exposure at a venue
+would make tripping it the more dangerous choice, and an operator who learns that stops
+tripping it.
+
+The guard forwards the adapter contract explicitly, with no `__getattr__` catch-all. A
+wrapper that forwarded unknown attributes would forward the next outbound method somebody
+adds, silently un-guarding it.
+
+**The feed transport** (`core.market_data.transport`) treats a socket that is open but
+silent as disconnected. That is the failure mode worth naming: every naive liveness check
+calls it healthy, and the engine would trade on a price that stopped updating. Feed state
+reaches `/system/feed` and the console with `NOT_ATTACHED`, `STALE` and `UNKNOWN` kept
+distinct — conflating any two of them hides a fault.
+
+### On the OANDA adapter
+
+It has **never spoken to OANDA**. No practice credentials exist in the environment it was
+written in, so what is verified is its handling of the documented v20 wire format against a
+local server implementing that format: real HTTP, real JSON, real status codes, real error
+bodies. That catches wrong verbs, wrong paths, wrong bodies and unhandled statuses. It
+cannot catch undocumented fields, behavioural quirks or rate-limit reality.
+
+It is disabled by default and requires two independent deliberate acts to construct —
+`enabled: true` in configuration *and* credentials in the environment — so neither a config
+typo nor a leftover environment variable can reach a venue alone.
 
 ## Phase 5 — Intelligence
 

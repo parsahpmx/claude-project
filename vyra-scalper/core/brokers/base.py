@@ -59,6 +59,9 @@ class BrokerErrorCode(StrEnum):
     UNKNOWN_ORDER = "UNKNOWN_ORDER"
     RATE_LIMIT = "RATE_LIMIT"
     VENUE_REJECT = "VENUE_REJECT"
+    KILL_SWITCH_ACTIVE = "KILL_SWITCH_ACTIVE"
+    """Refused by the guard, not by the venue. Never transient: retrying a halted order
+    is the one retry that must not eventually succeed on its own."""
     UNKNOWN = "UNKNOWN"
 
     @property
@@ -179,6 +182,14 @@ class OrderRequest:
     stop_price: float | None = None
     strategy_id: str = ""
     ts_created: Nanos = 0
+    reduce_only: bool = False
+    """Whether this order can only reduce exposure.
+
+    Set from the signal's entry/exit intent and read by the venue-boundary guard: while the
+    kill switch is tripped an entry is always refused, and an exit only under an emergency
+    policy that permits one. Defaults to False so an order whose intent nobody stated is
+    treated as an entry — the refusing side.
+    """
 
     def __post_init__(self) -> None:
         if self.quantity <= 0:

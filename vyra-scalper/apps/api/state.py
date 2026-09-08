@@ -17,7 +17,7 @@ import json
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 from core.config.loader import ConfigBundle, load_bundle
 from core.instruments.registry import InstrumentRegistry
@@ -49,6 +49,18 @@ _CREDENTIAL_HINTS = (
 # which individual fields are sensitive is a list that will eventually be incomplete —
 # `client_id` was missing from the hints above until a test caught it.
 _CREDENTIAL_BLOCKS = ("connection", "credentials", "auth")
+
+
+@runtime_checkable
+class FeedDiagnostics(Protocol):
+    """Whatever is providing market data, as far as the API needs to know.
+
+    Satisfied by :class:`~core.market_data.gateway.MarketDataGateway` and by the transports
+    under it. Kept to one method so the API does not grow a second opinion about feed
+    health: it reports what the component says, and adds nothing.
+    """
+
+    def diagnostics(self) -> dict[str, Any]: ...
 
 
 def strip_credentials(payload: Any) -> Any:
@@ -151,6 +163,7 @@ class EngineState:
     config_dir: Path
     runs_dir: Path
     state_dir: Path
+    feed: FeedDiagnostics | None
     bundle: ConfigBundle = field(init=False)
     registry: InstrumentRegistry = field(init=False)
     limits: RiskLimits = field(init=False)
@@ -163,7 +176,12 @@ class EngineState:
         runs_dir: str | Path,
         kill_switch: KillSwitch | None = None,
         state_dir: str | Path | None = None,
+        feed: FeedDiagnostics | None = None,
     ) -> None:
+        # None means no feed is attached, which is different from a feed that is down. The
+        # API reports the two differently; collapsing them would let "nothing is running"
+        # read as "everything is fine".
+        self.feed = feed
         self.config_dir = Path(config_dir)
         self.runs_dir = Path(runs_dir)
         self.state_dir = Path(state_dir) if state_dir is not None else self.runs_dir
@@ -305,6 +323,44 @@ class EngineState:
             for name in sorted(self.bundle.sections)
         }
 
+    def feed_health(self) -> dict[str, Any]:
+        """Feed state, with credentials stripped on the way out.
+
+        A transport holds a venue token, and its own diagnostics deliberately exclude it.
+        The filter runs again here anyway: the guarantee is that no credential leaves the
+        API, and a guarantee that depends on every upstream component remembering is not
+        one. Belt and braces cost one function call.
+
+        A feed that is connected but silent past its heartbeat is reported ``STALE``, not
+        healthy. That distinction is the whole reason this endpoint exists — a socket being
+        open says nothing about whether the prices are current.
+        """
+        if self.feed is None:
+            return {
+                "attached": False,
+                "state": "NOT_ATTACHED",
+                "note": (
+                    "No market-data feed is attached in this build. This is not a feed "
+                    "outage: nothing is subscribed. Prices shown anywhere in this console "
+                    "would be from a completed research run, so none are shown."
+                ),
+            }
+        try:
+            raw = self.feed.diagnostics()
+        except Exception as exc:
+            # A feed whose own health check throws is not a healthy feed.
+            _log.warning("feed_diagnostics_failed", detail=str(exc))
+            return {
+                "attached": True,
+                "state": "UNKNOWN",
+                "note": f"the feed could not report its own state: {exc}",
+            }
+        cleaned = strip_credentials(raw)
+        assert isinstance(cleaned, dict)
+        cleaned["attached"] = True
+        cleaned.setdefault("state", "UNKNOWN")
+        return cleaned
+
     def health(self) -> dict[str, Any]:
         return {
             "status": "degraded" if self.kill_switch.is_tripped else "ok",
@@ -314,6 +370,7 @@ class EngineState:
             "instruments": len(self.registry),
             "kill_switch": self.kill_switch.state.value,
             "runs_available": sum(1 for _ in self.iter_runs()),
+            "feed": self.feed_health().get("state", "NOT_ATTACHED"),
         }
 
 

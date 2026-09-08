@@ -43,6 +43,13 @@ class HealthResponse(BaseModel):
     instruments: int
     kill_switch: str
     runs_available: int
+    feed: str = Field(
+        default="NOT_ATTACHED",
+        description=(
+            "Feed state. NOT_ATTACHED means nothing is subscribed, which is not the same "
+            "as a feed that is down — an open socket that stopped delivering reports STALE."
+        ),
+    )
 
 
 class InstrumentResponse(BaseModel):

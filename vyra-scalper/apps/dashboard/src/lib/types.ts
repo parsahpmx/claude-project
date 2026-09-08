@@ -22,6 +22,21 @@ export interface Health {
   instruments: number;
   kill_switch: string;
   runs_available: number;
+  feed: string;
+}
+
+/** Feed health. Open-ended: each transport reports its own counters. */
+export interface FeedHealth {
+  attached: boolean;
+  state: string;
+  note?: string;
+  connected?: boolean;
+  silence_ms?: number;
+  heartbeat_timeout_ms?: number;
+  transport?: string;
+  subscribed?: string[];
+  stats?: Record<string, number>;
+  [key: string]: unknown;
 }
 
 export interface KillSwitch {

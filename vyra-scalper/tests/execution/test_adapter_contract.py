@@ -18,12 +18,14 @@ from core.brokers.base import (
     OrderAmendment,
     OrderRequest,
 )
+from core.brokers.guard import GuardedBrokerAdapter, LocalHaltSource
 from core.brokers.paper import PaperBrokerAdapter
 from core.brokers.simulated import SimulatedBrokerAdapter
 from core.events import FillModel, OrderType, QuoteEvent, Side
 from core.execution.costs import CostModel
 from core.execution.fills import FillSimulator
 from core.instruments.registry import InstrumentRegistry
+from core.risk.kill_switch import EmergencyPolicy, KillSwitch
 
 
 def build_simulated(registry: InstrumentRegistry, config_bundle) -> SimulatedBrokerAdapter:
@@ -57,18 +59,44 @@ def build_shadow(registry: InstrumentRegistry, config_bundle) -> PaperBrokerAdap
     )
 
 
+def build_guarded(registry: InstrumentRegistry, config_bundle) -> GuardedBrokerAdapter:
+    """A paper adapter behind the kill-switch guard, with the switch armed.
+
+    Run through the whole contract suite on purpose: the guard delegates every method it
+    does not intercept, and the cheapest way to prove it forwards them faithfully is to
+    make it pass the same tests the adapter underneath it passes. A dropped or mistyped
+    delegation shows up as a contract failure rather than as a method nobody called.
+    """
+    switch = KillSwitch(emergency_policy=EmergencyPolicy.HOLD)
+    return GuardedBrokerAdapter(build_paper(registry, config_bundle), LocalHaltSource(switch))
+
+
 # Every adapter must pass this suite -- simulated, paper, shadow, and every live venue when
 # one is written. An adapter that cannot has not implemented the contract.
 ADAPTERS: dict[str, Callable[..., BrokerAdapter]] = {
     "simulated": build_simulated,
     "paper": build_paper,
     "shadow": build_shadow,
+    "guarded_paper": build_guarded,
 }
 
 
 @pytest.fixture(params=list(ADAPTERS), ids=list(ADAPTERS))
 def adapter(request, registry: InstrumentRegistry, config_bundle) -> BrokerAdapter:
     return ADAPTERS[request.param](registry, config_bundle)
+
+
+def feed(adapter: BrokerAdapter, event) -> None:
+    """Drive the simulator's clock, reaching through the guard when there is one.
+
+    The guard forwards the :class:`BrokerAdapter` contract and nothing else — no
+    ``__getattr__`` catch-all — so a simulator-only test hook is not visible through it.
+    That is the point: a wrapper that forwarded unknown attributes would forward the next
+    outbound method someone adds, silently un-guarding it. Reaching for ``inner`` here is
+    test scaffolding, and it is the only place that does.
+    """
+    target = adapter.inner if isinstance(adapter, GuardedBrokerAdapter) else adapter
+    target.advance(event)  # type: ignore[attr-defined]
 
 
 def quote(ts: int = 1_000_000_000) -> QuoteEvent:
@@ -136,14 +164,14 @@ class TestOrderEntry:
         self, adapter: BrokerAdapter
     ) -> None:
         adapter.connect()
-        adapter.advance(quote())  # type: ignore[attr-defined]
+        feed(adapter, quote())
         ack = adapter.submit_order(market_order())
         assert ack.accepted
         assert ack.broker_order_id
 
     def test_a_working_order_appears_in_get_orders(self, adapter: BrokerAdapter) -> None:
         adapter.connect()
-        adapter.advance(quote())  # type: ignore[attr-defined]
+        feed(adapter, quote())
         adapter.submit_order(market_order())
         if getattr(adapter, "shadow", False):
             # Shadow mode records the order and never rests it: nothing was sent, so the
@@ -158,7 +186,7 @@ class TestOrderEntry:
     ) -> None:
         """The venue-side half of duplicate protection (EXECUTION_SPEC.md §4)."""
         adapter.connect()
-        adapter.advance(quote())  # type: ignore[attr-defined]
+        feed(adapter, quote())
         first = adapter.submit_order(market_order())
         second = adapter.submit_order(market_order())
         assert second.accepted

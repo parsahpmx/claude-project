@@ -25,7 +25,10 @@ api = [
     # time without it, so it is a hard dependency of the service, not an extra.
     "python-multipart>=0.0.9",
 ]
-storage = ["psycopg[binary]>=3.1", "redis>=5.0", "sqlalchemy>=2.0"]
+storage = ["psycopg[binary]>=3.1", "redis>=5.0"]
+# Live venue connectivity. Separate from the engine core, which still depends only on the
+# standard library plus PyYAML: a backtest must not need a websocket library to run.
+live = ["websockets>=12.0", "httpx>=0.27"]
 dev = ["pytest>=8.0", "pytest-cov>=4.1", "mypy>=1.9", "ruff>=0.3"]
 
 [tool.setuptools]
