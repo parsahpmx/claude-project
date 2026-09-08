@@ -7,6 +7,11 @@ run:
   random_seed: 20240315
 
 data:
+  # SYNTHETIC exercises the pipeline without vendor data and is watermarked in every
+  # report. CSV reads vendor files directly. PARQUET reads the normalised layer produced
+  # by scripts/ingest_data.py, which is the path to use once licensed data is available:
+  # it carries a manifest whose content hash the run manifest references, so a result
+  # cannot be silently re-attributed to changed data.
   source: SYNTHETIC          # SYNTHETIC | CSV | PARQUET
   instruments: ["CME:MES"]
   start: "2024-03-04T00:00:00Z"
@@ -25,6 +30,28 @@ data:
     spread_ticks_wide_prob: 0.05
     mean_reversion_strength: 0.02
     tick_interval_ms: 250
+
+  # Used when source is PARQUET.
+  parquet:
+    root: data_store/mes           # directory containing _manifest.json
+    # Re-hash the files and compare against the manifest before reading. Off by default
+    # because hashing a large archive on every run is expensive; turn it on for a
+    # promotion run, where the cost is worth the certainty.
+    verify_content: false
+
+  # Used when source is CSV. Column names are declared, never guessed: reading the ask
+  # column as the bid produces a plausible backtest with inverted spreads.
+  csv:
+    files: []                      # paths or globs
+    timestamp_column: timestamp
+    timestamp_format: iso          # iso | epoch_ns | epoch_us | epoch_ms | epoch_s
+    bid_column: bid
+    ask_column: ask
+    bid_size_column: bid_size
+    ask_size_column: ask_size
+    price_column: price
+    size_column: size
+    aggressor_column: aggressor
 
 strategies: [vwap_mean_reversion]
 

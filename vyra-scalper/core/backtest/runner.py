@@ -39,7 +39,9 @@ from core.util.clock import from_iso
 from core.util.ids import derive_seed
 from core.util.ids import run_id as make_run_id
 from core.util.logging import get_logger
-from data.collectors.base import DataSource
+from data.collectors.base import DataSource, DataSourceError
+from data.collectors.csv_source import CsvColumnMap, CsvTickSource
+from data.collectors.parquet_source import ParquetSource
 from data.collectors.synthetic import SyntheticConfig, SyntheticTickSource
 
 __all__ = ["BacktestRun", "run_backtest"]
@@ -175,11 +177,38 @@ def _build_data_source(
         )
         return SyntheticTickSource(instrument, config, registry.calendar(instrument_id))
 
-    if kind in ("CSV", "PARQUET"):
-        raise ConfigError(
-            f"data source {kind} is specified but not yet implemented; see ROADMAP.md. "
-            "Use SYNTHETIC, or supply a source object to run_backtest()."
+    if kind == "PARQUET":
+        spec = data.section("parquet")
+        try:
+            return ParquetSource(
+                instrument=instrument,
+                root=spec.str_("root"),
+                verify_content=spec.bool_("verify_content", False),
+            )
+        except DataSourceError as exc:
+            raise ConfigError(f"parquet source: {exc}") from exc
+
+    if kind == "CSV":
+        spec = data.section("csv")
+        columns = CsvColumnMap(
+            timestamp=spec.str_("timestamp_column", "timestamp"),
+            timestamp_format=spec.str_("timestamp_format", "iso"),
+            bid=spec.str_("bid_column", "bid"),
+            ask=spec.str_("ask_column", "ask"),
+            bid_size=spec.str_("bid_size_column", "bid_size"),
+            ask_size=spec.str_("ask_size_column", "ask_size"),
+            price=spec.str_("price_column", "price"),
+            size=spec.str_("size_column", "size"),
+            aggressor=spec.str_("aggressor_column", "aggressor"),
         )
+        paths = [str(p) for p in spec.list_("files")]
+        if not paths:
+            raise ConfigError("backtest.data.csv.files is empty; nothing to read")
+        try:
+            return CsvTickSource(instrument, paths, columns)
+        except DataSourceError as exc:
+            raise ConfigError(f"csv source: {exc}") from exc
+
     raise ConfigError(f"unknown data source {kind!r}; expected SYNTHETIC, CSV or PARQUET")
 
 
@@ -386,6 +415,21 @@ def run_backtest(
         random_seed=seed,
         data_quality=result.data_quality,
     )
+    # Provenance must survive the storage layer. A synthetic dataset written to Parquet
+    # is still synthetic, but its source_id becomes "PARQUET:<id>" and the substring check
+    # in RunManifest no longer sees it. The dataset's own manifest knows, so its notes are
+    # carried into the run's warnings rather than being lost at the boundary.
+    dataset_manifest = getattr(source, "manifest", None)
+    if dataset_manifest is not None:
+        for note in getattr(dataset_manifest, "notes", []):
+            manifest.add_warning(f"DATASET: {note}")
+        drop_rate = getattr(dataset_manifest, "drop_rate", 0.0)
+        if drop_rate > 0:
+            manifest.data_quality["dataset_drop_rate"] = round(drop_rate, 6)
+        unexplained = getattr(dataset_manifest, "unexplained_gaps", [])
+        if unexplained:
+            manifest.data_quality["dataset_unexplained_gaps"] = len(unexplained)
+
     manifest.finalise(result.result_payload())
 
     if result.halted:

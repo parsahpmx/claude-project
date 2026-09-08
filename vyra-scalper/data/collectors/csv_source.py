@@ -8,7 +8,7 @@ backtest with inverted spreads.
 from __future__ import annotations
 
 import csv
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from hashlib import sha256
 from pathlib import Path
@@ -78,7 +78,9 @@ def _file_fingerprint(paths: list[Path]) -> str:
 class _CsvBase:
     __slots__ = ("_columns", "_instrument", "_paths")
 
-    def __init__(self, instrument: Instrument, paths: list[str | Path], columns: CsvColumnMap):
+    def __init__(
+        self, instrument: Instrument, paths: Sequence[str | Path], columns: CsvColumnMap
+    ) -> None:
         resolved = [Path(p) for p in paths]
         missing = [str(p) for p in resolved if not p.is_file()]
         if missing:
@@ -125,7 +127,7 @@ class CsvTickSource(_CsvBase):
     def __init__(
         self,
         instrument: Instrument,
-        paths: list[str | Path],
+        paths: Sequence[str | Path],
         columns: CsvColumnMap | None = None,
         source_id: str | None = None,
     ) -> None:
@@ -209,7 +211,7 @@ class CsvBarSource(_CsvBase):
     def __init__(
         self,
         instrument: Instrument,
-        paths: list[str | Path],
+        paths: Sequence[str | Path],
         timeframe: Timeframe,
         columns: CsvColumnMap | None = None,
         source_id: str | None = None,

@@ -230,8 +230,17 @@ backtest hash changes, and the old result is not silently re-attributed to new d
   Poisson trade-arrival process and configurable microstructure noise. Deterministic for
   a given seed; used by tests and by the reproducibility proof.
 * `CsvTickSource` / `CsvBarSource` — column mapping declared in config, no guessing.
-* `ParquetSource` — reads the normalised layer. **Not yet implemented**; selecting it in
-  configuration fails with an explicit error rather than falling back to another source.
+* `ParquetSource` — reads the normalised layer, partitioned `instrument/date`. Refuses a
+  directory with no manifest, refuses an instrument the dataset does not cover, and
+  refuses a window outside its range: zero trades over a window the data never covered
+  reads as "the strategy did nothing" rather than "the data was not there". With
+  `verify_content`, the files are re-hashed against the manifest before reading.
+
+Datasets are produced by `scripts/ingest_data.py`, which normalises a raw source, counts
+every rejection, attributes each gap to a closed session or records it as unexplained, and
+writes the manifest. A dataset's notes — including the `SYNTHETIC` watermark — are carried
+into the run manifest of any backtest that reads it, so provenance survives the storage
+boundary.
 
 Synthetic data is for **plumbing and invariants only**. No expectancy claim is ever made
 from it, and reports generated from a synthetic dataset are watermarked `SYNTHETIC`.
