@@ -15,7 +15,10 @@ dependencies = [
 # The engine core deliberately has no third-party runtime dependency beyond PyYAML.
 # Everything below is for research, storage and services at the edges.
 data = ["pandas>=2.0", "pyarrow>=14.0", "numpy>=1.26"]
-ml = ["scikit-learn>=1.4", "lightgbm>=4.0", "xgboost>=2.0", "catboost>=1.2"]
+# scikit-learn only for now: the first model is a logistic regression, deliberately,
+# and adding gradient boosting is a decision to take after a linear model has been shown
+# to be the limitation.
+ml = ["scikit-learn>=1.4", "numpy>=1.26"]
 api = [
     "fastapi>=0.110",
     "uvicorn>=0.27",
@@ -68,5 +71,5 @@ disallow_any_generics = true
 files = ["core", "brokers", "data", "apps"]
 
 [[tool.mypy.overrides]]
-module = ["pandas.*", "pyarrow.*", "yaml.*", "jose.*"]
+module = ["pandas.*", "pyarrow.*", "yaml.*", "jose.*", "sklearn.*", "redis.*", "psycopg.*"]
 ignore_missing_imports = true
