@@ -158,6 +158,21 @@ class TestOutputs:
         assert "Before vs after costs" in report
         assert "Reproducibility" in report
 
+    def test_warnings_lead_the_report(self, short_run) -> None:
+        """A reader who stops after the first screen must know what to distrust."""
+        report = (short_run.output_directory / "report.md").read_text()
+        warnings_at = report.index("Read this first")
+        assert warnings_at < report.index("Before vs after costs")
+
+    def test_every_surface_shows_both_kinds_of_warning(self, short_run) -> None:
+        """Provenance warnings and result-shape warnings must not be split across surfaces."""
+        report = (short_run.output_directory / "report.md").read_text()
+        for warning in short_run.warnings:
+            assert warning in report, f"report.md omits {warning!r}"
+        assert set(short_run.summary["warnings"]) == set(short_run.warnings)
+        assert any("SYNTHETIC" in w for w in short_run.warnings)
+        assert any("TRADES" in w for w in short_run.warnings)
+
     def test_orders_fills_and_risk_events_are_all_written(self, short_run) -> None:
         for name in ("orders.jsonl", "fills.jsonl", "risk_events.jsonl", "equity.jsonl"):
             assert (short_run.output_directory / name).is_file(), f"{name} was not written"

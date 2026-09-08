@@ -59,6 +59,16 @@ class BacktestRun:
     output_directory: Path
 
     @property
+    def warnings(self) -> list[str]:
+        """Provenance warnings and result-shape warnings, together.
+
+        The manifest knows about the data and the build; the report knows whether the
+        numbers look like an artefact.  A caller that sees only one of the two can be
+        misled by the other, so every surface shows both.
+        """
+        return [*self.manifest.warnings, *self.report.implausibility_warnings]
+
+    @property
     def summary(self) -> dict[str, Any]:
         return {
             "run_id": self.run_id,
@@ -69,7 +79,7 @@ class BacktestRun:
             "survives_costs": self.report.survives_costs,
             "halted": self.result.halted,
             "result_hash": self.manifest.result_hash,
-            "warnings": list(self.manifest.warnings),
+            "warnings": self.warnings,
         }
 
 
