@@ -13,14 +13,14 @@ live position (``core/instruments/sessions.py``).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date, timedelta
 
-from core.events import FillEvent, PositionEvent, Side
+from core.events import FillEvent, PositionEvent
 from core.instruments.instrument import Instrument
 from core.instruments.sessions import SessionCalendar
 from core.portfolio.position import Position, RealizedTrade
-from core.util.clock import Nanos, local_date
+from core.util.clock import NS_PER_SEC, Nanos, local_date
 from core.util.logging import get_logger
 from core.util.numeric import round_money
 
@@ -64,14 +64,17 @@ class Portfolio:
         starting_equity: opening account equity.
         instruments: instruments that may be traded.
         calendars: session calendars used to bucket PnL by trading date.
-        record_curve: whether to retain every equity point.  Always on in backtest;
-            live runs sample instead, since a tick-rate curve over a week is large and
-            adds nothing a sampled one does not show.
+        record_curve: whether to retain equity points at all.
+        curve_sample_ns: minimum spacing between recorded points.  Fills always record and
+            the peak/drawdown are tracked on every update, so sampling affects only how
+            much of the curve is kept.
     """
 
     __slots__ = (
         "_calendars",
+        "_current_trading_date",
         "_curve",
+        "_curve_sample_ns",
         "_daily_pnl",
         "_equity",
         "_instruments",
@@ -81,7 +84,6 @@ class Portfolio:
         "_record_curve",
         "_session_start_equity",
         "_starting_equity",
-        "_current_trading_date",
         "_weekly_pnl",
     )
 
@@ -91,6 +93,7 @@ class Portfolio:
         instruments: dict[str, Instrument],
         calendars: dict[str, SessionCalendar] | None = None,
         record_curve: bool = True,
+        curve_sample_ns: int = NS_PER_SEC,
     ) -> None:
         if starting_equity <= 0:
             raise ValueError(f"starting_equity must be positive, got {starting_equity}")
@@ -107,6 +110,10 @@ class Portfolio:
         self._weekly_pnl: dict[date, float] = {}
         self._curve: list[EquityPoint] = []
         self._record_curve = record_curve
+        # One point per second by default.  A tick-resolution curve over a multi-day run is
+        # millions of points that no chart shows and no metric needs; the peak and the
+        # drawdown are tracked exactly regardless, and fills always record.
+        self._curve_sample_ns = curve_sample_ns
 
     # -- accessors ----------------------------------------------------------------------
 
@@ -126,21 +133,39 @@ class Portfolio:
     def session_start_equity(self) -> float:
         return self._session_start_equity
 
+    # Accumulators are raw floats and are rounded only where a figure leaves the object
+    # (an EquityPoint, a summary, a report).  Rounding inside the accumulation path cost
+    # about a third of the event loop in profiling -- six Decimal quantisations per mark,
+    # at tick rates -- and bought nothing: the rounding that matters is the one applied to
+    # the number a human or a database finally sees.
+
+    def _raw_realized(self) -> float:
+        return sum(p.realized_pnl for p in self._positions.values())
+
+    def _raw_unrealized(self) -> float:
+        return sum(p.unrealized_pnl for p in self._positions.values())
+
+    def _raw_fees(self) -> float:
+        return sum(p.fees_paid for p in self._positions.values())
+
+    def _raw_exposure(self) -> float:
+        return sum(p.notional for p in self._positions.values())
+
     @property
     def realized_pnl(self) -> float:
-        return round_money(sum(p.realized_pnl for p in self._positions.values()))
+        return round_money(self._raw_realized())
 
     @property
     def unrealized_pnl(self) -> float:
-        return round_money(sum(p.unrealized_pnl for p in self._positions.values()))
+        return round_money(self._raw_unrealized())
 
     @property
     def fees_paid(self) -> float:
-        return round_money(sum(p.fees_paid for p in self._positions.values()))
+        return round_money(self._raw_fees())
 
     @property
     def gross_exposure(self) -> float:
-        return round_money(sum(p.notional for p in self._positions.values()))
+        return round_money(self._raw_exposure())
 
     @property
     def drawdown(self) -> float:
@@ -194,7 +219,10 @@ class Portfolio:
         if trade is not None:
             self._realized_trades.append(trade)
             self._book_to_period(trade)
-        self.mark(fill.instrument_id, fill.price, fill.ts_fill or fill.ts)
+        # A fill always records a curve point regardless of sampling: equity steps at a
+        # fill, and a sampled curve that missed the step would understate drawdown depth.
+        position.mark(fill.price)
+        self._recompute(fill.ts_fill or fill.ts, force_record=True)
         return trade
 
     def mark(self, instrument_id: str, price: float, ts: Nanos) -> EquityPoint:
@@ -211,27 +239,51 @@ class Portfolio:
                 position.mark(price)
         return self._recompute(ts)
 
-    def _recompute(self, ts: Nanos) -> EquityPoint:
-        realized = self.realized_pnl
-        unrealized = self.unrealized_pnl
-        fees = self.fees_paid
-        self._equity = round_money(self._starting_equity + realized + unrealized - fees)
-        self._peak_equity = max(self._peak_equity, self._equity)
+    def _recompute(self, ts: Nanos, force_record: bool = False) -> EquityPoint:
+        """Recompute equity from first principles and, if due, record a curve point.
 
-        point = EquityPoint(
-            ts=ts,
-            equity=self._equity,
-            realized_pnl=realized,
-            unrealized_pnl=unrealized,
-            fees=fees,
-            drawdown=self.drawdown,
-            drawdown_pct=self.drawdown_pct,
-            gross_exposure=self.gross_exposure,
-            open_positions=len(self.open_positions),
-        )
-        if self._record_curve:
+        The peak is updated on **every** call regardless of whether a point is stored, so
+        curve sampling never affects the maximum-drawdown figure -- it controls only how
+        many points are retained for plotting and drawdown-duration analysis.
+        """
+        realized = self._raw_realized()
+        unrealized = self._raw_unrealized()
+        fees = self._raw_fees()
+        self._equity = self._starting_equity + realized + unrealized - fees
+        self._peak_equity = max(self._peak_equity, self._equity)
+        drawdown = max(0.0, self._peak_equity - self._equity)
+
+        if self._record_curve and (
+            force_record
+            or self._curve_sample_ns <= 0
+            or not self._curve
+            or ts - self._curve[-1].ts >= self._curve_sample_ns
+        ):
+            point = EquityPoint(
+                ts=ts,
+                equity=round_money(self._equity),
+                realized_pnl=round_money(realized),
+                unrealized_pnl=round_money(unrealized),
+                fees=round_money(fees),
+                drawdown=round_money(drawdown),
+                drawdown_pct=drawdown / self._peak_equity if self._peak_equity > 0 else 0.0,
+                gross_exposure=round_money(self._raw_exposure()),
+                open_positions=sum(1 for p in self._positions.values() if not p.is_flat),
+            )
             self._curve.append(point)
-        return point
+            return point
+
+        return EquityPoint(
+            ts=ts,
+            equity=round_money(self._equity),
+            realized_pnl=round_money(realized),
+            unrealized_pnl=round_money(unrealized),
+            fees=round_money(fees),
+            drawdown=round_money(drawdown),
+            drawdown_pct=drawdown / self._peak_equity if self._peak_equity > 0 else 0.0,
+            gross_exposure=0.0,
+            open_positions=0,
+        )
 
     # -- period accounting --------------------------------------------------------------
 

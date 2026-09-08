@@ -17,7 +17,14 @@ import itertools
 import os
 import threading
 
-__all__ = ["IdGenerator", "canonicalize", "client_order_id", "content_hash", "run_id"]
+__all__ = [
+    "IdGenerator",
+    "canonicalize",
+    "client_order_id",
+    "content_hash",
+    "derive_seed",
+    "run_id",
+]
 
 
 class IdGenerator:
@@ -107,6 +114,22 @@ def canonicalize(payload: object) -> object:
     if isinstance(payload, (str, int, float, bool)) or payload is None:
         return payload
     return str(payload)
+
+
+def derive_seed(master_seed: int, component: str) -> int:
+    """Derive a component seed deterministically from one master seed.
+
+    A run must be determined by a **single** number.  Independent per-component seeds in
+    configuration look harmless and are not: they can be changed apart from the seed the
+    manifest records, so the manifest ends up claiming a value that does not in fact
+    determine the run, and two runs recorded as identical can differ.
+
+    The derivation is a stable hash, so component seeds are decorrelated (the data
+    generator and the fill simulator do not share a random stream) while the whole run
+    still follows from ``master_seed`` alone.
+    """
+    digest = hashlib.sha256(f"{master_seed}|{component}".encode()).digest()
+    return int.from_bytes(digest[:8], "big") % (2**31 - 1)
 
 
 def content_hash(payload: object) -> str:

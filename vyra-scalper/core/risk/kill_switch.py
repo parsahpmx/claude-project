@@ -14,19 +14,19 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
 from core.util.clock import NS_PER_SEC, Nanos, now_ns, to_iso
 from core.util.logging import get_logger
 
-__all__ = ["EmergencyPolicy", "KillSwitch", "KillSwitchState", "TripRecord", "Trigger"]
+__all__ = ["EmergencyPolicy", "KillSwitch", "KillSwitchState", "Trigger", "TripRecord"]
 
 _log = get_logger("risk.kill_switch")
 
 
-class Trigger(str, Enum):
+class Trigger(StrEnum):
     """Conditions that trip the switch."""
 
     DAILY_LOSS_EXCEEDED = "DAILY_LOSS_EXCEEDED"
@@ -46,7 +46,7 @@ class Trigger(str, Enum):
     MANUAL = "MANUAL"
 
 
-class EmergencyPolicy(str, Enum):
+class EmergencyPolicy(StrEnum):
     """What to do with open positions when the switch trips.
 
     ``HOLD`` is the default because flattening into the conditions that tripped the switch
@@ -59,7 +59,7 @@ class EmergencyPolicy(str, Enum):
     FLATTEN_IMMEDIATELY = "FLATTEN_IMMEDIATELY"
 
 
-class KillSwitchState(str, Enum):
+class KillSwitchState(StrEnum):
     ARMED = "ARMED"
     TRIPPED = "TRIPPED"
 

@@ -14,7 +14,7 @@ from typing import Any, ClassVar
 from core.events.enums import DataFlag, EventType
 from core.util.clock import Nanos
 
-__all__ = ["Event", "NO_EXCHANGE_TIMESTAMP"]
+__all__ = ["NO_EXCHANGE_TIMESTAMP", "Event"]
 
 NO_EXCHANGE_TIMESTAMP: Nanos = 0
 """Sentinel for a venue that supplies no timestamp of its own.

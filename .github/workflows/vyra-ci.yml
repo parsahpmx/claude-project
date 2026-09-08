@@ -1,0 +1,71 @@
+name: VYRA CI
+
+on:
+  push:
+    branches: ["**"]
+    paths: ["vyra-scalper/**", ".github/workflows/vyra-ci.yml"]
+  pull_request:
+    paths: ["vyra-scalper/**", ".github/workflows/vyra-ci.yml"]
+
+# A newer push to the same branch makes the running job's result irrelevant.
+concurrency:
+  group: vyra-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: vyra-scalper
+
+jobs:
+  test:
+    name: test (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev,data]"
+      - name: Lint
+        run: ruff check core brokers data tests scripts
+      - name: Type check
+        run: mypy
+      - name: Test
+        run: pytest -q --cov=core --cov=brokers --cov=data --cov-report=term-missing
+
+  acceptance:
+    name: MVP acceptance criteria
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev,data]"
+      - name: Acceptance suite
+        run: pytest tests/backtest -q
+      - name: Reference backtest runs end to end
+        run: python scripts/run_backtest.py --output /tmp/runs --quiet
+
+  secrets:
+    name: no committed secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan for credential-shaped strings in configuration
+        working-directory: vyra-scalper
+        run: |
+          # Config must reference secrets through ${VAR}, never inline them.
+          if grep -rEn '(password|api_key|api_token|secret)\s*:\s*["'"'"']?[A-Za-z0-9/+_-]{12,}' configs/; then
+            echo "::error::a credential-shaped literal is present in configs/"
+            exit 1
+          fi
+          echo "no inline credentials found"

@@ -172,7 +172,10 @@ class BaseStrategy(ABC):
 
     # -- lifecycle ---------------------------------------------------------------------
 
-    def initialize(self) -> None:
+    # The lifecycle and event hooks below default to doing nothing on purpose: a strategy
+    # implements only the handlers it needs, and forcing an empty override of the rest
+    # would be noise in every subclass.
+    def initialize(self) -> None:  # noqa: B027
         """Called once before the first event.  Override to set up strategy state."""
 
     def reset(self) -> None:
@@ -198,7 +201,7 @@ class BaseStrategy(ABC):
     def on_orderbook(self, event: OrderBookEvent, ctx: StrategyContext) -> list[Signal]:
         return []
 
-    def on_fill(self, event: FillEvent, ctx: StrategyContext) -> None:
+    def on_fill(self, event: FillEvent, ctx: StrategyContext) -> None:  # noqa: B027
         """Notification that one of this strategy's orders executed.
 
         Returns nothing: a fill is information, not an opportunity to place another order
@@ -213,7 +216,7 @@ class BaseStrategy(ABC):
         Anything time-dependent comes from ``ctx.ts``, so a replay reproduces the run.
         """
 
-    def validate_params(self, params: dict[str, Any]) -> None:
+    def validate_params(self, params: dict[str, Any]) -> None:  # noqa: B027
         """Validate this strategy's configuration block.
 
         Override to check required keys and ranges.  Called from ``__init__`` so a

@@ -54,9 +54,9 @@ class BarBuilder:
 
     __slots__ = (
         "_close",
+        "_exchange",
         "_high",
         "_instrument_id",
-        "_exchange",
         "_low",
         "_notional",
         "_open",

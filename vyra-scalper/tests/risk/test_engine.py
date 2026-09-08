@@ -154,7 +154,7 @@ class TestLossLimitsAndHalt:
 class TestSessionCounters:
     def test_max_trades_per_session(self, harness) -> None:
         engine, _, _, limits = harness
-        for i in range(limits.max_trades_per_session):
+        for _i in range(limits.max_trades_per_session):
             engine.on_trade_closed("vwap", net_pnl=10.0, ts=TS)
         decision = engine.evaluate(signal(), CLEAN)
         assert decision.reason_codes == (Reason.MAX_TRADES_PER_SESSION,)
@@ -207,7 +207,7 @@ class TestExposureCaps:
 
     def test_correlated_group_shares_one_budget(self, harness, registry) -> None:
         """MES and ES are the same bet at two sizes."""
-        engine, portfolio, _, _ = harness
+        engine, _portfolio, _, _ = harness
         assert engine.limits.group_for("CME:MES") == engine.limits.group_for("CME:ES")
 
 

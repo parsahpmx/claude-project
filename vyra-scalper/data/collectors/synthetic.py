@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from core.events import Aggressor, QuoteEvent, TradeEvent
 from core.instruments.instrument import Instrument
 from core.instruments.sessions import SessionCalendar
-from core.util.clock import NS_PER_MS, NS_PER_SEC, Nanos
+from core.util.clock import NS_PER_MS, Nanos
 from core.util.ids import content_hash
 
 __all__ = ["SyntheticConfig", "SyntheticTickSource"]
@@ -45,6 +45,7 @@ class SyntheticConfig:
     spread_ticks_wide_prob: float = 0.05
     spread_ticks_wide_multiple: float = 4.0
     mean_reversion_strength: float = 0.02
+    anchor_drift_volatility: float = 0.6
     tick_interval_ms: float = 250.0
     trade_size_mean: float = 3.0
     exchange_latency_us: float = 400.0
@@ -128,6 +129,12 @@ class SyntheticTickSource:
         sigma_step = cfg.annual_volatility * math.sqrt(dt_seconds / _SECONDS_PER_TRADING_YEAR)
         anchor = math.log(cfg.start_price)
         log_mid = anchor
+        # The anchor itself is a slow random walk.  An anchor fixed for the whole run makes
+        # the series revert to one constant price, which any mean-reversion rule harvests
+        # perfectly -- the first full run of this generator produced 90 trades, 90 wins and
+        # a Sharpe of 40.  That is a property of the generator, not an edge, and a test bed
+        # that hands a strategy a free win tests nothing about the strategy.
+        anchor_sigma = sigma_step * cfg.anchor_drift_volatility
         sequence = 0
         latency_ns = int(cfg.exchange_latency_us * 1_000)
 
@@ -143,7 +150,8 @@ class SyntheticTickSource:
                 ts = nxt
                 continue
 
-            # Mean-reverting drift toward the anchor plus a diffusive shock.
+            # Mean-reverting drift toward a slowly drifting anchor, plus a diffusive shock.
+            anchor += rng.gauss(0.0, anchor_sigma)
             log_mid += -cfg.mean_reversion_strength * (log_mid - anchor) * dt_seconds
             log_mid += rng.gauss(0.0, sigma_step)
             mid = math.exp(log_mid)

@@ -1,0 +1,18 @@
+# Market regime classification thresholds (section 7).
+#
+# The first implementation is deterministic and rule-based.  An ML classifier replaces
+# the rules behind the same interface in a later phase; strategies do not change.
+#
+# UNKNOWN is published whenever the evidence is insufficient, and a strategy that declares
+# allowed_regimes will not trade in UNKNOWN.  That is deliberate: trading a mean-reversion
+# strategy through an unclassified market is what the gate exists to prevent.
+
+classification:
+  min_bars: 30                    # history required before any classification is published
+  confirm_bars: 3                 # consecutive bars a candidate must hold before adoption
+  trend_ema_separation_atr: 0.5   # EMA separation in ATR units that marks a trend
+  breakout_atr: 0.75              # distance beyond the recent range that marks a breakout
+  low_vol_ratio: 0.7              # ATR / rolling-median ATR below which volatility is low
+  high_vol_ratio: 1.6             # and above which it is high
+  range_containment: 0.8          # fraction of the range price must sit within
+  vol_lookback: 50                # bars in the ATR median

@@ -13,7 +13,7 @@ immediate loss.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from core.events import OrderType, Regime, Side
@@ -32,7 +32,7 @@ class SignalError(ValueError):
     """
 
 
-class SignalIntent(str, Enum):
+class SignalIntent(StrEnum):
     """What the signal asks the portfolio to do."""
 
     ENTER = "ENTER"
@@ -42,7 +42,7 @@ class SignalIntent(str, Enum):
     SCALE_OUT = "SCALE_OUT"
 
 
-class EntryType(str, Enum):
+class EntryType(StrEnum):
     """How the strategy would like to be filled.
 
     A preference, not a command: the execution engine maps it onto an order type the venue

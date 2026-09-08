@@ -56,7 +56,7 @@ __all__ = [
     "SessionState",
     "Side",
     "StalenessState",
-    "Timeframe",
     "TimeInForce",
+    "Timeframe",
     "TradeEvent",
 ]

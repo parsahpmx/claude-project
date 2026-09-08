@@ -21,8 +21,8 @@ from typing import Any
 from core.events import BarEvent, Event, QuoteEvent, SessionEvent, Timeframe, TradeEvent
 from core.features.indicators import (
     ATR,
-    RSI,
     ROC,
+    RSI,
     AnchoredVWAP,
     OpeningRange,
     OrderFlowTracker,

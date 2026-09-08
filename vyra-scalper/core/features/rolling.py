@@ -196,7 +196,7 @@ class RollingStd:
 class _RollingExtreme:
     """Monotonic-deque extreme over a window, O(1) amortised per update."""
 
-    __slots__ = ("_deque", "_index", "_period", "_is_max")
+    __slots__ = ("_deque", "_index", "_is_max", "_period")
 
     def __init__(self, period: int, is_max: bool) -> None:
         if period < 1:

@@ -7,7 +7,7 @@ that historical records remain interpretable after a code change.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 from core.util.clock import (
     NS_PER_DAY,
@@ -34,7 +34,7 @@ __all__ = [
 ]
 
 
-class EventType(str, Enum):
+class EventType(StrEnum):
     """Discriminator carried by every event."""
 
     QUOTE = "QUOTE"
@@ -49,7 +49,7 @@ class EventType(str, Enum):
     RISK = "RISK"
 
 
-class AssetClass(str, Enum):
+class AssetClass(StrEnum):
     """Instrument family.  Drives sizing, session and depth-availability rules."""
 
     FUTURE = "FUTURE"
@@ -60,7 +60,7 @@ class AssetClass(str, Enum):
     METAL_CFD = "METAL_CFD"
 
 
-class Side(str, Enum):
+class Side(StrEnum):
     """Order/trade direction."""
 
     BUY = "BUY"
@@ -75,7 +75,7 @@ class Side(str, Enum):
         return Side.SELL if self is Side.BUY else Side.BUY
 
 
-class Aggressor(str, Enum):
+class Aggressor(StrEnum):
     """Which side initiated a trade print.
 
     ``UNKNOWN`` is a real and common value: many feeds do not tag aggressor, and
@@ -88,21 +88,21 @@ class Aggressor(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-class OrderType(str, Enum):
+class OrderType(StrEnum):
     MARKET = "MARKET"
     LIMIT = "LIMIT"
     STOP = "STOP"
     STOP_LIMIT = "STOP_LIMIT"
 
 
-class TimeInForce(str, Enum):
+class TimeInForce(StrEnum):
     DAY = "DAY"
     GTC = "GTC"
     IOC = "IOC"
     FOK = "FOK"
 
 
-class OrderState(str, Enum):
+class OrderState(StrEnum):
     """Order lifecycle states (``EXECUTION_SPEC.md`` §1)."""
 
     PENDING_NEW = "PENDING_NEW"
@@ -141,7 +141,7 @@ _TERMINAL_ORDER_STATES = frozenset(
 )
 
 
-class SessionState(str, Enum):
+class SessionState(StrEnum):
     """Where a venue is in its trading day."""
 
     PRE = "PRE"
@@ -152,7 +152,7 @@ class SessionState(str, Enum):
     HALTED = "HALTED"
 
 
-class StalenessState(str, Enum):
+class StalenessState(StrEnum):
     """Market-data freshness (``DATA_SPEC.md`` §4)."""
 
     FRESH = "FRESH"
@@ -161,7 +161,7 @@ class StalenessState(str, Enum):
     DEAD = "DEAD"
 
 
-class DataFlag(str, Enum):
+class DataFlag(StrEnum):
     """Non-fatal data-quality annotations attached to an event.
 
     A flagged event is still delivered — hiding it would be a silent modification — but
@@ -178,7 +178,7 @@ class DataFlag(str, Enum):
     SYNTHETIC = "SYNTHETIC"
 
 
-class Regime(str, Enum):
+class Regime(StrEnum):
     """Market regime classification (§7 of the platform specification)."""
 
     TRENDING_UP = "TRENDING_UP"
@@ -193,7 +193,7 @@ class Regime(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-class ExecutionMode(str, Enum):
+class ExecutionMode(StrEnum):
     """How the platform is running (``ARCHITECTURE.md`` §2)."""
 
     BACKTEST = "BACKTEST"
@@ -206,7 +206,7 @@ class ExecutionMode(str, Enum):
         return self is ExecutionMode.LIVE
 
 
-class FillModel(str, Enum):
+class FillModel(StrEnum):
     """Backtest fill optimism (``BACKTEST_SPEC.md`` §5)."""
 
     OPTIMISTIC = "OPTIMISTIC"
@@ -219,7 +219,7 @@ class FillModel(str, Enum):
         return self in (FillModel.REALISTIC, FillModel.CONSERVATIVE)
 
 
-class Timeframe(str, Enum):
+class Timeframe(StrEnum):
     """Bar timeframes.  ``ns`` gives the nominal duration in nanoseconds."""
 
     S1 = "1s"

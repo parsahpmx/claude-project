@@ -137,11 +137,16 @@ class SessionCalendar:
     a small list rather than re-deriving timezone arithmetic on every tick.
     """
 
-    __slots__ = ("_cache", "_session")
+    __slots__ = ("_cache", "_last_window", "_session")
 
     def __init__(self, session: TradingSession) -> None:
         self._session = session
         self._cache: dict[date, tuple[_Window, ...]] = {}
+        # The engine walks time forward, so consecutive queries almost always land in the
+        # window resolved for the previous one.  Caching it turns the common case into two
+        # integer comparisons instead of timezone arithmetic, which profiling showed to be
+        # the third-largest cost in the event loop.
+        self._last_window: _Window | None = None
 
     @property
     def session(self) -> TradingSession:
@@ -208,11 +213,15 @@ class SessionCalendar:
 
     def is_open(self, ts: Nanos) -> bool:
         """True when the venue is in an open window at ``ts``."""
-        return any(w.start_ns <= ts < w.end_ns for w in self._candidate_windows(ts))
+        return self.current_window(ts) is not None
 
     def current_window(self, ts: Nanos) -> _Window | None:
+        cached = self._last_window
+        if cached is not None and cached.start_ns <= ts < cached.end_ns:
+            return cached
         for window in self._candidate_windows(ts):
             if window.start_ns <= ts < window.end_ns:
+                self._last_window = window
                 return window
         return None
 

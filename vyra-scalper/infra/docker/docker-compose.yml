@@ -1,0 +1,54 @@
+# Development stack.
+#
+# Secrets are never written here: every credential is an environment reference resolved at
+# load time, and the engine refuses to start on an unset reference with no default.
+
+name: vyra
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vyra}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in your environment}
+      POSTGRES_DB: ${POSTGRES_DB:-vyra}
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vyra}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["6379:6379"]
+    volumes: ["redisdata:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  engine:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+      target: engine
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    environment:
+      VYRA_ENV: ${VYRA_ENV:-development}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-vyra}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vyra}
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ../../runs:/app/runs
+    # The engine never starts in LIVE mode from compose.  Live deployment is a deliberate,
+    # separately-approved step after paper and shadow are operational (ROADMAP.md).
+    command: ["python", "scripts/run_backtest.py", "--quiet"]
+
+volumes:
+  pgdata:
+  redisdata:

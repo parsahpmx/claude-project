@@ -44,7 +44,7 @@ class TestInstrumentInvariants:
         [("tick_size", 0.0), ("tick_value", -1.0), ("multiplier", 0.0), ("min_qty", 0.0)],
     )
     def test_non_positive_specs_are_rejected(self, field: str, value: float) -> None:
-        kwargs = dict(tick_size=0.25, tick_value=1.25, multiplier=5.0, expiry_ns=1)
+        kwargs = {"tick_size": 0.25, "tick_value": 1.25, "multiplier": 5.0, "expiry_ns": 1}
         kwargs[field] = value
         with pytest.raises(InstrumentError):
             Instrument("CME:MES", "MES", AssetClass.FUTURE, "CME", "USD", **kwargs)  # type: ignore[arg-type]

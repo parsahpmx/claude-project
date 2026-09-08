@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date
-from enum import Enum
+from enum import StrEnum
 
 from core.util.clock import NS_PER_DAY, Nanos, day_start_ns
 
@@ -33,7 +33,7 @@ __all__ = [
 ]
 
 
-class RollRule(str, Enum):
+class RollRule(StrEnum):
     """When to switch from the front contract to the next."""
 
     CALENDAR_DAYS_BEFORE_EXPIRY = "CALENDAR_DAYS_BEFORE_EXPIRY"
@@ -41,7 +41,7 @@ class RollRule(str, Enum):
     OPEN_INTEREST_CROSSOVER = "OPEN_INTEREST_CROSSOVER"
 
 
-class Adjustment(str, Enum):
+class Adjustment(StrEnum):
     """How to reconcile the price gap at a roll.
 
     ``NONE``

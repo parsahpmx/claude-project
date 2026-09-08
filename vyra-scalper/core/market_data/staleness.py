@@ -54,7 +54,7 @@ class StalenessGate:
     Keeping the decision in one place is what makes the kill-switch triggers auditable.
     """
 
-    __slots__ = ("_calendars", "_last_quote_ns", "_thresholds", "_default")
+    __slots__ = ("_calendars", "_default", "_last_quote_ns", "_thresholds")
 
     def __init__(
         self,

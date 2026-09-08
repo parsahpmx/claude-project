@@ -6,7 +6,7 @@ reworded**.  A new condition gets a new code; an existing code keeps its meaning
 
 from __future__ import annotations
 
-__all__ = ["Reason", "ALL_REASONS"]
+__all__ = ["ALL_REASONS", "Reason"]
 
 
 class Reason:

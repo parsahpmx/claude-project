@@ -21,19 +21,19 @@ from core.events import (
 
 
 def make_quote(**kw: object) -> QuoteEvent:
-    defaults = dict(
-        instrument_id="CME:MES",
-        exchange="CME",
-        ts_exchange=1_000,
-        ts_receive=1_800,
-        ts_processed=2_500,
-        sequence_id=1,
-        source="TEST",
-        bid=5100.00,
-        ask=5100.25,
-        bid_size=12.0,
-        ask_size=30.0,
-    )
+    defaults = {
+        "instrument_id": "CME:MES",
+        "exchange": "CME",
+        "ts_exchange": 1_000,
+        "ts_receive": 1_800,
+        "ts_processed": 2_500,
+        "sequence_id": 1,
+        "source": "TEST",
+        "bid": 5100.00,
+        "ask": 5100.25,
+        "bid_size": 12.0,
+        "ask_size": 30.0,
+    }
     defaults.update(kw)
     return QuoteEvent(**defaults)  # type: ignore[arg-type]
 
@@ -89,8 +89,8 @@ class TestTradeEvent:
         assert t.signed_size == 0.0
 
     def test_signed_size_follows_aggressor(self) -> None:
-        base = dict(instrument_id="CME:MES", exchange="CME", ts_exchange=0, ts_receive=0,
-                    ts_processed=1, sequence_id=1, source="TEST", price=5100.0, size=3.0)
+        base = {"instrument_id": "CME:MES", "exchange": "CME", "ts_exchange": 0, "ts_receive": 0,
+                    "ts_processed": 1, "sequence_id": 1, "source": "TEST", "price": 5100.0, "size": 3.0}
         assert TradeEvent(**base, aggressor=Aggressor.BUY).signed_size == 3.0  # type: ignore[arg-type]
         assert TradeEvent(**base, aggressor=Aggressor.SELL).signed_size == -3.0  # type: ignore[arg-type]
 

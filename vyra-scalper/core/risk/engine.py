@@ -19,10 +19,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
-from core.events import Regime, Side, StalenessState
+from core.events import Regime, StalenessState
 from core.instruments.instrument import Instrument
 from core.instruments.registry import InstrumentRegistry
 from core.portfolio.portfolio import Portfolio
@@ -39,7 +39,7 @@ __all__ = ["MarketState", "RiskAction", "RiskDecision", "RiskEngine"]
 _log = get_logger("risk.engine")
 
 
-class RiskAction(str, Enum):
+class RiskAction(StrEnum):
     APPROVE = "APPROVE"
     REDUCE = "REDUCE"
     REJECT = "REJECT"
@@ -135,11 +135,11 @@ class RiskEngine:
     __slots__ = (
         "_counter",
         "_decisions",
+        "_evaluated_signal_ids",
         "_id_prefix",
         "_kill_switch",
         "_limits",
         "_portfolio",
-        "_evaluated_signal_ids",
         "_registry",
         "_state",
     )
@@ -190,7 +190,7 @@ class RiskEngine:
         decision_id = f"{self._id_prefix}-{self._counter:08d}"
         try:
             return self._evaluate_inner(decision_id, signal, market)
-        except Exception as exc:  # noqa: BLE001 - deliberately total; see docstring
+        except Exception as exc:
             _log.exception(
                 "risk_check_error",
                 decision_id=decision_id,

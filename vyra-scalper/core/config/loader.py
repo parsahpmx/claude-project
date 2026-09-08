@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, TypeVar
@@ -86,7 +87,11 @@ def load_yaml(path: str | Path) -> dict[str, Any]:
         raise ConfigError(f"{p}: YAML parse error: {exc}") from exc
     if not isinstance(raw, dict):
         raise ConfigError(f"{p}: top level must be a mapping, got {type(raw).__name__}")
-    return _expand_tree(raw, source=str(p))
+    expanded = _expand_tree(raw, source=str(p))
+    # _expand_tree is recursive over Any; the top level is known to be a mapping because
+    # it was checked above.
+    assert isinstance(expanded, dict)
+    return expanded
 
 
 @dataclass(frozen=True, slots=True)
@@ -187,6 +192,18 @@ class ConfigSection:
     def items(self) -> list[tuple[str, Any]]:
         return list(self.data.items())
 
+    # A ConfigSection presents a mapping interface (get, keys, items, section), so it
+    # should behave like one: iterating yields key names, matching ``for name in section``
+    # at every call site.
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.data)
+
+    def __len__(self) -> int:
+        return len(self.data)
+
+    def __contains__(self, key: object) -> bool:
+        return key in self.data
+
 
 @dataclass(frozen=True, slots=True)
 class ConfigBundle:
@@ -247,6 +264,7 @@ def load_bundle(config_dir: str | Path, names: list[str] | None = None) -> Confi
         "brokers",
         "execution",
         "backtest",
+        "regime",
     ]
 
     sections: dict[str, ConfigSection] = {}

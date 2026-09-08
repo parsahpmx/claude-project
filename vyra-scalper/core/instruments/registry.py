@@ -81,9 +81,7 @@ class NoTradeWindow:
         """Whether ``ts`` falls inside this window for the given session bounds."""
         if self.after_open_ns is not None and ts < session_open + self.after_open_ns:
             return True
-        if self.before_close_ns is not None and ts > session_close - self.before_close_ns:
-            return True
-        return False
+        return bool(self.before_close_ns is not None and ts > session_close - self.before_close_ns)
 
     def __repr__(self) -> str:
         return f"NoTradeWindow(reason={self.reason!r})"
@@ -215,7 +213,7 @@ class InstrumentRegistry:
     def _build_sessions(cfg: ConfigSection) -> dict[str, TradingSession]:
         out: dict[str, TradingSession] = {}
         section = cfg.section("sessions")
-        for session_id in section.keys():
+        for session_id in section:
             spec = section.section(session_id)
             segments_raw = spec.list_("segments")
             if not segments_raw:
@@ -261,7 +259,7 @@ class InstrumentRegistry:
         out: dict[str, Instrument] = {}
         errors: list[str] = []
 
-        for instrument_id in section.keys():
+        for instrument_id in section:
             spec = section.section(instrument_id)
             try:
                 expiry_raw = spec.get("expiry")
@@ -296,7 +294,7 @@ class InstrumentRegistry:
     def _build_continuous(cfg: ConfigSection) -> dict[str, ContinuousContractSpec]:
         section = cfg.section("continuous_contracts", required=False)
         out: dict[str, ContinuousContractSpec] = {}
-        for root in section.keys():
+        for root in section:
             spec = section.section(root)
             try:
                 out[root] = ContinuousContractSpec(
@@ -314,7 +312,7 @@ class InstrumentRegistry:
     def _build_no_trade(cfg: ConfigSection) -> dict[str, list[NoTradeWindow]]:
         section = cfg.section("no_trade_windows", required=False)
         out: dict[str, list[NoTradeWindow]] = {}
-        for session_id in section.keys():
+        for session_id in section:
             windows: list[NoTradeWindow] = []
             for entry in section.list_(session_id):
                 if not isinstance(entry, dict):

@@ -224,7 +224,8 @@ backtest hash changes, and the old result is not silently re-attributed to new d
   Poisson trade-arrival process and configurable microstructure noise. Deterministic for
   a given seed; used by tests and by the reproducibility proof.
 * `CsvTickSource` / `CsvBarSource` — column mapping declared in config, no guessing.
-* `ParquetSource` — reads the normalised layer.
+* `ParquetSource` — reads the normalised layer. **Not yet implemented**; selecting it in
+  configuration fails with an explicit error rather than falling back to another source.
 
 Synthetic data is for **plumbing and invariants only**. No expectancy claim is ever made
 from it, and reports generated from a synthetic dataset are watermarked `SYNTHETIC`.

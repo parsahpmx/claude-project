@@ -48,8 +48,23 @@ tests/     unit, integration, strategy, risk, execution, backtest, failure
 * Nothing is claimed as working unless a test covers it. `ROADMAP.md` lists what is not
   built yet, explicitly.
 
+## Running a backtest
+
+```bash
+python scripts/run_backtest.py                 # reference run from configs/
+python scripts/replay_run.py runs/<id>/manifest.json   # verify it reproduces
+```
+
+The reference run uses a seeded synthetic generator so the pipeline is testable without
+vendor data. Its report is watermarked `SYNTHETIC` and supports no claim about expectancy.
+
 ## Status
 
-Phase 1 (foundation and MVP backtest). See `ROADMAP.md` for what is DONE, IN PROGRESS and
-PLANNED. No live broker connectivity exists yet; capital is not deployed until paper and
-shadow modes are operational.
+Phase 1 (foundation and MVP backtest) is complete and covered by
+`tests/backtest/test_mvp_acceptance.py`.
+
+Not built yet, explicitly: live broker adapters, the order book engine, six of the seven
+strategies, the SQL/Redis/Parquet storage layers, the API and dashboard, the ML and AI
+components, and the validation pipeline. Because the validation pipeline does not exist,
+**no strategy can be promoted**, and no capital is deployed until paper and shadow modes
+are operational. `ROADMAP.md` tracks each item with its acceptance criteria.

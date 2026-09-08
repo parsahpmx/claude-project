@@ -14,7 +14,10 @@ data:
   synthetic:
     # A seeded generator, used so the pipeline is testable without vendor data.  Results
     # from synthetic data are watermarked SYNTHETIC and support no expectancy claim.
-    seed: 20240315
+    #
+    # There is deliberately no seed here: the generator's seed is derived from
+    # run.random_seed above, so a single number determines the whole run and the manifest
+    # cannot record a seed that does not in fact reproduce it.
     start_price: 5100.0
     annual_volatility: 0.18
     trade_arrival_per_second: 1.5
