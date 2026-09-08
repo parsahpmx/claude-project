@@ -36,6 +36,7 @@ from core.market_data.bars import BarEngine
 from core.market_data.normalization import Normalizer
 from core.market_data.staleness import StalenessGate
 from core.portfolio.portfolio import Portfolio
+from core.portfolio.reconciliation import PositionReconciler
 from core.regime.engine import MarketRegimeEngine
 from core.risk.engine import MarketState, RiskEngine
 from core.signals.signal import Signal
@@ -132,6 +133,7 @@ class BacktestEngine:
         normalizer: Normalizer,
         staleness: StalenessGate,
         regime_engine: MarketRegimeEngine | None = None,
+        reconciler: PositionReconciler | None = None,
         timeframes: Sequence[Timeframe] = (Timeframe.M1,),
         market_data_latency_ns: int = 800_000,
         seed: int = 0,
@@ -148,6 +150,7 @@ class BacktestEngine:
         self._normalizer = normalizer
         self._staleness = staleness
         self._regimes = regime_engine or MarketRegimeEngine()
+        self._reconciler = reconciler
         self._md_latency_ns = market_data_latency_ns
         self._rng = random.Random(seed)
 
@@ -283,6 +286,8 @@ class BacktestEngine:
 
         for fill in self._broker.advance(event):
             self._on_fill(fill)
+
+        self._maybe_reconcile(event.ts)
 
     def _dispatch_to_strategies(self, event: Event, closed_bars: Sequence[BarEvent]) -> None:
         strategies = self._strategies_by_instrument.get(event.instrument_id, [])
@@ -426,6 +431,24 @@ class BacktestEngine:
             if strategy.config.strategy_id == fill.strategy_id:
                 strategy.on_fill(fill, self._build_context(strategy, fill))
 
+    def _maybe_reconcile(self, ts: Nanos) -> None:
+        """Run reconciliation when it falls due.
+
+        In a backtest our book and the simulated venue's are derived from the same fills,
+        so this should always agree — which is the point: it exercises the code path that
+        will run against a real venue, and a divergence here means an accounting bug in the
+        engine itself.
+        """
+        if self._reconciler is None or not self._reconciler.is_due(ts):
+            return
+        result = self._reconciler.reconcile(ts, reason="SCHEDULED")
+        if result.is_clean:
+            return
+        self._result.risk_events.extend(e.to_dict() for e in result.risk_events)
+        self._result.data_quality.setdefault("reconciliation", []).append(result.to_dict())
+        if result.tripped_kill_switch and not self._result.halted:
+            self._on_halt(ts, f"reconciliation: {result.critical[0].describe()}")
+
     def _mark_portfolio(self, event: Event) -> None:
         price: float | None = None
         if isinstance(event, QuoteEvent) and event.is_two_sided:
@@ -463,6 +486,11 @@ class BacktestEngine:
         """Close out the run: cancel working orders and record data quality."""
         last_ts = self._broker.now
         self._execution.cancel_all(last_ts, "END_OF_RUN")
+        # A final pass: an engine whose book disagrees with the venue at the end of a run
+        # produced a PnL figure it cannot substantiate.
+        if self._reconciler is not None:
+            final = self._reconciler.reconcile(last_ts, reason="END_OF_RUN")
+            self._result.data_quality["final_reconciliation"] = final.to_dict()
         self._result.data_quality.update(
             {
                 "validation": self._normalizer.all_counters(),

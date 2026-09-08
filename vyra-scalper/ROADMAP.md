@@ -54,11 +54,12 @@ building it are recorded here because they shaped the code:
 
 | # | Item | Status | Acceptance |
 |---|---|---|---|
-| 13 | Live market-data adapter | PLANNED | reconnect, resequence, gap detection under a chaos test |
-| 14 | Broker adapters: IBKR, MT5, OANDA | PLANNED | contract tests every adapter must pass |
+| 13 | Live market-data gateway | DONE | reconnect, resequence, gap detection and monotonicity under chaos tests |
+| 14 | Broker adapters: IBKR, MT5, OANDA | PLANNED | must pass `tests/execution/test_adapter_contract.py`, which simulated, paper and shadow already do |
 | 15 | Execution engine hardening: retries, timeouts, cancel/replace | DONE | duplicate-submit, timeout and capability-negotiation tests |
-| 16 | Position reconciliation | PLANNED | injected divergence trips the kill switch |
-| 17 | Paper trading end to end | PLANNED | 1 session, no manual intervention, ledger matches sim |
+| 16 | Position reconciliation | DONE | every divergence class trips the kill switch; the backtest reconciles clean throughout |
+| 17 | Paper and shadow adapters | DONE | both pass the shared contract suite; shadow records the counterfactual and never fills |
+| 17b | Paper trading session end to end | PLANNED | needs a live transport (item 13's `FeedTransport`) — 1 session, no manual intervention |
 
 ## Phase 3 — Strategy breadth and validation
 
@@ -102,9 +103,13 @@ Capital is not deployed until Phases 2, 3, 4 and 24 are all DONE.
 
 ## Known gaps (explicit, not hidden)
 
-* Broker adapters are the interface plus the simulated implementation. IBKR, MT5 and OANDA
-  are declared in `configs/brokers.yaml` with their symbol maps and capabilities, but the
-  adapter classes are **not written**. No live venue connectivity exists.
+* Broker adapters are the interface plus simulated, paper and shadow implementations.
+  IBKR, MT5 and OANDA are declared in `configs/brokers.yaml` with their symbol maps and
+  capabilities, but the adapter classes are **not written**. No live venue connectivity
+  exists.
+* The market-data gateway is transport-agnostic and fully tested against a fake feed. No
+  concrete `FeedTransport` exists, so nothing connects to a real venue yet — that
+  implementation is the only part the gateway's tests do not cover, by design.
 * Only one strategy is implemented (`VWAPMeanReversionStrategy`). The other six are
   configured and disabled; their classes do not exist yet, and the loader will fail
   loudly if one is enabled.

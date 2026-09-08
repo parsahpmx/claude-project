@@ -18,6 +18,7 @@ from core.brokers.base import (
     OrderAmendment,
     OrderRequest,
 )
+from core.brokers.paper import PaperBrokerAdapter
 from core.brokers.simulated import SimulatedBrokerAdapter
 from core.events import FillModel, OrderType, QuoteEvent, Side
 from core.execution.costs import CostModel
@@ -35,8 +36,33 @@ def build_simulated(registry: InstrumentRegistry, config_bundle) -> SimulatedBro
     )
 
 
+def build_paper(registry: InstrumentRegistry, config_bundle) -> PaperBrokerAdapter:
+    instruments = {i: registry.get(i) for i in registry.ids()}
+    return PaperBrokerAdapter(
+        instruments=instruments,
+        cost_model=CostModel.from_config(config_bundle["execution"]),
+        fill_simulator=FillSimulator(FillModel.REALISTIC, seed=1),
+        order_latency_ns=1_000_000,
+    )
+
+
+def build_shadow(registry: InstrumentRegistry, config_bundle) -> PaperBrokerAdapter:
+    instruments = {i: registry.get(i) for i in registry.ids()}
+    return PaperBrokerAdapter(
+        instruments=instruments,
+        cost_model=CostModel.from_config(config_bundle["execution"]),
+        fill_simulator=FillSimulator(FillModel.REALISTIC, seed=1),
+        order_latency_ns=1_000_000,
+        shadow=True,
+    )
+
+
+# Every adapter must pass this suite -- simulated, paper, shadow, and every live venue when
+# one is written. An adapter that cannot has not implemented the contract.
 ADAPTERS: dict[str, Callable[..., BrokerAdapter]] = {
     "simulated": build_simulated,
+    "paper": build_paper,
+    "shadow": build_shadow,
 }
 
 
@@ -119,6 +145,12 @@ class TestOrderEntry:
         adapter.connect()
         adapter.advance(quote())  # type: ignore[attr-defined]
         adapter.submit_order(market_order())
+        if getattr(adapter, "shadow", False):
+            # Shadow mode records the order and never rests it: nothing was sent, so the
+            # venue has nothing to report.
+            assert adapter.get_orders() == {}
+            assert adapter.shadow_records  # type: ignore[attr-defined]
+            return
         assert "c1" in adapter.get_orders()
 
     def test_resubmitting_the_same_client_order_id_does_not_duplicate(
@@ -131,7 +163,8 @@ class TestOrderEntry:
         second = adapter.submit_order(market_order())
         assert second.accepted
         assert second.broker_order_id == first.broker_order_id
-        assert len(adapter.get_orders()) == 1
+        if not getattr(adapter, "shadow", False):
+            assert len(adapter.get_orders()) == 1
 
     def test_cancelling_an_unknown_order_raises_a_normalised_error(
         self, adapter: BrokerAdapter

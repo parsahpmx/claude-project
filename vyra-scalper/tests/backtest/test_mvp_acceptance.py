@@ -131,6 +131,17 @@ class TestRiskControls:
         assert not entries_after, f"{len(entries_after)} entries were created after the halt"
 
 
+class TestReconciliation:
+    def test_the_book_agrees_with_the_venue_at_the_end_of_the_run(self, short_run) -> None:
+        """Both are derived from the same fills, so any divergence is an engine bug."""
+        final = short_run.result.data_quality.get("final_reconciliation")
+        assert final is not None, "the run did not reconcile at the end"
+        assert final["is_clean"], f"book diverged from the venue: {final['divergences']}"
+
+    def test_no_divergence_was_recorded_during_the_run(self, short_run) -> None:
+        assert "reconciliation" not in short_run.result.data_quality
+
+
 class TestOutputs:
     def test_an_equity_curve_is_produced(self, short_run) -> None:
         curve = short_run.result.portfolio.equity_curve

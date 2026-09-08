@@ -36,6 +36,17 @@ _SECRET_KEY_HINTS = (
 )
 _REDACTED = "***REDACTED***"
 
+# Names ``logging.Logger.makeRecord`` refuses in ``extra`` because the record already
+# defines them. Passing one raises KeyError from inside the logging call itself.
+_RESERVED_RECORD_ATTRS = frozenset(
+    {
+        "args", "asctime", "created", "exc_info", "exc_text", "filename", "funcName",
+        "levelname", "levelno", "lineno", "message", "module", "msecs", "msg", "name",
+        "pathname", "process", "processName", "relativeCreated", "stack_info",
+        "taskName", "thread", "threadName",
+    }
+)
+
 _RESERVED = frozenset(
     {
         "args",
@@ -117,8 +128,25 @@ class StructuredLogger:
         return StructuredLogger(self._logger, merged)
 
     def _emit(self, level: int, event: str, **fields: Any) -> None:
-        extra = {**self._context, **fields}
-        self._logger.log(level, event, extra=extra, stacklevel=3)
+        self._logger.log(level, event, extra=self._safe_extra(fields), stacklevel=3)
+
+    def _safe_extra(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Merge bound context with call fields, renaming reserved LogRecord attributes.
+
+        :meth:`logging.Logger.makeRecord` raises ``KeyError`` when ``extra`` contains a
+        name the record already uses -- ``message``, ``name``, ``args``, ``module`` and a
+        dozen others. A structured logger that propagates that failure turns an ordinary
+        log line into an exception, and the natural place to write ``message=exc.message``
+        is inside an error handler, where an unhandled exception is at its most damaging.
+
+        Colliding keys are prefixed rather than dropped, so the value still reaches the log
+        and the collision is visible in the output.
+        """
+        merged = {**self._context, **fields}
+        return {
+            (f"field_{key}" if key in _RESERVED_RECORD_ATTRS else key): value
+            for key, value in merged.items()
+        }
 
     def debug(self, event: str, **fields: Any) -> None:
         self._emit(logging.DEBUG, event, **fields)
@@ -134,8 +162,9 @@ class StructuredLogger:
 
     def exception(self, event: str, **fields: Any) -> None:
         """Log at ERROR with the active exception's traceback attached."""
-        extra = {**self._context, **fields}
-        self._logger.error(event, extra=extra, exc_info=True, stacklevel=3)
+        self._logger.error(
+            event, extra=self._safe_extra(fields), exc_info=True, stacklevel=3
+        )
 
     def critical(self, event: str, **fields: Any) -> None:
         self._emit(logging.CRITICAL, event, **fields)

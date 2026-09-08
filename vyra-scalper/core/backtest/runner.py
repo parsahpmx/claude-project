@@ -28,6 +28,7 @@ from core.instruments.registry import InstrumentRegistry
 from core.market_data.normalization import Normalizer
 from core.market_data.staleness import StalenessGate, StalenessThresholds
 from core.portfolio.portfolio import Portfolio
+from core.portfolio.reconciliation import PositionReconciler, ReconciliationConfig
 from core.regime.engine import MarketRegimeEngine, RegimeConfig
 from core.risk.engine import RiskEngine
 from core.risk.kill_switch import EmergencyPolicy, KillSwitch
@@ -302,6 +303,16 @@ def run_backtest(
         else RegimeConfig()
     )
 
+    reconciler = PositionReconciler(
+        broker=broker,
+        portfolio=portfolio,
+        instruments=instruments,
+        kill_switch=kill_switch,
+        config=ReconciliationConfig.from_config(
+            bundle["execution"].section("reconciliation", required=False)
+        ),
+    )
+
     normalizer = Normalizer(instruments)
     staleness = StalenessGate(
         default=StalenessThresholds(
@@ -325,6 +336,7 @@ def run_backtest(
         normalizer=normalizer,
         staleness=staleness,
         regime_engine=regime_engine,
+        reconciler=reconciler,
         timeframes=[timeframe],
         market_data_latency_ns=latency.market_data_ns(),
         seed=derive_seed(seed, "engine"),
