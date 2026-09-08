@@ -67,11 +67,16 @@ building it are recorded here because they shaped the code:
 |---|---|---|
 | 18 | Momentum breakout, liquidity sweep, trend pullback, order-flow imbalance, opening-range breakout, microstructure scalper | DONE — implemented and tested; **none validated, so none promoted** |
 | 18b | Order book engine (imbalance, delta, absorption, liquidity walls, CFD namespace boundary) | DONE |
-| 19 | Walk-forward, Monte Carlo, parameter-sensitivity, cost/latency stress | PLANNED |
+| 19 | Walk-forward, Monte Carlo, parameter-sensitivity, cost stress, promotion gate | DONE |
 
-Promotion gate: a strategy is promoted only on a **parameter plateau** that survives
-out-of-sample, walk-forward and a 2× transaction-cost stress. Highest-PnL single
-parameter set is explicitly not a promotion criterion.
+Promotion gate: implemented in `core.validation.promotion` and run by
+`scripts/validate_strategy.py`, which exits non-zero when a strategy is not approved so the
+gate is usable from CI. A strategy is promoted only on a **parameter plateau** that
+survives out-of-sample, walk-forward and a cost stress. Highest-PnL single parameter set is
+explicitly not a promotion criterion, and **missing evidence counts as a failure** — an
+unmeasured risk is not an absent one.
+
+No strategy has been submitted to the gate on real data, so **none is promoted**.
 
 ## Phase 4 — Interfaces
 
@@ -123,8 +128,13 @@ Capital is not deployed until Phases 2, 3, 4 and 24 are all DONE.
   error rather than silently falling back.
 * Storage is JSONL run artefacts. PostgreSQL/TimescaleDB, Redis and Parquet layers are
   specified in `DATA_SPEC.md` §8 but not built.
-* The validation pipeline (walk-forward, Monte Carlo, sensitivity, stress) is specified in
-  `BACKTEST_SPEC.md` §8 and not implemented, so **no strategy can be promoted yet**.
+* The validation pipeline exists and runs, but no strategy has passed it. On the shipped
+  synthetic dataset the reference strategy is rejected on five criteria — which is the gate
+  working, not a defect. Promotion requires real market data, which this environment has
+  no licence for.
+* Latency stress is not implemented as a separate stage: cost stress is analytic over the
+  realised ledger, whereas a latency stress needs a full re-run per multiple. The
+  `LatencyModel` supports it; the pipeline stage does not exist yet.
 * Market impact is modelled as a square-root function of participation; it is a model,
   not a measurement, and is flagged as such in every report.
 * No production data feed licence is assumed. Phase 1 ships a deterministic synthetic

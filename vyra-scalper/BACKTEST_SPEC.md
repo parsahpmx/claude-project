@@ -175,7 +175,24 @@ Automatic rejection criteria:
 * OOS Sharpe < `min_oos_sharpe` (default 0.5);
 * fewer than `min_trades` (default 100) in OOS — an unmeasurable result is not a good one;
 * cost headroom < 1.5× — no margin for real-world cost drift;
-* parameter plateau width < `min_plateau_fraction` of the swept range.
+* parameter plateau width < `min_plateau_fraction` of the swept range, or a best value
+  that is an isolated point rather than a region;
+* probability of ruin above `max_probability_of_ruin` at the configured drawdown;
+* a 95th-percentile resampled drawdown more than `max_drawdown_understatement` times the
+  realised one — the backtest's drawdown then owes more to ordering luck than to the
+  strategy;
+* **any criterion that could not be evaluated.** Missing evidence is a failure, not a
+  pass. A strategy that has not been walk-forward tested has not been shown to work out of
+  sample more than once.
+
+Implemented in `core.validation`; run with `scripts/validate_strategy.py <strategy>`, which
+exits non-zero when the strategy is not approved.
+
+Two limitations are stated rather than hidden. Cost headroom is computed analytically from
+the realised ledger, so it does not account for the different trades a higher-cost run
+would have taken — it is an **upper bound**. And sweeps run on the in-sample window only,
+because sweeping on out-of-sample data would consume the one unbiased measurement the
+pipeline has.
 
 ---
 

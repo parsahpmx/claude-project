@@ -1,0 +1,46 @@
+# The validation pipeline and the promotion gate (BACKTEST_SPEC.md section 8).
+#
+# A strategy is promoted only when EVERY criterion passes. Evidence that is missing counts
+# as a failure, not a pass: an unmeasured risk is not an absent one.
+#
+# These defaults are deliberately demanding. A gate that most candidates pass is not a gate.
+
+seed: 20240315
+
+windows:
+  # Chosen before any run and recorded in the manifest. A window picked after seeing
+  # in-sample results is not out of sample.
+  in_sample_fraction: 0.5
+  validation_fraction: 0.2
+  # The remainder (30%) is out-of-sample and is touched exactly once.
+
+walk_forward:
+  mode: ANCHORED          # ANCHORED sees all history; ROLLING sees only recent history
+  train_days: 2.0
+  test_days: 1.0
+
+monte_carlo:
+  iterations: 1000
+  method: BOOTSTRAP       # SHUFFLE isolates sequence risk; BOOTSTRAP adds sample risk
+  ruin_threshold_pct: 0.20
+
+stress:
+  cost_multiples: [1.0, 1.5, 2.0, 3.0, 5.0]
+
+# Parameters to sweep for plateau detection, on the IN-SAMPLE window only. Sweeping on
+# out-of-sample data would consume the one unbiased measurement in the pipeline.
+sweeps:
+  entry_deviation_sigma: [1.5, 1.75, 2.0, 2.25, 2.5, 3.0]
+
+promotion:
+  min_oos_trades: 100             # an unmeasurable result is not a good one
+  min_oos_sharpe: 0.5
+  min_oos_expectancy: 0.0
+  min_cost_headroom: 1.5          # no margin below this for real-world cost drift
+  min_plateau_fraction: 0.3       # a peak surrounded by losses is noise
+  max_peak_to_plateau_ratio: 2.0
+  min_walk_forward_win_rate: 0.5  # consistency matters more than the aggregate
+  max_probability_of_ruin: 0.05
+  max_drawdown_understatement: 2.0
+  min_profitable_regimes: 1
+  require_realistic_fills: true   # OPTIMISTIC fills cannot support a promotion decision

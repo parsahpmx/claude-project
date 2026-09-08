@@ -265,6 +265,7 @@ def load_bundle(config_dir: str | Path, names: list[str] | None = None) -> Confi
         "execution",
         "backtest",
         "regime",
+        "validation",
     ]
 
     sections: dict[str, ConfigSection] = {}
